@@ -2,7 +2,7 @@
 
 A lightweight, reproducible, and scalable data‑engineering pipeline for ingesting, validating, and profiling large CMS public datasets.
 
-Branch 1 (MVP) focuses on **high‑volume ingestion**, **schema‑driven validation**, and **baseline data-quality profiling** for CMS POS and QIES before expanding to full provider/facility enrichment.
+Branch 1 (MVP) focuses on **high‑volume ingestion**, **schema‑driven validation**, **baseline data-quality profiling**, and **structured reporting** for CMS POS and QIES before expanding to full provider/facility enrichment.
 
 ---
 
@@ -15,7 +15,8 @@ Branch 1 establishes a clean, testable workflow that:
 - validates schema structure (Stage 01)
 - loads raw data into canonical structures (Stage 02)
 - performs baseline data‑quality checks (Stage 03)
-- prepares intermediate and processed outputs (Stages 04-05)
+- generates structured reporting artifacts (Stage 04)
+- prepares for dashboard/reporting layers (Stage 05)
 
 Future branches will introduce transformation layers, CCN/NPI validation, facility alignment, enrichment logic, and synthetic‑claims integration.
 
@@ -37,6 +38,7 @@ cms-data-quality-and-ingestion/
 │   │   ├── sample_rows.csv
 │   │   └── schema.json
 │   ├── stage02_raw/
+│   ├── stage02_cleaned/
 │   ├── stage03_intermediate/
 │   ├── stage04_processed/
 │   └── stage05_reports/
@@ -102,10 +104,11 @@ Each item begins with a Guided Link.
 - **Schema validationn** — enforce structural consistency
 - **Minimal column guraantees** — essential fields only
 - **Baseline quality checks** - nulls, duplicates, drift indicators
-- **Logging + diagnostics** — ingestion + quality logs
+- **Reporting layer** - structured JSON/CSV outputs (Stage 04)
+- **Logging + diagnostics** — ingestion + quality + reporting logs
 - **Makefile workflow** — reproducible execution
 
-This MVP focuses on **ingestion + validation + quality**, not full transformation.
+This MVP focuses on **ingestion + validation + quality + reporting**, not full transformation.
 
 ---
 
@@ -119,7 +122,7 @@ Stage 03 produces lightweight quality metrics:
 - schema drift indicators
 - warnings for high-null columns or duplicate keys
 
-Future branches will add referential integrity checks, CCN/NPI validation, and facility/provider enrichment.
+Stage 04 transforms these into structured reporting artifacts.
 
 ---
 
@@ -150,31 +153,44 @@ make stage02
 make stage03
 ```
 
-Developer-direct version:
+### 5. Run Stage 04 (reporting)
 
 ```bash
-PYTHONPATH="$(PWD)/src:$(PWD)" python scripts/diagnostics/stage03/check_quality.py \
-    --file data/stage02_raw/pos_q2_2026.csv \
-    --type pos
+make stage04
 ```
 
-### 5. Run diagnostics
+This generates:
+
+- dataset summary
+- column health
+- sparse column list
+- facility-level quality metrics
+- top/bottom facility rankings
+- a manifest (`report_index.json`)
+
+All written to:
+
+```text
+data/stage04_processed/
+```
+
+### 6. Run diagnostics
 
 ```bash
 make diag-pos
 make diag-qies FILE=/path/to/qies.csv
 ```
 
-### 6. Run tests
+### 7. Run tests
 
 ```bash
 make test
 ```
 
-### 7. Reset pipeline artifacts
+### 8. Remove cache
 
 ```bash
-make reset
+make clean-cache
 ```
 
 Commands will evolve as the pipeline expands.
@@ -207,8 +223,14 @@ Commands will evolve as the pipeline expands.
 
 ### Stage 04 — Reporting
 
-- intermediate → processed transformations
-- quality summaries
+- transforms Stage 03 intermediate artifacts into structured JSON/CSV outputs
+- dataset‑level summary
+- column‑level health assessment
+- sparse column detection
+- facility‑level quality scoring
+- top/bottom facility rankings
+- manifest generation
+- logs written to `logs/runner.log`
 
 ### Stage 05 — Pipeline Runner
 
@@ -218,8 +240,6 @@ Commands will evolve as the pipeline expands.
 ---
 
 ## 📈 Roadmap
-
-Each item begins with a Guided Link.
 
 - **Transformation layer** — facility type normalization, address cleaning
 - **Validation layer** — schema enforcement + integrity checks
@@ -246,8 +266,8 @@ Los Angeles, CA
 
 Each item begins with a Guided Link.
 
-- **Healthcare data engineering** — CMS synthetic claims, POS/QIES ingestion, schema‑driven pipelines
-- **Analytics systems design** — reproducible workflows
-- **Scientific computing** — stochastic modeling, environmental data pipelines
-- **Data quality & governance** — schema enforcement, drift detection
-- **Technical writing** — clear documentation, modular patterns
+- healthcare data engineering
+- analytics systems design
+- scientific computing
+- data quality & governance
+- technical writing

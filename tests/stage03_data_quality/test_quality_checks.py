@@ -13,22 +13,24 @@ This suite is intentionally lightweight for Branch 1 MVP.
 """
 
 import pandas as pd
+
 from src.stage03_data_quality.quality_checks import (
-    run_quality_checks,
     QualityReport,
+    run_quality_checks,
 )
+
+# import pytest
 
 
 def test_imports():
-    """Ensure the module imports cleanly."""
     assert QualityReport is not None
     assert callable(run_quality_checks)
 
 
 def test_quality_report_structure():
-    """QualityReport should return expected fields."""
     df = pd.DataFrame({"ccn": [1, 2], "provider_type": ["A", "B"]})
     expected_cols = ["ccn", "provider_type"]
+
     report = run_quality_checks(df, expected_cols, key="ccn")
 
     assert isinstance(report, QualityReport)
@@ -40,7 +42,6 @@ def test_quality_report_structure():
 
 
 def test_null_counts():
-    """Null counts should be computed correctly."""
     df = pd.DataFrame(
         {
             "ccn": [1, None, 3],
@@ -56,7 +57,6 @@ def test_null_counts():
 
 
 def test_duplicate_detection():
-    """Duplicate CCNs should be detected."""
     df = pd.DataFrame(
         {
             "ccn": [100, 100, 200],
@@ -72,7 +72,6 @@ def test_duplicate_detection():
 
 
 def test_drift_detection_missing_columns():
-    """Missing expected columns should trigger drift warnings."""
     df = pd.DataFrame({"ccn": [1, 2]})
     expected_cols = ["ccn", "provider_type"]
 
@@ -83,7 +82,6 @@ def test_drift_detection_missing_columns():
 
 
 def test_drift_detection_unexpected_columns():
-    """Unexpected columns should trigger drift warnings."""
     df = pd.DataFrame(
         {
             "ccn": [1, 2],
