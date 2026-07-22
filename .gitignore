@@ -43,6 +43,11 @@ data/stage05_reports/
 !data/stage01_schema/schema.json
 !data/stage01_schema/sample_rows.csv
 
+# Keep empty directories tracked via .gitkeep
+!data/stage04_processed/.gitkeep
+!data/stage05_reports/.gitkeep
+!scripts/diagnostics/stage04/.gitkeep
+
 # ------------------------------------------------------------------------------
 # VSCode settings
 # ------------------------------------------------------------------------------

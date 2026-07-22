@@ -1,31 +1,61 @@
 """
 Stage 03 Diagnostics — Quality Checks
+================================================================================
+This script provides a CLI entry point for running Stage 03 quality diagnostics
+on the Stage 02 cleaned dataset.
 
-This script provides a CLI entry point for running Stage 03 quality checks
-on raw POS/QIES data loaded from Stage 02.
+It loads:
+    - Stage 01 schema.json
+    - Stage 02 cleaned_data.csv
 
-It loads a CSV/Parquet file, runs the quality engine, prints a summary,
-and writes results to logs/quality.log.
+Then it runs:
+    - Stage 03 quality engine (pure computation)
+
+Finally it prints:
+    - dataset-level metrics
+    - facility-level metrics
+    - column-level profiles
 
 Usage:
-    python check_quality.py --file data/stage02_raw/pos_q2_2026.csv --type pos
+    python check_quality.py --file data/stage02_cleaned/cleaned_data.csv
 """
 
 import argparse
+import json
 import logging
-import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-# Import Stage 03 engine
-from stage03_data_quality import run_quality_checks
+from src.stage01_schema_definition.schema_loader import load_schema
+from src.stage03_data_quality.quality_engine import run_stage03_quality
 
-# Configure logger
+
+def to_python_scalar(value):
+    """Convert numpy scalar types to native Python types."""
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def sanitize_dict(d: dict) -> dict:
+    """Recursively sanitize dictionaries containing NumPy scalar values."""
+    clean = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            clean[k] = sanitize_dict(v)
+        else:
+            clean[k] = to_python_scalar(v)
+    return clean
+
+
+# ------------------------------------------------------------------------------
+# Logging configuration
+# ------------------------------------------------------------------------------
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# Log file path
 LOG_PATH = Path("logs/quality.log")
 handler = logging.FileHandler(LOG_PATH)
 formatter = logging.Formatter("%(asctime)s — %(levelname)s — %(message)s")
@@ -33,110 +63,90 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-# Minimal expected columns for POS/QIES
-POS_COLUMNS = [
-    "ccn",
-    "provider_type",
-    "address",
-    "city",
-    "state",
-    "zip",
-    "ownership",
-]
-
-QIES_COLUMNS = [
-    "ccn",
-    "qm_rating",
-    "qm_score",
-    "participation_flag",
-]
-
-
-def load_file(path: Path) -> pd.DataFrame:
+# ------------------------------------------------------------------------------
+# Loader helpers
+# ------------------------------------------------------------------------------
+def load_cleaned(path: Path) -> pd.DataFrame:
     """
-    Load a raw CSV or Parquet file.
-
-    Args:
-        path: Path to the raw file.
-
-    Returns:
-        Loaded DataFrame.
-
-    Raises:
-        FileNotFoundError: If the file does not exist.
-        ValueError: If file extension is unsupported.
+    Load Stage 02 cleaned dataset.
     """
     if not path.exists():
-        logger.error(f"File not found: {path}")
-        raise FileNotFoundError(f"Raw file not found: {path}")
+        logger.error(f"Cleaned dataset not found: {path}")
+        raise FileNotFoundError(f"Cleaned dataset not found: {path}")
 
-    logger.info(f"Loading raw file: {path}")
-
-    if path.suffix.lower() == ".csv":
-        return pd.read_csv(path)
-    elif path.suffix.lower() == ".parquet":
-        return pd.read_parquet(path)
-    else:
-        raise ValueError(f"Unsupported file type: {path.suffix}")
+    logger.info(f"Loading cleaned dataset: {path}")
+    df = pd.read_csv(path)
+    logger.info(f"Loaded cleaned dataset with shape: {df.shape}")
+    return df
 
 
+# ------------------------------------------------------------------------------
+# CLI Entrypoint
+# ------------------------------------------------------------------------------
 def main():
-    """
-    CLI entry point for Stage 03 diagnostics.
+    parser = argparse.ArgumentParser(description="Run Stage 03 Quality Diagnostics")
+    parser.add_argument(
+        "--file",
+        required=True,
+        help="Path to cleaned_data.csv (Stage 02 output)",
+    )
 
-    Steps:
-        1. Parse arguments
-        2. Load raw file
-        3. Select expected columns + key
-        4. Run quality checks
-        5. Print summary
-        6. Log results
-    """
-    parser = argparse.ArgumentParser(description="Run Stage 03 Quality Checks")
-    parser.add_argument("--file", required=True, help="Path to raw POS/QIES file")
     parser.add_argument(
         "--type",
-        required=True,
-        choices=["pos", "qies"],
-        help="Dataset type: pos or qies",
+        required=False,
+        choices=["pos", "qies", "combined"],
+        help="Specify dataset type for diagnostics.",
     )
 
     args = parser.parse_args()
-    file_path = Path(args.file)
 
+    # dataset_type = args.type or "pos"   # default if omitted
+    cleaned_path = Path(args.file)
+
+    # Load Stage 01 schema
+    logger.info("Loading Stage 01 schema...")
+    schema = load_schema()
+
+    # Load Stage 02 cleaned dataset
     try:
-        df = load_file(file_path)
+        df = load_cleaned(cleaned_path)
     except Exception as e:
-        logger.error(f"Failed to load file: {e}")
-        sys.exit(1)
+        logger.error(f"Failed to load cleaned dataset: {e}")
+        return
 
-    # Select expected columns + key
-    if args.type == "pos":
-        expected_cols = POS_COLUMNS
-        key = "ccn"
-    else:
-        expected_cols = QIES_COLUMNS
-        key = "ccn"
+    # Run Stage 03 quality engine
+    logger.info("Running Stage 03 quality engine...")
+    summary_dict, df_facility, column_profiles = run_stage03_quality(df, schema)
 
-    logger.info(f"Running quality checks for dataset type: {args.type}")
+    # Print dataset-level metrics
+    print("\n=== Stage 03 Dataset-Level Metrics ===")
+    for k, v in summary_dict.items():
+        print(f"{k}: {v}")
 
-    report = run_quality_checks(df, expected_cols, key)
+    # Print facility-level metrics
+    print("\n=== Stage 03 Facility-Level Metrics ===")
+    print(df_facility.to_string(index=False))
 
-    # Print summary to console
-    print("\n=== Stage 03 Quality Report ===")
-    print(f"Rows: {report.row_count}")
-    print(f"Null Counts: {report.null_counts}")
-    print(f"Duplicate Counts: {report.duplicate_counts}")
-    print(f"Drift Indicators: {report.drift_indicators}")
-    print(f"Warnings: {report.warnings}")
-    print("================================\n")
+    # Print column-level profiles (summaries only)
+    print("\n=== Stage 03 Column-Level Profiles (Summary) ===")
+    for col, profile in column_profiles.items():
+        print(
+            f"{col}: nulls={profile['null_count']}, distinct={profile['distinct_count']}"
+        )
+
+    print("\nDiagnostics complete.\n")
 
     # Log summary
-    logger.info(f"Row count: {report.row_count}")
-    logger.info(f"Null counts: {report.null_counts}")
-    logger.info(f"Duplicate counts: {report.duplicate_counts}")
-    logger.info(f"Drift indicators: {report.drift_indicators}")
-    logger.info(f"Warnings: {report.warnings}")
+    logger.info("Dataset-level metrics:")
+    clean_summary = sanitize_dict(summary_dict)
+    logger.info(json.dumps(clean_summary, indent=2))
+
+    logger.info("Facility-level metrics:")
+    logger.info(df_facility.to_string(index=False))
+
+    logger.info("Column-level profiles:")
+    clean_profiles = sanitize_dict(column_profiles)
+    logger.info(json.dumps(clean_profiles, indent=2))
 
     logger.info("Stage 03 diagnostics complete.")
 

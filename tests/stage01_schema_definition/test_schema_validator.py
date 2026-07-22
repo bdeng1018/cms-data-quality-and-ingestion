@@ -14,76 +14,52 @@ from src.stage01_schema_definition.schema_validator import (
 
 
 def test_no_duplicate_fields():
-    """
-    Ensure that no duplicates are reported when all field names are unique.
-    """
     fields = [
         {"name": "a", "type": "string"},
         {"name": "b", "type": "integer"},
     ]
-    duplicates = check_for_duplicate_fields(fields)
-    assert duplicates == []
+    assert check_for_duplicate_fields(fields) == []
 
 
 def test_detect_duplicate_fields():
-    """
-    Verify that duplicate field names are correctly identified.
-    """
     fields = [
         {"name": "a", "type": "string"},
         {"name": "a", "type": "integer"},
     ]
-    duplicates = check_for_duplicate_fields(fields)
-    assert duplicates == ["a"]
+    assert check_for_duplicate_fields(fields) == ["a"]
 
 
 def test_no_missing_types():
-    """
-    Ensure that no missing types are reported when all fields define a type.
-    """
     fields = [
         {"name": "a", "type": "string"},
         {"name": "b", "type": "integer"},
     ]
-    missing = check_for_missing_types(fields)
-    assert missing == []
+    assert check_for_missing_types(fields) == []
 
 
 def test_detect_missing_types():
-    """
-    Verify that fields missing a type definition are correctly identified.
-    """
     fields = [
         {"name": "a", "type": "string"},
         {"name": "b", "type": ""},
         {"name": "c"},
     ]
-    missing = check_for_missing_types(fields)
-    assert missing == ["b", "c"]
+    assert check_for_missing_types(fields) == ["b", "c"]
 
 
 def test_no_invalid_types():
-    """
-    Ensure that no invalid types are reported when all types are allowed.
-    """
     fields = [
         {"name": "a", "type": "string"},
         {"name": "b", "type": "integer"},
         {"name": "c", "type": "boolean"},
     ]
-    invalid = check_for_invalid_types(fields)
-    assert invalid == []
+    assert check_for_invalid_types(fields) == []
 
 
 def test_detect_invalid_types():
-    """
-    Verify that invalid type values are correctly identified.
-    """
     fields = [
         {"name": "a", "type": "string"},
         {"name": "b", "type": "banana"},
         {"name": "c", "type": "float"},
         {"name": "d", "type": "unknown"},
     ]
-    invalid = check_for_invalid_types(fields)
-    assert invalid == ["banana", "unknown"]
+    assert check_for_invalid_types(fields) == ["banana", "unknown"]

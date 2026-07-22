@@ -4,7 +4,8 @@ Ensures the abstract class loads and exposes required methods.
 """
 
 import pytest
-from stage02_raw_ingestion.base_ingestion import BaseIngestionSource
+
+from src.stage02_raw_ingestion.base_ingestion import BaseIngestionSource
 
 
 def test_base_ingestion_interface():

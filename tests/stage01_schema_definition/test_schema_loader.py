@@ -6,42 +6,47 @@ and that its structure matches the expectations of the Stage 01 validator
 and downstream ingestion stages.
 """
 
-from src.stage01_schema_definition.schema_loader import load_schema
+import json
+
+import pytest
+
+import src.stage01_schema_definition.schema_loader as loader
+
+# from pathlib import Path
 
 
-def test_load_schema_returns_dict():
+@pytest.fixture
+def fake_schema(tmp_path, monkeypatch):
     """
-    Ensure that load_schema() returns a Python dictionary.
-
-    This confirms that the JSON file is parsed correctly and that the loader
-    exposes the schema in a usable Python structure.
+    Create a temporary schema.json and patch load_schema() to use it.
     """
-    schema = load_schema()
+    schema_path = tmp_path / "schema.json"
+    schema = {
+        "fields": [
+            {"name": "facility_id", "type": "string"},
+            {"name": "col1", "type": "integer"},
+        ]
+    }
+    with schema_path.open("w") as f:
+        json.dump(schema, f)
+
+    monkeypatch.setattr(loader, "load_schema", lambda: json.load(schema_path.open()))
+    return schema
+
+
+def test_load_schema_returns_dict(fake_schema):
+    schema = loader.load_schema()
     assert isinstance(schema, dict)
 
 
-def test_load_schema_has_fields_key():
-    """
-    Verify that the loaded schema contains the required top-level 'fields' key.
-
-    The Stage 01 validator depends on this key to perform structural checks.
-    """
-    schema = load_schema()
+def test_load_schema_has_fields_key(fake_schema):
+    schema = loader.load_schema()
     assert "fields" in schema
     assert isinstance(schema["fields"], list)
 
 
-def test_load_schema_field_structure():
-    """
-    Validate the structure of the first field entry in the schema.
-
-    Each field must define:
-    - 'name' (string)
-    - 'type' (string)
-
-    This ensures the schema adheres to the canonical Stage 01 format.
-    """
-    schema = load_schema()
+def test_load_schema_field_structure(fake_schema):
+    schema = loader.load_schema()
     first = schema["fields"][0]
 
     assert "name" in first

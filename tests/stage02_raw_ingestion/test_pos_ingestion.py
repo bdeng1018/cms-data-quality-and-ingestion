@@ -5,8 +5,8 @@ Ensures POS ingestion loads a DataFrame and validates minimal columns.
 
 import pandas as pd
 
-from stage02_raw_ingestion.constants import POS_MIN_COLUMNS
-from stage02_raw_ingestion.pos_ingestion import PosIngestionSource
+from src.stage02_raw_ingestion.constants import POS_MIN_COLUMNS
+from src.stage02_raw_ingestion.pos_ingestion import PosIngestionSource
 
 
 def test_pos_ingestion_smoke(tmp_path):

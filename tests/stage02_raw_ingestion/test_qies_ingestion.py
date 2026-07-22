@@ -5,8 +5,8 @@ Ensures QIES ingestion loads a DataFrame and validates minimal columns.
 
 import pandas as pd
 
-from stage02_raw_ingestion.constants import QIES_MIN_COLUMNS
-from stage02_raw_ingestion.qies_ingestion import QiesIngestionSource
+from src.stage02_raw_ingestion.constants import QIES_MIN_COLUMNS
+from src.stage02_raw_ingestion.qies_ingestion import QiesIngestionSource
 
 
 def test_qies_ingestion_smoke(tmp_path):

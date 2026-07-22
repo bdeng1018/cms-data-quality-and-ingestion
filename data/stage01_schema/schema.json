@@ -1,156 +1,248 @@
 {
   "fields": [
     {
-      "name": "record_id",
-      "type": "string"
-    },
-    {
       "name": "facility_id",
       "type": "string"
     },
     {
       "name": "facility_name",
-      "type": "string"
-    },
-    {
-      "name": "facility_state",
-      "type": "string"
-    },
-    {
-      "name": "facility_county",
-      "type": "string"
-    },
-    {
-      "name": "resident_id",
-      "type": "string"
-    },
-    {
-      "name": "resident_age",
-      "type": "integer"
-    },
-    {
-      "name": "resident_gender",
-      "type": "string"
-    },
-    {
-      "name": "resident_race",
-      "type": "string"
-    },
-    {
-      "name": "assessment_id",
-      "type": "string"
-    },
-    {
-      "name": "assessment_date",
-      "type": "date"
-    },
-    {
-      "name": "assessment_type",
-      "type": "string"
-    },
-    {
-      "name": "admission_date",
-      "type": "date"
-    },
-    {
-      "name": "discharge_date",
-      "type": "date"
-    },
-    {
-      "name": "diagnosis_primary",
-      "type": "string"
-    },
-    {
-      "name": "diagnosis_secondary",
-      "type": "string"
-    },
-    {
-      "name": "adl_walking",
-      "type": "integer"
-    },
-    {
-      "name": "adl_bathing",
-      "type": "integer"
-    },
-    {
-      "name": "adl_dressing",
-      "type": "integer"
-    },
-    {
-      "name": "adl_toileting",
-      "type": "integer"
-    },
-    {
-      "name": "adl_eating",
-      "type": "integer"
-    },
-    {
-      "name": "pain_level",
-      "type": "integer"
-    },
-    {
-      "name": "pain_frequency",
-      "type": "string"
-    },
-    {
-      "name": "pressure_ulcer_stage",
-      "type": "integer"
-    },
-    {
-      "name": "pressure_ulcer_present",
       "type": "boolean"
     },
     {
-      "name": "fall_history",
-      "type": "integer"
-    },
-    {
-      "name": "fall_injury",
+      "name": "facility_type",
       "type": "boolean"
     },
     {
-      "name": "infection_uti",
+      "name": "address_1",
       "type": "boolean"
     },
     {
-      "name": "infection_respiratory",
+      "name": "address_2",
       "type": "boolean"
     },
     {
-      "name": "behavior_wandering",
-      "type": "boolean"
+      "name": "city",
+      "type": "string"
     },
     {
-      "name": "behavior_aggression",
-      "type": "boolean"
+      "name": "state",
+      "type": "string"
     },
     {
-      "name": "medication_antipsychotic",
-      "type": "boolean"
-    },
-    {
-      "name": "medication_antibiotic",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_rn_hours",
+      "name": "zip",
       "type": "float"
     },
     {
-      "name": "staffing_lpn_hours",
-      "type": "float"
+      "name": "county",
+      "type": "boolean"
     },
     {
-      "name": "staffing_cna_hours",
-      "type": "float"
+      "name": "ssa_county_code",
+      "type": "string"
     },
     {
-      "name": "quality_measure_score",
-      "type": "float"
+      "name": "state_region_code",
+      "type": "string"
+    },
+    {
+      "name": "provider_region_code",
+      "type": "string"
+    },
+    {
+      "name": "parent_facility_id",
+      "type": "boolean"
+    },
+    {
+      "name": "related_facility_id",
+      "type": "boolean"
+    },
+    {
+      "name": "cross_reference_provider_number",
+      "type": "boolean"
+    },
+    {
+      "name": "ownership_type",
+      "type": "boolean"
+    },
+    {
+      "name": "chain_affiliation",
+      "type": "boolean"
+    },
+    {
+      "name": "corporate_owner_name",
+      "type": "boolean"
+    },
+    {
+      "name": "corporate_owner_id",
+      "type": "boolean"
+    },
+    {
+      "name": "npp_type_code",
+      "type": "string"
+    },
+    {
+      "name": "clia_id_1",
+      "type": "boolean"
+    },
+    {
+      "name": "clia_id_2",
+      "type": "boolean"
+    },
+    {
+      "name": "clia_id_3",
+      "type": "boolean"
+    },
+    {
+      "name": "clia_id_4",
+      "type": "boolean"
+    },
+    {
+      "name": "clia_id_5",
+      "type": "boolean"
+    },
+    {
+      "name": "cah_psych_unit_flag",
+      "type": "boolean"
+    },
+    {
+      "name": "rehab_unit_flag",
+      "type": "string"
+    },
+    {
+      "name": "swing_bed_flag",
+      "type": "string"
+    },
+    {
+      "name": "override_bed_count_flag",
+      "type": "string"
+    },
+    {
+      "name": "override_staffing_flag",
+      "type": "string"
+    },
+    {
+      "name": "medicare_medicaid_participation_flag",
+      "type": "string"
+    },
+    {
+      "name": "meets_1861_flag",
+      "type": "string"
+    },
+    {
+      "name": "collection_status_flag",
+      "type": "string"
+    },
+    {
+      "name": "life_safety_code_waiver_flag",
+      "type": "string"
+    },
+    {
+      "name": "rn_24_hour_waiver_flag",
+      "type": "string"
+    },
+    {
+      "name": "bed_count_reported",
+      "type": "boolean"
+    },
+    {
+      "name": "bed_count_certified",
+      "type": "boolean"
+    },
+    {
+      "name": "bed_count_available",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_rn_hours_reported",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_lpn_hours_reported",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_cna_hours_reported",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_rn_hours_adjusted",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_lpn_hours_adjusted",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_cna_hours_adjusted",
+      "type": "boolean"
+    },
+    {
+      "name": "emergency_prep_plan_flag",
+      "type": "boolean"
+    },
+    {
+      "name": "infection_control_flag",
+      "type": "boolean"
+    },
+    {
+      "name": "quality_reporting_flag",
+      "type": "boolean"
+    },
+    {
+      "name": "inspection_score",
+      "type": "boolean"
+    },
+    {
+      "name": "inspection_date",
+      "type": "boolean"
+    },
+    {
+      "name": "inspection_result",
+      "type": "boolean"
+    },
+    {
+      "name": "penalty_amount",
+      "type": "boolean"
+    },
+    {
+      "name": "penalty_date",
+      "type": "boolean"
+    },
+    {
+      "name": "penalty_reason",
+      "type": "boolean"
+    },
+    {
+      "name": "five_star_overall_rating",
+      "type": "boolean"
+    },
+    {
+      "name": "five_star_staffing_rating",
+      "type": "boolean"
+    },
+    {
+      "name": "five_star_quality_rating",
+      "type": "boolean"
+    },
+    {
+      "name": "raw_file_quarter",
+      "type": "string"
+    },
+    {
+      "name": "raw_file_year",
+      "type": "integer"
+    },
+    {
+      "name": "ingestion_source",
+      "type": "string"
+    },
+    {
+      "name": "ingestion_timestamp",
+      "type": "string"
     },
     {
       "name": "submission_timestamp",
-      "type": "datetime"
+      "type": "string"
     }
   ]
 }

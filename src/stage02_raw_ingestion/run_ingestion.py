@@ -1,10 +1,19 @@
 """
 run_ingestion.py
 Stage 02 — Local Ingestion Runner Stub
+================================================================================
+Provides a simple manual entry point for testing POS/QIES ingestion without
+requiring the full pipeline runner (Stage 05). Useful for development,
+diagnostics, and Branch 1 smoke testing.
 
-Provides a simple manual entry point for testing POS/QIES ingestion
-without requiring the full pipeline runner (Stage 05). Useful for
-development, diagnostics, and Branch 1 smoke testing.
+Responsibilities (Branch 1):
+- Load raw POS/QIES files
+- Validate minimal structure (rows > 0, columns > 0)
+- Log ingestion results
+- Return raw DataFrame for diagnostics/tests
+
+This module intentionally performs *no* cleaning, renaming, dtype enforcement,
+or schema alignment. Cleaning occurs in Stage 02 cleaning.
 """
 
 import sys
@@ -17,8 +26,13 @@ from .pos_ingestion import PosIngestionSource
 from .qies_ingestion import QiesIngestionSource
 
 
+# ==============================================================================
+# POS ingestion
+# ==============================================================================
 def run_pos_ingestion(path: str) -> pd.DataFrame:
     """
+    Load and minimally validate raw POS data.
+
     Returns
     -------
     pd.DataFrame
@@ -35,8 +49,13 @@ def run_pos_ingestion(path: str) -> pd.DataFrame:
     return df
 
 
+# ==============================================================================
+# QIES ingestion
+# ==============================================================================
 def run_qies_ingestion(path: str) -> pd.DataFrame:
     """
+    Load and minimally validate raw QIES data.
+
     Returns
     -------
     pd.DataFrame
@@ -53,6 +72,9 @@ def run_qies_ingestion(path: str) -> pd.DataFrame:
     return df
 
 
+# ==============================================================================
+# CLI Entrypoint
+# ==============================================================================
 if __name__ == "__main__":
     """
     Example usage:

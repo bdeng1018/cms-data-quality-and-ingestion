@@ -4,7 +4,6 @@ channels:
 
 dependencies:
   - python=3.11
-  - pip
 
   # Core developer tooling
   - black
@@ -12,11 +11,11 @@ dependencies:
   - pytest
   - ruff
 
-  # Data handling (Stage 02 ingestion)
+  # Data handling (Stage 02 ingestion + Stage 03/04 profiling)
   - pandas
   - pyarrow
   - requests
 
-  # Pip-only packages (none yet for Stage 01/02)
+  # Pip-only packages (none yet for Stage 01–04)
   - pip:
       - ""
