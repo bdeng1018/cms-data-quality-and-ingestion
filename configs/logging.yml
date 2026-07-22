@@ -1,0 +1,56 @@
+version: 1
+
+formatters:
+  standard:
+    format: "%(asctime)s — %(name)s — %(levelname)s — %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: standard
+    stream: ext://sys.stdout
+
+  schema_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/schema.log
+    maxBytes: 1048576
+    backupCount: 3
+
+  ingestion_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/ingestion.log
+    maxBytes: 1048576
+    backupCount: 3
+
+  quality_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/quality.log
+    maxBytes: 1048576
+    backupCount: 3
+
+loggers:
+  stage01:
+    level: INFO
+    handlers: ["schema_file", "console"]
+    propagate: false
+
+  stage02:
+    level: INFO
+    handlers: ["ingestion_file", "console"]
+    propagate: false
+
+  stage03:
+    level: INFO
+    handlers: ["quality_file", "console"]
+    propagate: false
+
+root:
+  level: WARNING
+  handlers: ["console"]

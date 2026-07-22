@@ -1,0 +1,156 @@
+{
+  "fields": [
+    {
+      "name": "record_id",
+      "type": "string"
+    },
+    {
+      "name": "facility_id",
+      "type": "string"
+    },
+    {
+      "name": "facility_name",
+      "type": "string"
+    },
+    {
+      "name": "facility_state",
+      "type": "string"
+    },
+    {
+      "name": "facility_county",
+      "type": "string"
+    },
+    {
+      "name": "resident_id",
+      "type": "string"
+    },
+    {
+      "name": "resident_age",
+      "type": "integer"
+    },
+    {
+      "name": "resident_gender",
+      "type": "string"
+    },
+    {
+      "name": "resident_race",
+      "type": "string"
+    },
+    {
+      "name": "assessment_id",
+      "type": "string"
+    },
+    {
+      "name": "assessment_date",
+      "type": "date"
+    },
+    {
+      "name": "assessment_type",
+      "type": "string"
+    },
+    {
+      "name": "admission_date",
+      "type": "date"
+    },
+    {
+      "name": "discharge_date",
+      "type": "date"
+    },
+    {
+      "name": "diagnosis_primary",
+      "type": "string"
+    },
+    {
+      "name": "diagnosis_secondary",
+      "type": "string"
+    },
+    {
+      "name": "adl_walking",
+      "type": "integer"
+    },
+    {
+      "name": "adl_bathing",
+      "type": "integer"
+    },
+    {
+      "name": "adl_dressing",
+      "type": "integer"
+    },
+    {
+      "name": "adl_toileting",
+      "type": "integer"
+    },
+    {
+      "name": "adl_eating",
+      "type": "integer"
+    },
+    {
+      "name": "pain_level",
+      "type": "integer"
+    },
+    {
+      "name": "pain_frequency",
+      "type": "string"
+    },
+    {
+      "name": "pressure_ulcer_stage",
+      "type": "integer"
+    },
+    {
+      "name": "pressure_ulcer_present",
+      "type": "boolean"
+    },
+    {
+      "name": "fall_history",
+      "type": "integer"
+    },
+    {
+      "name": "fall_injury",
+      "type": "boolean"
+    },
+    {
+      "name": "infection_uti",
+      "type": "boolean"
+    },
+    {
+      "name": "infection_respiratory",
+      "type": "boolean"
+    },
+    {
+      "name": "behavior_wandering",
+      "type": "boolean"
+    },
+    {
+      "name": "behavior_aggression",
+      "type": "boolean"
+    },
+    {
+      "name": "medication_antipsychotic",
+      "type": "boolean"
+    },
+    {
+      "name": "medication_antibiotic",
+      "type": "boolean"
+    },
+    {
+      "name": "staffing_rn_hours",
+      "type": "float"
+    },
+    {
+      "name": "staffing_lpn_hours",
+      "type": "float"
+    },
+    {
+      "name": "staffing_cna_hours",
+      "type": "float"
+    },
+    {
+      "name": "quality_measure_score",
+      "type": "float"
+    },
+    {
+      "name": "submission_timestamp",
+      "type": "datetime"
+    }
+  ]
+}

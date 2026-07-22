@@ -1,0 +1,44 @@
+pipeline:
+  name: pos_qies_pipeline
+  version: "1.0"
+  description: "CMS POS/QIES ingestion + quality profiling pipeline (Branch 1 MVP)"
+
+stages:
+  - id: stage01
+    name: "Schema Diagnostics"
+    description: "Validate POS/QIES schema definitions before ingestion."
+    scripts: ["scripts/diagnostics/stage01/check_schema.py"]
+    inputs: ["schema/pos_schema.json", "schema/qies_schema.json"]
+    outputs: ["logs/schema.log"]
+    run: ["make stage01"]
+
+  - id: stage02
+    name: "Raw Ingestion"
+    description: "Fetch, ingest, and validate raw POS/QIES files."
+    scripts:
+      [
+        "src/stage02_raw_ingestion/fetch_pos_api.py",
+        "src/stage02_raw_ingestion/run_ingestion.py",
+        "scripts/diagnostics/stage02/check_ingestion.py",
+      ]
+    inputs:
+      [
+        "data/stage02_raw/pos_q2_2026.parquet",
+        "data/stage02_raw/qies_q2_2026.csv",
+      ]
+    outputs: ["logs/ingestion.log"]
+    run: ["make stage02"]
+
+  - id: stage03
+    name: "Data Quality Profiling"
+    description: "Compute null counts, duplicates, drift indicators, and warnings."
+    scripts: ["scripts/diagnostics/stage03/check_quality.py"]
+    inputs: ["data/stage02_raw/pos_q2_2026.csv"]
+    outputs: ["logs/quality.log"]
+    run: ["make stage03"]
+
+tooling:
+  lint: ["make lint"]
+  test: ["make test"]
+  reset: ["make reset"]
+  env: ["make env"]

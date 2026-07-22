@@ -1,0 +1,22 @@
+name: pos_qies_pipeline
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.11
+  - pip
+
+  # Core developer tooling
+  - black
+  - isort
+  - pytest
+  - ruff
+
+  # Data handling (Stage 02 ingestion)
+  - pandas
+  - pyarrow
+  - requests
+
+  # Pip-only packages (none yet for Stage 01/02)
+  - pip:
+      - ""
