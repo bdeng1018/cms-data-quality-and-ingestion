@@ -14,45 +14,51 @@ help:
 	@echo ""
 	@echo "CMS Data Quality & Ingestion Pipeline — Commands"
 	@echo "------------------------------------------------"
-	@echo "make stage01            Run Stage 01 schema diagnostics"
-	@echo "make stage02            Full Stage 02 (fetch → ingest → clean → diag → lint → test)"
-	@echo "make stage03            Full Stage 03 (run → diag → lint → test)"
-	@echo "make stage04            Full Stage 04 (run → diag → lint → test)"
-	@echo "make fetch-pos          Download POS Q2 2026"
-	@echo "make ingest-pos         Ingest POS parquet"
-	@echo "make ingest-qies FILE=  Ingest QIES file"
-	@echo "make diag-pos           Run POS ingestion diagnostics"
-	@echo "make diag-qies FILE=    Run QIES ingestion diagnostics"
-	@echo "make diag-cleaned       Run Stage 02 cleaned-data diagnostics"
-	@echo "make diag-quality       Run Stage 03 quality checks"
-	@echo "make diag-intermediate  Validate Stage 03 intermediate artifacts"
-	@echo "make diag-stage04       Validate Stage 04 processed artifacts"
-	@echo "make test               Run pytest suite"
-	@echo "make lint               Run ruff + black checks"
-	@echo "make clean-cache        Remove Python caches"
-	@echo "make reset              Full cleanup of Stage 02 artifacts + logs"
-	@echo "make env                Create conda environment from environment.yml"
+	@echo "STAGE RUNNERS:"
+	@echo "  make stage01              Regenerate schema + run Stage 01 diagnostics"
+	@echo "  make stage02              Run Stage 02 (fetch → ingest → clean → diagnostics)"
+	@echo "  make stage03              Run Stage 03 (quality engine → diagnostics)"
+	@echo "  make stage04              Run Stage 04 (reporting → diagnostics)"
+	@echo "  make stage05              Run Stage 05 (pipeline runner → diagnostics)"
+	@echo "  make run                  Run full pipeline (Stages 01–05)"
+	@echo "  make smoke                Run lightweight smoke test (Stages 02–04)"
+	@echo ""
+	@echo "DIAGNOSTICS (ALL TARGETS):"
+	@echo "  make diagnostics          Run ALL diagnostics (Stages 01–05)"
+	@echo "  make schema-diagnostics   Stage 01 schema diagnostics"
+	@echo "  make diag-pos             Stage 02 POS ingestion diagnostics"
+	@echo "  make diag-qies FILE=...   Stage 02 QIES ingestion diagnostics"
+	@echo "  make diag-cleaned         Stage 02 cleaned-data diagnostics"
+	@echo "  make diag-quality         Stage 03 quality diagnostics"
+	@echo "  make diag-intermediate    Stage 03 intermediate artifact diagnostics"
+	@echo "  make diag-stage04         Stage 04 reporting diagnostics"
+	@echo "  make diag-pipeline        Stage 05 pipeline runner diagnostics"
+	@echo ""
+	@echo "STAGE 02 INGESTION UTILITIES:"
+	@echo "  make fetch-pos            Download POS Q2 2026"
+	@echo "  make ingest-pos           Ingest POS parquet"
+	@echo "  make ingest-qies FILE=... Ingest QIES file"
+	@echo "  make clean-pos            Clean POS data"
+	@echo ""
+	@echo "TESTING & LINTING:"
+	@echo "  make test                 Run pytest suite"
+	@echo "  make lint                 Run ruff + black checks"
+	@echo ""
+	@echo "MAINTENANCE:"
+	@echo "  make clean-cache          Remove Python caches"
+	@echo "  make reset                Remove pipeline artifacts (keeps cleaned data)"
+	@echo "  make env                  Create conda environment from environment.yml"
 	@echo ""
 
 # ==============================================================================
 # Stage 01 — Schema Definition + Diagnostics
 # ==============================================================================
 
-.PHONY: stage01 schema regen-schema schema-diagnostics
+.PHONY: stage01 regen-schema schema-diagnostics
 
-# Full Stage 01 pipeline:
-#   1. regenerate schema.json (automated)
-#   2. run diagnostics
-#   3. run lint
-#   4. run tests
 stage01: regen-schema schema-diagnostics
 	@echo "Stage 01 complete."
 
-# ------------------------------------------------------------------------------
-# Automated Schema Regeneration (Branch 1)
-# ------------------------------------------------------------------------------
-# This regenerates schema.json from the canonical Stage 02 cleaned-data column list.
-# It ensures schema.json always matches the pipeline.
 regen-schema:
 	@echo "Regenerating schema.json from cleaned_data.csv..."
 	PYTHONPATH="$(PWD)/src:$(PWD)" \
@@ -61,9 +67,6 @@ regen-schema:
 		--out data/stage01_schema/schema.json
 	@echo "Schema regenerated."
 
-# ------------------------------------------------------------------------------
-# Schema Diagnostics
-# ------------------------------------------------------------------------------
 schema-diagnostics:
 	PYTHONPATH="$(PWD)/src:$(PWD)" \
 		$(PYTHON) scripts/diagnostics/stage01/check_schema.py
@@ -91,7 +94,7 @@ ingest-qies:
 		qies $(FILE)
 
 clean-pos:
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m src.stage02_raw_ingestion.run_cleaning
+	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m stage02_raw_ingestion.run_cleaning
 
 diag-pos:
 	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
@@ -115,7 +118,7 @@ stage03: run-stage03 diag-quality diag-intermediate
 	@echo "Stage 03 complete."
 
 run-stage03:
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m src.stage03_data_quality.run_quality
+	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m stage03_data_quality.run_quality
 
 diag-quality:
 	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage03/check_quality.py \
@@ -131,21 +134,63 @@ diag-intermediate:
 
 .PHONY: stage04 run-stage04 diag-stage04
 
-# Full Stage 04 pipeline:
-#   1. run reporting engine + formatter + writer
-#   2. run diagnostics
-#   3. run lint
-#   4. run tests
 stage04: run-stage04 diag-stage04
 	@echo "Stage 04 complete."
 
 run-stage04:
 	PYTHONPATH="$(PWD)/src:$(PWD)" \
-		$(PYTHON) -m src.stage04_reporting.run_reporting
+		$(PYTHON) -m stage04_reporting.run_reporting
 
 diag-stage04:
 	PYTHONPATH="$(PWD)/src:$(PWD)" \
 		$(PYTHON) scripts/diagnostics/stage04/check_reports.py
+
+# ==============================================================================
+# Stage 05 — Pipeline Runner (Orchestrator)
+# ==============================================================================
+
+.PHONY: stage05 run-stage05 diag-pipeline
+
+stage05: run-stage05 diag-pipeline
+	@echo "Stage 05 complete."
+
+run-stage05:
+	PYTHONPATH="$(PWD)/src:$(PWD)" \
+		$(PYTHON) -m stage05_pipeline_runner.run_pipeline \
+		--config configs/pipeline.yml \
+		--output data/stage05_reports/pipeline_summary.json
+
+diag-pipeline:
+	PYTHONPATH="$(PWD)/src:$(PWD)" \
+		$(PYTHON) scripts/diagnostics/stage05/check_pipeline.py
+
+# ==============================================================================
+# Full Pipeline — Stages 01–05
+# ==============================================================================
+
+.PHONY: run
+
+run: stage01 stage02 stage03 stage04 stage05
+	@echo "Full pipeline (Stages 01–05) complete."
+
+# ==============================================================================
+# Smoke Testing — Stages 02-04
+# ==============================================================================
+
+.PHONY: smoke
+
+smoke: stage02 diag-cleaned stage03 diag-quality stage04
+	@echo "Smoke test (Stages 02–04) complete."
+
+# ==============================================================================
+# Aggregate Diagnostics — All Stages
+# ==============================================================================
+
+.PHONY: diagnostics
+
+# Left diag-qies out, but can include (between diag-pos and diag-cleaned)
+diagnostics: schema-diagnostics diag-pos diag-cleaned diag-quality diag-intermediate diag-stage04 diag-pipeline
+	@echo "All diagnostics (Stages 01–05) complete."
 
 # ==============================================================================
 # Testing
@@ -182,19 +227,20 @@ clean-cache:
 	@echo "Cache cleaned."
 
 # ==============================================================================
-# Reset — Full Artifact Cleanup
+# Reset — Full Artifact Cleanup (SAFE: keeps Stage 02 cleaned data)
 # ==============================================================================
 
 .PHONY: reset
 
 reset: clean-cache
-	@read -p "This will delete ALL pipeline data. Continue? (y/n) " ans; \
+	@read -p "This will delete ALL pipeline artifacts except cleaned data. Continue? (y/n) " ans; \
 	if [ "$$ans" = "y" ]; then \
 		rm -f data/stage02_raw/*; \
 		rm -f data/stage03_intermediate/*; \
 		rm -f data/stage04_processed/*; \
+		rm -f data/stage05_reports/*; \
 		rm -f logs/*.log; \
-		echo "Stage 02 + Stage 03 + Stage 04 artifacts and logs removed."; \
+		echo "Pipeline artifacts (Stages 02–05) removed. Cleaned data preserved."; \
 	else \
 		echo "Reset aborted."; \
 	fi

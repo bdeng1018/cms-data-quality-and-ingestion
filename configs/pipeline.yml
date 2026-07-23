@@ -1,44 +1,99 @@
+# ==============================================================================
+# CMS POS/QIES Ingestion + Quality + Reporting Pipeline Configuration
+# ==============================================================================
+
 pipeline:
   name: pos_qies_pipeline
   version: "1.0"
   description: "CMS POS/QIES ingestion + quality profiling pipeline (Branch 1 MVP)"
 
+# ==============================================================================
+# Stage Definitions (Workflow Manifest)
+# ==============================================================================
 stages:
   - id: stage01
     name: "Schema Diagnostics"
     description: "Validate POS/QIES schema definitions before ingestion."
-    scripts: ["scripts/diagnostics/stage01/check_schema.py"]
-    inputs: ["schema/pos_schema.json", "schema/qies_schema.json"]
-    outputs: ["logs/schema.log"]
-    run: ["make stage01"]
+    scripts:
+      - scripts/diagnostics/stage01/check_schema.py
+    inputs:
+      - schema/pos_schema.json
+      - schema/qies_schema.json
+    outputs:
+      - logs/schema.log
+    run:
+      - make stage01
 
   - id: stage02
     name: "Raw Ingestion"
     description: "Fetch, ingest, and validate raw POS/QIES files."
     scripts:
-      [
-        "src/stage02_raw_ingestion/fetch_pos_api.py",
-        "src/stage02_raw_ingestion/run_ingestion.py",
-        "scripts/diagnostics/stage02/check_ingestion.py",
-      ]
+      - src/stage02_raw_ingestion/fetch_pos_api.py
+      - src/stage02_raw_ingestion/run_ingestion.py
+      - scripts/diagnostics/stage02/check_ingestion.py
     inputs:
-      [
-        "data/stage02_raw/pos_q2_2026.parquet",
-        "data/stage02_raw/qies_q2_2026.csv",
-      ]
-    outputs: ["logs/ingestion.log"]
-    run: ["make stage02"]
+      - data/stage02_raw/pos_q2_2026.parquet
+      - data/stage02_raw/qies_q2_2026.csv
+    outputs:
+      - logs/ingestion.log
+    run:
+      - make stage02
 
   - id: stage03
     name: "Data Quality Profiling"
     description: "Compute null counts, duplicates, drift indicators, and warnings."
-    scripts: ["scripts/diagnostics/stage03/check_quality.py"]
-    inputs: ["data/stage02_raw/pos_q2_2026.csv"]
-    outputs: ["logs/quality.log"]
-    run: ["make stage03"]
+    scripts:
+      - scripts/diagnostics/stage03/check_quality.py
+    inputs:
+      - data/stage02_cleaned/cleaned_data.csv
+    outputs:
+      - logs/quality.log
+    run:
+      - make stage03
 
+  - id: stage04
+    name: "Reporting"
+    description: "Generate facility-level and dataset-level quality reports."
+    scripts:
+      - src/stage04_reporting/run_reporting.py
+      - scripts/diagnostics/stage04/check_reports.py
+    inputs:
+      - data/stage03_intermediate/facility_metrics.csv
+      - data/stage03_intermediate/quality_summary.json
+    outputs:
+      - logs/runner.log
+      - data/stage04_processed/report_index.json
+    run:
+      - make stage04
+
+  - id: stage05
+    name: "Pipeline Orchestrator"
+    description: "Execute all stages in order and generate pipeline summary."
+    scripts:
+      - src/stage05_pipeline_runner/run_pipeline.py
+      - scripts/diagnostics/stage05/check_pipeline.py
+    inputs:
+      - configs/pipeline.yml
+    outputs:
+      - data/stage05_reports/pipeline_summary.json
+    run:
+      - make stage05
+
+# ==============================================================================
+# Stage 05 Runtime Configuration (Required by run_pipeline.py)
+# ==============================================================================
+stage05:
+  output_dir: "data/stage05_reports"
+
+# ==============================================================================
+# Developer Tooling
+# ==============================================================================
 tooling:
-  lint: ["make lint"]
-  test: ["make test"]
-  reset: ["make reset"]
-  env: ["make env"]
+  lint:
+    - make lint
+  test:
+    - make test
+  reset:
+    - make reset
+  env:
+    - make env

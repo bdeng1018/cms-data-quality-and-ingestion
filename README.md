@@ -16,7 +16,7 @@ Branch 1 establishes a clean, testable workflow that:
 - loads raw data into canonical structures (Stage 02)
 - performs baseline data‑quality checks (Stage 03)
 - generates structured reporting artifacts (Stage 04)
-- prepares for dashboard/reporting layers (Stage 05)
+- orchestrates full pipeline execution (Stage 05)
 
 Future branches will introduce transformation layers, CCN/NPI validation, facility alignment, enrichment logic, and synthetic‑claims integration.
 
@@ -35,8 +35,6 @@ cms-data-quality-and-ingestion/
 │
 ├── data/
 │   ├── stage01_schema/
-│   │   ├── sample_rows.csv
-│   │   └── schema.json
 │   ├── stage02_raw/
 │   ├── stage02_cleaned/
 │   ├── stage03_intermediate/
@@ -75,8 +73,6 @@ cms-data-quality-and-ingestion/
 │   └── stage05_pipeline_runner/
 │
 └── utils/
-    ├── address_cleaning.py
-    ├── ccn_validation.py
     ├── file_io.py
     └── logging_utils.py
 ```
@@ -87,10 +83,15 @@ cms-data-quality-and-ingestion/
 
 Branch 1 ingests **two** CMS datasets:
 
-- **POS (Provider of Services Master File)**
-  - Note: This file contains hundreds of provider‑type‑specific fields. Many columns are structurally null — this is expected.
-- **QIES (Quality Improvement and Evaluation System)**
-  - Smaller, more structured, used for facility certification metadata.
+### POS (Provider of Services Master File)
+
+- Large, sparse, provider‑type‑specific fields
+- Many columns structurally null (expected)
+
+### QIES (Quality Improvement and Evaluation System)
+
+- Smaller, more structured
+- Facility certification metadata
 
 These datasets are large, messy, and ideal for demonstrating real ingestion, validation, and quality-profiling workflows.
 
@@ -98,15 +99,13 @@ These datasets are large, messy, and ideal for demonstrating real ingestion, val
 
 ## 🔧 MVP Features
 
-Each item begins with a Guided Link.
-
 - **Raw ingestion** — load POS/QIES files into canonical DataFrames
-- **Schema validationn** — enforce structural consistency
-- **Minimal column guraantees** — essential fields only
+- **Schema validation** — enforce structural consistency
+- **Minimal column guarantees** — essential fields only
 - **Baseline quality checks** - nulls, duplicates, drift indicators
 - **Reporting layer** - structured JSON/CSV outputs (Stage 04)
-- **Logging + diagnostics** — ingestion + quality + reporting logs
-- **Makefile workflow** — reproducible execution
+- **Logging + diagnostics** — ingestion, quality, and reporting logs
+- **Makefile workflow** — reproducible execution across all stages
 
 This MVP focuses on **ingestion + validation + quality + reporting**, not full transformation.
 
@@ -135,65 +134,47 @@ make env
 conda activate pos_qies_pipeline
 ```
 
-### 2. Run Stage 01 (schema validation)
+### 2. Run full pipeline (Stages 01–05)
+
+```bash
+make run
+```
+
+### 3. Run smoke test (Stages 02-04)
+
+```bash
+make smoke
+```
+
+### 4. Run individual stages
 
 ```bash
 make stage01
-```
-
-### 3. Run Stage 02 (raw ingestion)
-
-```bash
 make stage02
-```
-
-### 4. Run Stage 03 (quality profiling)
-
-```bash
 make stage03
-```
-
-### 5. Run Stage 04 (reporting)
-
-```bash
 make stage04
+make stage05
 ```
 
-This generates:
-
-- dataset summary
-- column health
-- sparse column list
-- facility-level quality metrics
-- top/bottom facility rankings
-- a manifest (`report_index.json`)
-
-All written to:
-
-```text
-data/stage04_processed/
-```
-
-### 6. Run diagnostics
+### 5. Run diagnostics
 
 ```bash
+make diagnostics
 make diag-pos
 make diag-qies FILE=/path/to/qies.csv
 ```
 
-### 7. Run tests
+### 6. Run tests
 
 ```bash
 make test
 ```
 
-### 8. Remove cache
+### 7. Remove cache
 
 ```bash
 make clean-cache
 ```
-
-Commands will evolve as the pipeline expands.
 
 ---
 
@@ -210,7 +191,7 @@ Commands will evolve as the pipeline expands.
 - POS/QIES loaders
 - minimal column enforcement
 - ingestion logs
-- DataFrame metadata
+- cleaned canonical dataset
 
 ### Stage 03 — Data Quality
 
@@ -219,7 +200,7 @@ Commands will evolve as the pipeline expands.
 - drift indicators
 - quality logs
 - POS Master File sparsity handling
-- robust missing-key behavior (e.g., missing CCN)
+- robust missing-key behavior
 
 ### Stage 04 — Reporting
 
@@ -230,23 +211,38 @@ Commands will evolve as the pipeline expands.
 - facility‑level quality scoring
 - top/bottom facility rankings
 - manifest generation
-- logs written to `logs/runner.log`
 
 ### Stage 05 — Pipeline Runner
 
 - orchestrates multi‑stage execution
 - integrates configs + logging
+- produces `pipeline_summary.json`
+
+---
+
+## Branch 1 Status
+
+Branch 1 (Deterministic Pipeline) is nearly complete:
+
+- Stages 01–05 implemented
+- Diagrams added (pipeline + schema)
+- Diagnostics and Makefile orchestration finalized
+
+Stage 06 is being created to design infrastructure for non-deterministic AI systems.
+
+Branch 2 (AI Inference) will depend on Stage 06.
 
 ---
 
 ## 📈 Roadmap
 
-- **Transformation layer** — facility type normalization, address cleaning
-- **Validation layer** — schema enforcement + integrity checks
-- **Provider/facility enrichment** — join POS/QIES with synthetic claims
-- **Graph modeling** — attending ↔ rendering relationships
-- **Synthetic claims integration**
-- **Dashboard + metrics**
+- transformation layer (facility normalization, address cleaning)
+- validation layer (schema enforcement + integrity checks)
+- provider/facility enrichment
+- synthetic claims integration
+- dashboard + metrics
+
+Stage 06 scaffolding will be added in Branch 1; full AI/RAG/agentic workflows arrive in Branch 2.
 
 ---
 
@@ -260,11 +256,10 @@ Branch 1 prioritizes **clarity, reproducibility, and correctness** over complete
 ## 👤 Author & Maintainer
 
 **Brian Deng** <br>
-Los Angeles, CA
+Los Angeles, CA <br>
+<bdeng.data.pipelines@gmail.com>
 
 ### Focus Areas
-
-Each item begins with a Guided Link.
 
 - healthcare data engineering
 - analytics systems design

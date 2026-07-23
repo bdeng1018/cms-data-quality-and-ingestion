@@ -57,6 +57,12 @@ class PosIngestionSource:
         else:
             raise ValueError(f"Unsupported POS file format: {self.raw_path}")
 
+        # Add facility_id for Stage 03 + Stage 04 compatibility
+        if "PRVDR_NUM" in df.columns:
+            df["facility_id"] = df["PRVDR_NUM"]
+        else:
+            raise ValueError("POS dataset missing PRVDR_NUM; cannot derive facility_id")
+
         self.logger.info(f"Loaded POS file with shape: {df.shape}")
         return df
 

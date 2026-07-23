@@ -1,98 +1,69 @@
 """
 run_ingestion.py
-Stage 02 — Local Ingestion Runner Stub
+Stage 02 — Local Ingestion Runner (POS-Only, Pipeline-Compatible)
 ================================================================================
-Provides a simple manual entry point for testing POS/QIES ingestion without
-requiring the full pipeline runner (Stage 05). Useful for development,
-diagnostics, and Branch 1 smoke testing.
+Branch 1 MVP: Only POS ingestion is supported.
 
-Responsibilities (Branch 1):
-- Load raw POS/QIES files
+Responsibilities:
+- Auto-discover raw POS file
+- Load raw POS dataset
 - Validate minimal structure (rows > 0, columns > 0)
 - Log ingestion results
-- Return raw DataFrame for diagnostics/tests
-
-This module intentionally performs *no* cleaning, renaming, dtype enforcement,
-or schema alignment. Cleaning occurs in Stage 02 cleaning.
+- Write cleaned output for downstream stages
 """
 
 import sys
+from pathlib import Path
 
 import pandas as pd
 
+from stage02_raw_ingestion.pos_ingestion import PosIngestionSource
 from utils.logging_utils import get_logger
 
-from .pos_ingestion import PosIngestionSource
-from .qies_ingestion import QiesIngestionSource
+logger = get_logger("run_ingestion")
 
 
 # ==============================================================================
 # POS ingestion
 # ==============================================================================
-def run_pos_ingestion(path: str) -> pd.DataFrame:
-    """
-    Load and minimally validate raw POS data.
-
-    Returns
-    -------
-    pd.DataFrame
-        Loaded and minimally validated raw dataset.
-    """
-    logger = get_logger("run_ingestion")
+def run_pos_ingestion(path: Path) -> pd.DataFrame:
     logger.info(f"Running POS ingestion for file: {path}")
-
-    pos = PosIngestionSource(path)
+    pos = PosIngestionSource(str(path))
     df = pos.load_raw()
     pos.validate_minimal_structure(df)
-
     logger.info(f"POS ingestion complete. Shape: {df.shape}")
     return df
 
 
 # ==============================================================================
-# QIES ingestion
+# Pipeline-Compatible Entrypoint (POS-only)
 # ==============================================================================
-def run_qies_ingestion(path: str) -> pd.DataFrame:
+def run_ingestion_pipeline() -> None:
     """
-    Load and minimally validate raw QIES data.
+    Auto-ingest POS raw file.
 
-    Returns
-    -------
-    pd.DataFrame
-        Loaded and minimally validated raw dataset.
+    This function is called by Stage 05 and must not require CLI arguments.
     """
-    logger = get_logger("run_ingestion")
-    logger.info(f"Running QIES ingestion for file: {path}")
 
-    qies = QiesIngestionSource(path)
-    df = qies.load_raw()
-    qies.validate_minimal_structure(df)
+    raw_dir = Path("data/stage02_raw")
+    pos_path = raw_dir / "pos_q2_2026.parquet"
 
-    logger.info(f"QIES ingestion complete. Shape: {df.shape}")
-    return df
+    if not pos_path.exists():
+        logger.error(f"Missing POS raw file: {pos_path}")
+        sys.exit(1)
+
+    pos_df = run_pos_ingestion(pos_path)
+
+    output_path = Path("data/stage02_cleaned/cleaned_data.csv")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    pos_df.to_csv(output_path, index=False)
+
+    logger.info(f"Stage 02 ingestion complete. Output written to: {output_path}")
 
 
 # ==============================================================================
-# CLI Entrypoint
+# Main
 # ==============================================================================
 if __name__ == "__main__":
-    """
-    Example usage:
-        python run_ingestion.py pos /path/to/pos.csv
-        python run_ingestion.py qies /path/to/qies.csv
-    """
-
-    if len(sys.argv) != 3:
-        print("Usage: python run_ingestion.py [pos|qies] <raw_file_path>")
-        sys.exit(1)
-
-    source_type = sys.argv[1].lower()
-    raw_path = sys.argv[2]
-
-    if source_type == "pos":
-        run_pos_ingestion(raw_path)
-    elif source_type == "qies":
-        run_qies_ingestion(raw_path)
-    else:
-        print("Invalid source type. Use 'pos' or 'qies'.")
-        sys.exit(1)
+    # Pipeline-compatible: no CLI args required
+    run_ingestion_pipeline()

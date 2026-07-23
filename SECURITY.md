@@ -11,6 +11,12 @@ Although it does not expose a public API, contributors and users may discover is
 - diagnostics scripts
 - reproducibility and deterministic execution
 
+### Branch 1 Note
+
+Branch 1 is fully deterministic (Stages 01–06 infrastructure only) and processes only public CMS datasets.
+No PHI/PII is ingested, stored, or processed.
+AI/RAG/agentic inference will be introduced in **Branch 2** and should not be added to Branch 1.
+
 If you believe you have found a security‑relevant issue, please follow the guidelines below.
 
 ---

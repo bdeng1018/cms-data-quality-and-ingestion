@@ -1,247 +1,1899 @@
 {
   "fields": [
     {
-      "name": "facility_id",
-      "type": "string"
-    },
-    {
-      "name": "facility_name",
-      "type": "boolean"
-    },
-    {
-      "name": "facility_type",
-      "type": "boolean"
-    },
-    {
-      "name": "address_1",
-      "type": "boolean"
-    },
-    {
-      "name": "address_2",
-      "type": "boolean"
-    },
-    {
-      "name": "city",
-      "type": "string"
-    },
-    {
-      "name": "state",
-      "type": "string"
-    },
-    {
-      "name": "zip",
+      "name": "PRVDR_CTGRY_SBTYP_CD",
       "type": "float"
     },
     {
-      "name": "county",
-      "type": "boolean"
-    },
-    {
-      "name": "ssa_county_code",
-      "type": "string"
-    },
-    {
-      "name": "state_region_code",
-      "type": "string"
-    },
-    {
-      "name": "provider_region_code",
-      "type": "string"
-    },
-    {
-      "name": "parent_facility_id",
-      "type": "boolean"
-    },
-    {
-      "name": "related_facility_id",
-      "type": "boolean"
-    },
-    {
-      "name": "cross_reference_provider_number",
-      "type": "boolean"
-    },
-    {
-      "name": "ownership_type",
-      "type": "boolean"
-    },
-    {
-      "name": "chain_affiliation",
-      "type": "boolean"
-    },
-    {
-      "name": "corporate_owner_name",
-      "type": "boolean"
-    },
-    {
-      "name": "corporate_owner_id",
-      "type": "boolean"
-    },
-    {
-      "name": "npp_type_code",
-      "type": "string"
-    },
-    {
-      "name": "clia_id_1",
-      "type": "boolean"
-    },
-    {
-      "name": "clia_id_2",
-      "type": "boolean"
-    },
-    {
-      "name": "clia_id_3",
-      "type": "boolean"
-    },
-    {
-      "name": "clia_id_4",
-      "type": "boolean"
-    },
-    {
-      "name": "clia_id_5",
-      "type": "boolean"
-    },
-    {
-      "name": "cah_psych_unit_flag",
-      "type": "boolean"
-    },
-    {
-      "name": "rehab_unit_flag",
-      "type": "string"
-    },
-    {
-      "name": "swing_bed_flag",
-      "type": "string"
-    },
-    {
-      "name": "override_bed_count_flag",
-      "type": "string"
-    },
-    {
-      "name": "override_staffing_flag",
-      "type": "string"
-    },
-    {
-      "name": "medicare_medicaid_participation_flag",
-      "type": "string"
-    },
-    {
-      "name": "meets_1861_flag",
-      "type": "string"
-    },
-    {
-      "name": "collection_status_flag",
-      "type": "string"
-    },
-    {
-      "name": "life_safety_code_waiver_flag",
-      "type": "string"
-    },
-    {
-      "name": "rn_24_hour_waiver_flag",
-      "type": "string"
-    },
-    {
-      "name": "bed_count_reported",
-      "type": "boolean"
-    },
-    {
-      "name": "bed_count_certified",
-      "type": "boolean"
-    },
-    {
-      "name": "bed_count_available",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_rn_hours_reported",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_lpn_hours_reported",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_cna_hours_reported",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_rn_hours_adjusted",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_lpn_hours_adjusted",
-      "type": "boolean"
-    },
-    {
-      "name": "staffing_cna_hours_adjusted",
-      "type": "boolean"
-    },
-    {
-      "name": "emergency_prep_plan_flag",
-      "type": "boolean"
-    },
-    {
-      "name": "infection_control_flag",
-      "type": "boolean"
-    },
-    {
-      "name": "quality_reporting_flag",
-      "type": "boolean"
-    },
-    {
-      "name": "inspection_score",
-      "type": "boolean"
-    },
-    {
-      "name": "inspection_date",
-      "type": "boolean"
-    },
-    {
-      "name": "inspection_result",
-      "type": "boolean"
-    },
-    {
-      "name": "penalty_amount",
-      "type": "boolean"
-    },
-    {
-      "name": "penalty_date",
-      "type": "boolean"
-    },
-    {
-      "name": "penalty_reason",
-      "type": "boolean"
-    },
-    {
-      "name": "five_star_overall_rating",
-      "type": "boolean"
-    },
-    {
-      "name": "five_star_staffing_rating",
-      "type": "boolean"
-    },
-    {
-      "name": "five_star_quality_rating",
-      "type": "boolean"
-    },
-    {
-      "name": "raw_file_quarter",
-      "type": "string"
-    },
-    {
-      "name": "raw_file_year",
+      "name": "PRVDR_CTGRY_CD",
       "type": "integer"
     },
     {
-      "name": "ingestion_source",
+      "name": "CHOW_CNT",
+      "type": "integer"
+    },
+    {
+      "name": "CHOW_DT",
+      "type": "float"
+    },
+    {
+      "name": "CITY_NAME",
       "type": "string"
     },
     {
-      "name": "ingestion_timestamp",
+      "name": "ACPTBL_POC_SW",
       "type": "string"
     },
     {
-      "name": "submission_timestamp",
+      "name": "CMPLNC_STUS_CD",
+      "type": "string"
+    },
+    {
+      "name": "SSA_CNTY_CD",
+      "type": "string"
+    },
+    {
+      "name": "CROSS_REF_PROVIDER_NUMBER",
+      "type": "string"
+    },
+    {
+      "name": "CRTFCTN_DT",
+      "type": "float"
+    },
+    {
+      "name": "ELGBLTY_SW",
+      "type": "string"
+    },
+    {
+      "name": "FAC_NAME",
+      "type": "string"
+    },
+    {
+      "name": "INTRMDRY_CARR_CD",
+      "type": "float"
+    },
+    {
+      "name": "MDCD_VNDR_NUM",
+      "type": "string"
+    },
+    {
+      "name": "ORGNL_PRTCPTN_DT",
+      "type": "integer"
+    },
+    {
+      "name": "CHOW_PRIOR_DT",
+      "type": "float"
+    },
+    {
+      "name": "INTRMDRY_CARR_PRIOR_CD",
+      "type": "float"
+    },
+    {
+      "name": "PRVDR_NUM",
+      "type": "string"
+    },
+    {
+      "name": "RGN_CD",
+      "type": "integer"
+    },
+    {
+      "name": "SKLTN_REC_SW",
+      "type": "string"
+    },
+    {
+      "name": "STATE_CD",
+      "type": "string"
+    },
+    {
+      "name": "SSA_STATE_CD",
+      "type": "integer"
+    },
+    {
+      "name": "STATE_RGN_CD",
+      "type": "string"
+    },
+    {
+      "name": "ST_ADR",
+      "type": "string"
+    },
+    {
+      "name": "PHNE_NUM",
+      "type": "float"
+    },
+    {
+      "name": "PGM_TRMNTN_CD",
+      "type": "integer"
+    },
+    {
+      "name": "TRMNTN_EXPRTN_DT",
+      "type": "float"
+    },
+    {
+      "name": "CRTFCTN_ACTN_TYPE_CD",
+      "type": "float"
+    },
+    {
+      "name": "GNRL_CNTL_TYPE_CD",
+      "type": "string"
+    },
+    {
+      "name": "ZIP_CD",
+      "type": "float"
+    },
+    {
+      "name": "FIPS_STATE_CD",
+      "type": "float"
+    },
+    {
+      "name": "FIPS_CNTY_CD",
+      "type": "float"
+    },
+    {
+      "name": "CBSA_URBN_RRL_IND",
+      "type": "string"
+    },
+    {
+      "name": "CBSA_CD",
+      "type": "float"
+    },
+    {
+      "name": "ACRDTN_EFCTV_DT",
+      "type": "float"
+    },
+    {
+      "name": "ACRDTN_EXPRTN_DT",
+      "type": "float"
+    },
+    {
+      "name": "ACRDTN_TYPE_CD",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_AMBLNC_SRVC_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_ASC_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_COLCTD_HOSP_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_ESRD_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_FQHC_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_HHA_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_HOSPC_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_OPO_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "TOT_AFLTD_PRTF_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_RHC_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_AFLTD_SNF_CNT",
+      "type": "float"
+    },
+    {
+      "name": "AFLTD_PRVDR_CNT",
+      "type": "float"
+    },
+    {
+      "name": "RSDNT_PGM_ALPTHC_SW",
+      "type": "string"
+    },
+    {
+      "name": "RSDNT_PGM_DNTL_SW",
+      "type": "string"
+    },
+    {
+      "name": "RSDNT_PGM_OSTPTHC_SW",
+      "type": "string"
+    },
+    {
+      "name": "RSDNT_PGM_OTHR_SW",
+      "type": "string"
+    },
+    {
+      "name": "RSDNT_PGM_PDTRC_SW",
+      "type": "string"
+    },
+    {
+      "name": "LAB_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "PHRMCY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "RDLGY_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "ASC_BGN_SRVC_DT",
+      "type": "boolean"
+    },
+    {
+      "name": "FREESTNDNG_ASC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OVRRD_BED_CNT_SW",
+      "type": "string"
+    },
+    {
+      "name": "CRTFD_BED_CNT",
+      "type": "float"
+    },
+    {
+      "name": "ICFIID_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCD_NF_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCR_SNF_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCR_MDCD_SNF_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "AIDS_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ALZHMR_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DLYS_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DSBL_CHLDRN_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HEAD_TRMA_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HOSPC_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HNTGTN_DEASE_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "REHAB_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "VNTLTR_BED_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "BED_CNT",
+      "type": "float"
+    },
+    {
+      "name": "BRNCH_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "BRNCH_OPRTN_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "CAH_PSYCH_DPU_SW",
+      "type": "string"
+    },
+    {
+      "name": "CAH_REHAB_DPU_SW",
+      "type": "string"
+    },
+    {
+      "name": "CAH_SB_SW",
+      "type": "string"
+    },
+    {
+      "name": "CRDC_CTHRTZTN_PRCDR_ROOMS_CNT",
+      "type": "float"
+    },
+    {
+      "name": "GNRL_FAC_TYPE_CD",
+      "type": "float"
+    },
+    {
+      "name": "CHOW_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "CLIA_ID_NUMBER_1",
+      "type": "string"
+    },
+    {
+      "name": "CLIA_ID_NUMBER_2",
+      "type": "string"
+    },
+    {
+      "name": "CLIA_ID_NUMBER_3",
+      "type": "string"
+    },
+    {
+      "name": "CLIA_ID_NUMBER_4",
+      "type": "string"
+    },
+    {
+      "name": "CLIA_ID_NUMBER_5",
+      "type": "string"
+    },
+    {
+      "name": "COLCTN_STUS_SW",
+      "type": "string"
+    },
+    {
+      "name": "RN_24_HR_WVR_SW",
+      "type": "string"
+    },
+    {
+      "name": "RN_7_DAY_WVR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "BED_PER_ROOM_WVR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "LSC_WVR_SW",
+      "type": "string"
+    },
+    {
+      "name": "ROOM_SIZE_WVR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ENDSCPY_PRCDR_ROOMS_CNT",
+      "type": "float"
+    },
+    {
+      "name": "ESRD_NTWRK_NUM",
+      "type": "boolean"
+    },
+    {
+      "name": "EXPRMT_RSRCH_CNDCTD_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "FAX_PHNE_NUM",
+      "type": "float"
+    },
+    {
+      "name": "FY_END_MO_DAY_CD",
+      "type": "float"
+    },
+    {
+      "name": "FQHC_APPROVED_RHC_PROVIDER_NUM",
+      "type": "float"
+    },
+    {
+      "name": "FED_FUNDD_FQHC_SW",
+      "type": "string"
+    },
+    {
+      "name": "HHA_QLFYD_OPT_SPCH_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "HH_AIDE_TRNG_PGM_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "HOME_TRNG_SPRT_ONLY_SRVC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCR_HOSPC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "HOSP_BSD_SW",
+      "type": "string"
+    },
+    {
+      "name": "INCNTR_NCTRNL_SRVC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "LTC_CROSS_REF_PROVIDER_NUMBER",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_SCHL_AFLTN_CD",
+      "type": "float"
+    },
+    {
+      "name": "MEDICARE_HOSPICE_PROVIDER_NUM",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCD_MDCR_PRTCPTG_PRVDR_SW",
+      "type": "string"
+    },
+    {
+      "name": "MEDICARE_MEDICAID_PRVDR_NUMBER",
+      "type": "boolean"
+    },
+    {
+      "name": "MLT_FAC_ORG_NAME",
+      "type": "boolean"
+    },
+    {
+      "name": "MLT_OWND_FAC_ORG_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NCRY_PRVDR_DSGNTD_DT",
+      "type": "float"
+    },
+    {
+      "name": "NCRY_PRVDR_DSGNTD_AS_SW",
+      "type": "string"
+    },
+    {
+      "name": "NCRY_PRVDR_LOST_DT",
+      "type": "boolean"
+    },
+    {
+      "name": "MEET_1861_SW",
+      "type": "string"
+    },
+    {
+      "name": "NPP_TYPE_CD",
+      "type": "string"
+    },
+    {
+      "name": "TOT_OFSITE_CNCR_HOSP_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_CHLDRN_HOSP_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_EMER_DEPT_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_INPTNT_LCTN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_LTC_HOSP_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_OPTHLMC_SRGRY_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_OTHR_LCTN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_PSYCH_HOSP_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_PSYCH_UNIT_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_REHAB_HOSP_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_REHAB_UNIT_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TOT_OFSITE_URGNT_CARE_CNTR_CNT",
+      "type": "float"
+    },
+    {
+      "name": "OFSITE_LCTN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "OPRTG_ROOM_CNT",
+      "type": "float"
+    },
+    {
+      "name": "ORGNZ_FMLY_MBR_GRP_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ORGNZ_RSDNT_GRP_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PARENT_PROVIDER_NUMBER",
+      "type": "string"
+    },
+    {
+      "name": "FQHC_APRVD_RHC_SW",
+      "type": "string"
+    },
+    {
+      "name": "MDCR_PRTCPTN_OP_PT_SPCH_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PGM_PRTCPTN_CD",
+      "type": "float"
+    },
+    {
+      "name": "PRVDR_BSD_FAC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PRVNC_CD",
+      "type": "string"
+    },
+    {
+      "name": "PSYCH_UNIT_BED_CNT",
+      "type": "float"
+    },
+    {
+      "name": "PSYCH_UNIT_EFCTV_DT",
+      "type": "float"
+    },
+    {
+      "name": "PSYCH_UNIT_SW",
+      "type": "string"
+    },
+    {
+      "name": "PSYCH_UNIT_TRMNTN_CD",
+      "type": "float"
+    },
+    {
+      "name": "PSYCH_UNIT_TRMNTN_DT",
+      "type": "float"
+    },
+    {
+      "name": "REHAB_UNIT_BED_CNT",
+      "type": "float"
+    },
+    {
+      "name": "REHAB_UNIT_EFCTV_DT",
+      "type": "float"
+    },
+    {
+      "name": "REHAB_UNIT_SW",
+      "type": "string"
+    },
+    {
+      "name": "REHAB_UNIT_TRMNTN_CD",
+      "type": "float"
+    },
+    {
+      "name": "REHAB_UNIT_TRMNTN_DT",
+      "type": "float"
+    },
+    {
+      "name": "RELATED_PROVIDER_NUMBER",
+      "type": "string"
+    },
+    {
+      "name": "ACUTE_RNL_DLYS_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "PSYCH_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "HH_AIDE_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "ALCHL_DRUG_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "ANSTHSA_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "APLNC_EQUIP_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "AUDLGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "BLOOD_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "BLOOD_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "BLOOD_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "BURN_CARE_UNIT_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CRDC_CTHRTZTN_LAB_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OPEN_HRT_SRGRY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CARF_IP_REHAB_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CHMTHRPY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CHRPRCTIC_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CL_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "CL_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "CL_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "CL_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CRNRY_CARE_UNIT_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CNSLNG_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "CT_SCAN_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "DNTL_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "DNTL_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DNTL_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DNTL_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SHCK_TRMA_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "DGNSTC_RDLGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "DTRY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "DTRY_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DTRY_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DTRY_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DCTD_ER_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "EMER_PSYCH_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "XTRCRPRL_SHCK_LTHTRPTR_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "FRNSC_PSYCH_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "GRTRC_PSYCH_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "GRNTLGCL_SPCLTY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "SP_HOME_TRNG_SPRT_HD_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "HMDLYS_SRVC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "HMMKR_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "HSEKPNG_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "HSEKPNG_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "HSEKPNG_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "IP_SRGCL_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "INTRN_RSDNT_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_SCL_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_SUPLY_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "ICU_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "MDCR_TRNSPLNT_CNTR_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "MENTL_HLTH_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "MENTL_HLTH_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "MENTL_HLTH_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "MGNTC_RSNC_IMG_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "NEONTL_ICU_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "NEONTL_NRSRY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "NRSRGCL_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "ORGN_TRNSPLNT_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "NUCLR_MDCN_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "NRSNG_SRVC_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NRSNG_SRVC_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NRSNG_SRVC_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NRSNG_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "NRSNG_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NRSNG_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NRSNG_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "NTRTNL_GDNC_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "OB_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OPTHLMC_SRGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OPTMTRC_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OPRTG_ROOM_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "ORTHPDC_SRGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "ORTHTC_PRSTHTC_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ORTHTC_PRSTHTC_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ORTHTC_PRSTHTC_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OT_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OTHR_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "OP_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OP_PSYCH_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OP_REHAB_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "OP_SRGRY_UNIT_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "PED_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "PED_ICU_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "SP_HOME_TRNG_SPRT_PD_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PRTNL_DLYS_SRVC_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PET_SCAN_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "PHRMCY_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHRMCY_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHRMCY_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_EXT_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_EXT_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_EXT_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PDTRY_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PDTRY_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PDTRY_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PSTOPRTV_RCVRY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "CHLD_ADLSCNT_PSYCH_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "PSYCHLGCL_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PSYCHLGCL_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PSYCHLGCL_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "PT_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "RCNSTRCTN_SRGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "RSPRTRY_CARE_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "RSPRTRY_CARE_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "RSPRTRY_CARE_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "RSPRTRY_CARE_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "SHRT_TERM_IP_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "SCL_WORK_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_WORK_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_WORK_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGY_EMPLEE_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGY_CNTRCTR_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGY_ARNGMT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "SPCH_PTHLGY_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGY_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGY_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_THRPY_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "SRGCL_ICU_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "ACTVTY_OTHR_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_OTHR_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_OTHR_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_OTHR_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_OTHR_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_OTHR_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "THRPTC_RDLGY_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "THRPTC_RCRTNL_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "THRPTC_RCRTNL_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "THRPTC_RCRTNL_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "URGNT_CARE_SRVC_CD",
+      "type": "float"
+    },
+    {
+      "name": "VCTNL_GDNC_SRVC_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "VCTNL_SRVC_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "VCTNL_SRVC_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "VCTNL_SRVC_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DGNSTC_XRAY_OFSITE_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DGNSTC_XRAY_ONST_NRSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DGNSTC_XRAY_ONST_RSDNT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ACUTE_RESP_CARE_CD",
+      "type": "boolean"
+    },
+    {
+      "name": "OVRRD_STFG_SW",
+      "type": "string"
+    },
+    {
+      "name": "PROFNL_ADMIN_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PROFNL_ADMIN_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PROFNL_ADMIN_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HH_AIDE_EMPLEE_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HH_AIDE_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PRSNEL_OTHR_CNT",
+      "type": "float"
+    },
+    {
+      "name": "NRS_AIDE_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NRS_AIDE_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NRS_AIDE_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "CNSLR_EMPLEE_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "CNSLR_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "CRNA_CNT",
+      "type": "float"
+    },
+    {
+      "name": "DNTST_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DNTST_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DNTST_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DIETN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "DIETN_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DIETN_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DIETN_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DRCT_CARE_PRSNEL_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "FOOD_SRVC_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "FOOD_SRVC_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "FOOD_SRVC_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HH_AIDE_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HMMKR_EMPLEE_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HMMKR_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HSEKPNG_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HSEKPNG_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "HSEKPNG_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "LAB_TCHNCN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "LPN_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "LPN_LVN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "LPN_LVN_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "LPN_LVN_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "LPN_LVN_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "LPN_LVN_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_DRCTR_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_DRCTR_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_DRCTR_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_SCL_WORKR_CNT",
+      "type": "float"
+    },
+    {
+      "name": "MDCL_SCL_WORKR_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCL_TCHNLGST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "MDCTN_AIDE_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCTN_AIDE_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MDCTN_AIDE_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MENTL_HLTH_SRVC_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MENTL_HLTH_SRVC_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "MENTL_HLTH_SRVC_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NUCLR_MDCN_TCHNCN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "NAT_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NAT_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NAT_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NRS_PRCTNR_CNT",
+      "type": "float"
+    },
+    {
+      "name": "NRS_ADMINV_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NRS_ADMINV_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "NRS_ADMINV_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OCPTNL_THRPST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "OCPTNL_THRPST_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OCPTNL_THRPST_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OCPTNL_THRPST_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_AIDE_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_AIDE_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_AIDE_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_ASTNT_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_ASTNT_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "OT_ASTNT_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "VLNTR_OTHR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_STF_OTHR_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_STF_OTHR_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_STF_OTHR_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_OTHR_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_OTHR_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_OTHR_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_OTHR_STF_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_OTHR_STF_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_SRVC_OTHR_STF_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "STF_OTHR_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "STF_OTHR_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "STF_OTHR_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHRMCST_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHRMCST_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHRMCST_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYS_THRPST_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYS_THRPST_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYS_THRPST_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "PHYSN_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_ASTNT_CNT",
+      "type": "float"
+    },
+    {
+      "name": "PHYSN_EXT_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_EXT_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYSN_EXT_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RSDNT_PHYSN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "PDTRST_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PDTRST_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PDTRST_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PSYCHLGST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "PHYS_THRPST_STF_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PHYS_THRPST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "PHYS_THRPST_ARNGMT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_AIDE_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_AIDE_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_AIDE_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_ASTNT_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_ASTNT_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "PT_ASTNT_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_PROFNL_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_PROFNL_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "ACTVTY_PROFNL_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RDLGY_TCHNCN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "REG_PHRMCST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "INHLTN_THRPST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "RN_CNT",
+      "type": "float"
+    },
+    {
+      "name": "RN_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RN_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RN_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RN_VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RN_DRCTR_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RN_DRCTR_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "RN_DRCTR_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_WORKR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_WORKR_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_WORKR_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SCL_WORKR_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGST_ARNGMT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGST_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGST_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGST_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGST_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SPCH_PTHLGST_AUDLGST_CNT",
+      "type": "float"
+    },
+    {
+      "name": "TCHNCL_STF_NUM",
+      "type": "boolean"
+    },
+    {
+      "name": "TCHNCN_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "THRPTC_RCRTNL_CNTRCT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "THRPTC_RCRTNL_FLTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "THRPTC_RCRTNL_PRTM_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "EMPLEE_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "VLNTR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SBUNIT_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "SBUNIT_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SBUNIT_OPRTN_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "DNTL_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OTLRYNGLGY_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ENDSCPY_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OB_GYN_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OPTHMLGY_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "ORTHPDC_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "OTHR_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PAIN_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "PLSTC_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "FT_SRGRY_SW",
+      "type": "boolean"
+    },
+    {
+      "name": "SB_SW",
+      "type": "string"
+    },
+    {
+      "name": "SB_SIZE_CD",
+      "type": "float"
+    },
+    {
+      "name": "TCHNLGST_2_YR_RDLGC_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "TCHNLGST_ASCT_DGR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "TCHNLGST_BS_BA_DGR_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "DLYS_STN_CNT",
+      "type": "boolean"
+    },
+    {
+      "name": "facility_id",
       "type": "string"
     }
   ]
