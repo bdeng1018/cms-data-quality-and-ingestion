@@ -11,4 +11,4 @@ from src.stage02_raw_ingestion.base_ingestion import BaseIngestionSource
 def test_base_ingestion_interface():
     # Abstract class should not be instantiable
     with pytest.raises(TypeError):
-        BaseIngestionSource("dummy_path")
+        BaseIngestionSource("dummy_path")  # type: ignore[abstract]

@@ -71,6 +71,20 @@ These tools ensure consistent formatting, linting, and testing across all pipeli
 
 ---
 
+## Diagram Workflow
+
+All diagrams are maintained in Mermaid (.md) and exported to PNG.
+
+Both files are committed to the repo:
+
+- `diagrams/*.md`  → source of truth
+- `diagrams/*.png` → rendered artifact
+
+Use VS Code Mermaid preview or Mermaid CLI for PNG export.
+Do not commit SVG or draw.io files unless explicitly needed.
+
+---
+
 ## 🛠 Running the Pipeline
 
 Each stage can be executed individually via Makefile:
@@ -215,6 +229,11 @@ To add or modify a pipeline stage:
 8. Update the root README
 9. Update `CHANGELOG.md` under `[Unreleased]`
 
+### Branch 1 Note
+
+Branch 1 is **fully deterministic** (Stages 01–06 infrastructure only).
+AI/RAG/agentic inference will be introduced in **Branch 2** and should not be added to Branch 1.
+
 ---
 
 ## 🔄 Makefile Workflow
@@ -279,4 +298,4 @@ See `CODE_OF_CONDUCT.md` for community guidelines.
 Maintainer: **Brian Deng**  <br>
 Location: Los Angeles, CA <br>
 Email: **<bdeng.data.pipelines@gmail.com>** <br>
-Focus: CMS ingestion, data quality, reproducible pipelines
+Focus: healthcare data engineering, analytics systems design, scientific computing, data quality & governance, technical writing

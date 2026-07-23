@@ -1,9 +1,22 @@
+# Logging configuration for CMS Data Quality & Ingestion Pipeline
+# ---------------------------------------------------------------
+# Each stage logs to its own rotating file under logs/.
+# Stage 05 (pipeline runner) logs only to console.
+# Format: timestamp — logger — level — message
+
 version: 1
 
+# ------------------------------------------------------------------------------
+# 1. Formatters
+# ------------------------------------------------------------------------------
 formatters:
   standard:
     format: "%(asctime)s — %(name)s — %(levelname)s — %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
 
+# ------------------------------------------------------------------------------
+# 2. Handlers
+# ------------------------------------------------------------------------------
 handlers:
   console:
     class: logging.StreamHandler
@@ -35,6 +48,17 @@ handlers:
     maxBytes: 1048576
     backupCount: 3
 
+  reporting_file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: standard
+    filename: logs/runner.log
+    maxBytes: 1048576
+    backupCount: 3
+
+# ------------------------------------------------------------------------------
+# 3. Loggers (one per stage)
+# ------------------------------------------------------------------------------
 loggers:
   stage01:
     level: INFO
@@ -51,6 +75,19 @@ loggers:
     handlers: ["quality_file", "console"]
     propagate: false
 
+  stage04:
+    level: INFO
+    handlers: ["reporting_file", "console"]
+    propagate: false
+
+  stage05:
+    level: INFO
+    handlers: ["console"]
+    propagate: false
+
+# ------------------------------------------------------------------------------
+# 4. Root logger (fallback)
+# ------------------------------------------------------------------------------
 root:
   level: WARNING
   handlers: ["console"]

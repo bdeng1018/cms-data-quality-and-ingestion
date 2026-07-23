@@ -1,21 +1,41 @@
+# ==============================================================================
+# CMS POS/QIES Ingestion + Quality + Reporting Pipeline
+# Conda environment for development, testing, and execution
+# ==============================================================================
+
 name: pos_qies_pipeline
 channels:
   - conda-forge
 
 dependencies:
+  # ============================================================================
+  # Core Python Runtime
+  # ============================================================================
   - python=3.11
 
-  # Core developer tooling
+  # ============================================================================
+  # Developer Tooling (formatting, linting, testing)
+  # ============================================================================
   - black
   - isort
-  - pytest
   - ruff
+  - pytest
 
-  # Data handling (Stage 02 ingestion + Stage 03/04 profiling)
+  # ============================================================================
+  # Data Handling + File Formats
+  # Stage 02 ingestion, Stage 03 profiling, Stage 04 reporting
+  # ============================================================================
   - pandas
   - pyarrow
   - requests
 
-  # Pip-only packages (none yet for Stage 01–04)
+  # ============================================================================
+  # YAML + Configuration Parsing (Stage 05 runner)
+  # ============================================================================
+  - pyyaml
+
+  # ============================================================================
+  # Pip-only packages (none required yet)
+  # ============================================================================
   - pip:
       - ""

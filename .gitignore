@@ -35,6 +35,7 @@ logs/*.log
 # Data directories (runtime or large files)
 # ------------------------------------------------------------------------------
 data/stage02_raw/
+data/stage02_cleaned/
 data/stage03_intermediate/
 data/stage04_processed/
 data/stage05_reports/
@@ -42,11 +43,6 @@ data/stage05_reports/
 # Keep Stage 01 schema tracked
 !data/stage01_schema/schema.json
 !data/stage01_schema/sample_rows.csv
-
-# Keep empty directories tracked via .gitkeep
-!data/stage04_processed/.gitkeep
-!data/stage05_reports/.gitkeep
-!scripts/diagnostics/stage04/.gitkeep
 
 # ------------------------------------------------------------------------------
 # VSCode settings
@@ -76,9 +72,11 @@ Thumbs.db
 # ------------------------------------------------------------------------------
 # Diagrams (keep PNGs tracked)
 # ------------------------------------------------------------------------------
-diagrams/*.png
 diagrams/*.svg
 diagrams/*.jpg
+
+# Keep PNGs tracked
+!diagrams/*.png
 
 # ------------------------------------------------------------------------------
 # Pipeline configs (keep tracked)

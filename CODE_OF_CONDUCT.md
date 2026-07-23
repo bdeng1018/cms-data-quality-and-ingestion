@@ -57,9 +57,9 @@ This Code of Conduct applies to:
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainer:
 
-**Brian Deng** <br>
-Los Angeles, CA <br>
-<bdeng.data.pipelines@gmail.com>
+Maintainer: **Brian Deng** <br>
+Location: Los Angeles, CA <br>
+Email: <bdeng.data.pipelines@gmail.com>
 
 All complaints will be reviewed and addressed appropriately.
 
