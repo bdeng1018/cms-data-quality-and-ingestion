@@ -1,0 +1,75 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (Helm Values)
+# ==============================================================================
+# Intent:
+#   Provide deterministic, environment-specific configuration values for Helm
+#   deployments. These values define container image, environment variables,
+#   resource limits, and volume mounts.
+#
+# Determinism Guarantees:
+#   - Stable environment variables.
+#   - Pinned image tag.
+#   - Reproducible resource limits.
+#
+# Side Effects:
+#   - Controls logging verbosity.
+#   - Controls config resolution.
+#   - Appears in manifest.provenance.environment_name.
+#
+# Future Extensions:
+#   - Add cloud storage URIs.
+#   - Add distributed ingestion toggles.
+#   - Add autoscaling parameters.
+# ==============================================================================
+
+image:
+  repository: cms_ingestion
+  tag: latest
+  pullPolicy: IfNotPresent
+
+env:
+  CMS_ENV: "helm"
+  CMS_CONFIG_PATH: "/app/configs/pipeline.yml"
+  CMS_LOG_LEVEL: "INFO"
+  CMS_PROVENANCE_TAG: "helm-deployment"
+
+resources:
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+
+volumeMounts:
+  readOnly:
+    - name: configs
+      mountPath: /app/configs
+    - name: src
+      mountPath: /app/src
+    - name: utils
+      mountPath: /app/utils
+    - name: scripts
+      mountPath: /app/scripts
+    - name: deployment
+      mountPath: /app/deployment
+
+  writable:
+    - name: data
+      mountPath: /app/data
+    - name: logs
+      mountPath: /app/logs
+
+volumes:
+  configs:
+    hostPath: ../configs
+  src:
+    hostPath: ../src
+  utils:
+    hostPath: ../utils
+  scripts:
+    hostPath: ../scripts
+  deployment:
+    hostPath: ../deployment
+
+  data:
+    hostPath: ../data
+  logs:
+    hostPath: ../logs

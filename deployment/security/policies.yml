@@ -1,0 +1,74 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (Security Policies)
+# ==============================================================================
+# Intent:
+#   Define deterministic security policies for Kubernetes deployments of the CMS
+#   ingestion pipeline. These policies enforce least privilege, restrict network
+#   access, and ensure reproducible container behavior.
+#
+# Determinism Guarantees:
+#   - stable security posture
+#   - pinned capabilities
+#   - reproducible network rules
+#
+# Future Extensions:
+#   - OPA Gatekeeper policies
+#   - Kyverno policies
+#   - container signing enforcement
+# ==============================================================================
+
+apiVersion: v1
+kind: PodSecurityPolicy
+metadata:
+  name: cms-pipeline-psp
+  labels:
+    app: cms-pipeline
+    security: hardened
+
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+
+  runAsUser:
+    rule: MustRunAsNonRoot
+
+  readOnlyRootFilesystem: true
+
+  volumes:
+    - configMap
+    - secret
+    - projected
+    - persistentVolumeClaim
+
+  allowedCapabilities: []
+  requiredDropCapabilities:
+    - ALL
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cms-pipeline-network-policy
+  labels:
+    app: cms-pipeline
+
+spec:
+  podSelector:
+    matchLabels:
+      app: cms-pipeline
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: cms-pipeline
+
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: cms-pipeline

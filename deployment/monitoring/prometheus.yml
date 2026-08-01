@@ -1,0 +1,33 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (Prometheus Config)
+# ==============================================================================
+# Intent:
+#   Provide deterministic monitoring configuration for the CMS ingestion pipeline.
+#   Prometheus scrapes metrics exposed by the pipeline runner, enabling stable
+#   observability across local, docker-compose, K8s, and cloud deployments.
+#
+# Determinism Guarantees:
+#   - Stable scrape intervals.
+#   - Stable job naming.
+#   - Stable target endpoints.
+#
+# Side Effects:
+#   - Collects pipeline metrics.
+#   - Enables Grafana dashboards.
+#
+# Future Extensions:
+#   - Add ingestion latency metrics.
+#   - Add artifact generation metrics.
+#   - Add diagnostics summary metrics.
+# ==============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "cms_pipeline"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets:
+          - "cms-pipeline:8080"

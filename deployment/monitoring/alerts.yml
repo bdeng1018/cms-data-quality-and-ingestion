@@ -1,0 +1,104 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (Prometheus Alert Rules)
+# ==============================================================================
+# Intent:
+#   Define deterministic alerting rules for the CMS ingestion pipeline. These
+#   alerts detect ingestion failures, latency regressions, diagnostics failures,
+#   and artifact generation issues across all environments.
+#
+# Determinism Guarantees:
+#   - stable alert names
+#   - stable thresholds
+#   - stable labels and annotations
+#
+# Side Effects:
+#   - triggers alerts in Prometheus + Alertmanager
+#   - exposes pipeline health to monitoring dashboards
+#
+# Future Extensions:
+#   - add SLA-based latency alerts
+#   - add distributed ingestion alerts
+#   - add cloud storage ingestion alerts
+# ==============================================================================
+
+groups:
+  - name: cms-pipeline-alerts
+    interval: 15s
+
+    rules:
+      # ========================================================================
+      # Pipeline Runtime Alert
+      # ========================================================================
+      # Intent:
+      #   Detect when pipeline runtime exceeds deterministic thresholds.
+      #
+      # Determinism:
+      #   - threshold pinned at 300s (5 minutes)
+      # ========================================================================
+      - alert: CMSPipelineRuntimeHigh
+        expr: cms_pipeline_runtime_seconds > 300
+        for: 2m
+        labels:
+          severity: warning
+          pipeline: cms-ingestion
+        annotations:
+          summary: "Pipeline runtime exceeded deterministic threshold"
+          description: "cms_pipeline_runtime_seconds > 300 for 2 minutes"
+
+      # ========================================================================
+      # Artifact Generation Alert
+      # ========================================================================
+      # Intent:
+      #   Detect when artifact generation fails or produces fewer artifacts than
+      #   deterministic expectations.
+      #
+      # Determinism:
+      #   - threshold pinned at < 1 artifact
+      # ========================================================================
+      - alert: CMSArtifactGenerationLow
+        expr: cms_pipeline_artifacts_generated_total < 1
+        for: 1m
+        labels:
+          severity: critical
+          pipeline: cms-ingestion
+        annotations:
+          summary: "Artifact generation is below deterministic threshold"
+          description: "cms_pipeline_artifacts_generated_total < 1 for 1 minute"
+
+      # ========================================================================
+      # Diagnostics Failure Alert
+      # ========================================================================
+      # Intent:
+      #   Detect when diagnostics checks fail or regress.
+      #
+      # Determinism:
+      #   - threshold pinned at < 1 diagnostics passed
+      # ========================================================================
+      - alert: CMSDiagnosticsFailed
+        expr: cms_pipeline_diagnostics_passed_total < 1
+        for: 1m
+        labels:
+          severity: critical
+          pipeline: cms-ingestion
+        annotations:
+          summary: "Diagnostics checks failed"
+          description: "cms_pipeline_diagnostics_passed_total < 1 for 1 minute"
+
+      # ========================================================================
+      # Log Volume Alert
+      # ========================================================================
+      # Intent:
+      #   Detect when log volume drops unexpectedly, indicating pipeline stalls.
+      #
+      # Determinism:
+      #   - threshold pinned at < 10 log lines per minute
+      # ========================================================================
+      - alert: CMSLogVolumeLow
+        expr: rate(cms_pipeline_log_lines_total[1m]) < 10
+        for: 2m
+        labels:
+          severity: warning
+          pipeline: cms-ingestion
+        annotations:
+          summary: "Log volume is below deterministic threshold"
+          description: "rate(cms_pipeline_log_lines_total[1m]) < 10 for 2 minutes"

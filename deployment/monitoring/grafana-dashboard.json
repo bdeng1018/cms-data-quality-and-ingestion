@@ -1,0 +1,68 @@
+{
+    "dashboard": {
+        "id": null,
+        "title": "CMS Ingestion Pipeline — Deterministic Monitoring",
+        "tags": [
+            "cms",
+            "ingestion",
+            "deterministic",
+            "pipeline"
+        ],
+        "style": "dark",
+        "annotations": {
+            "list": [
+                {
+                    "name": "Provenance",
+                    "type": "dashboard",
+                    "builtIn": 1,
+                    "enable": true,
+                    "iconColor": "rgba(255, 96, 96, 1)",
+                    "query": "provenance:*"
+                }
+            ]
+        },
+        "panels": [
+            {
+                "type": "graph",
+                "title": "Pipeline Runtime Duration",
+                "targets": [
+                    {
+                        "expr": "cms_pipeline_runtime_seconds",
+                        "legendFormat": "runtime"
+                    }
+                ],
+                "datasource": "Prometheus",
+                "lines": true,
+                "linewidth": 2
+            },
+            {
+                "type": "graph",
+                "title": "Artifacts Generated",
+                "targets": [
+                    {
+                        "expr": "cms_pipeline_artifacts_generated_total",
+                        "legendFormat": "artifacts"
+                    }
+                ],
+                "datasource": "Prometheus",
+                "lines": true,
+                "linewidth": 2
+            },
+            {
+                "type": "graph",
+                "title": "Diagnostics Checks Passed",
+                "targets": [
+                    {
+                        "expr": "cms_pipeline_diagnostics_passed_total",
+                        "legendFormat": "diagnostics_passed"
+                    }
+                ],
+                "datasource": "Prometheus",
+                "lines": true,
+                "linewidth": 2
+            }
+        ],
+        "schemaVersion": 36,
+        "version": 1
+    }
+}
