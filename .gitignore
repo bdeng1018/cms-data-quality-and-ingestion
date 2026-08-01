@@ -53,6 +53,7 @@ data/stage05_reports/
 # OS / editor junk
 # ------------------------------------------------------------------------------
 .DS_Store
+diagrams/.DS_Store
 Thumbs.db
 *.swp
 *.swo
@@ -94,3 +95,31 @@ diagrams/*.jpg
 # ------------------------------------------------------------------------------
 *.parquet
 *.csv
+
+# ------------------------------------------------------------------------------
+# Deployment: Terraform
+# ------------------------------------------------------------------------------
+deployment/terraform/.terraform/
+deployment/terraform/.terraform.lock.hcl
+deployment/terraform/terraform.tfstate
+deployment/terraform/terraform.tfstate.backup
+
+# ------------------------------------------------------------------------------
+# Deployment: Helm
+# ------------------------------------------------------------------------------
+deployment/helm/.helm/
+deployment/helm/.helmfile/
+deployment/helm/charts/
+
+# ------------------------------------------------------------------------------
+# Deployment: Docker build artifacts
+# ------------------------------------------------------------------------------
+*.tar
+*.img
+*.squashfs
+
+# ------------------------------------------------------------------------------
+# Deployment: CI/CD runtime artifacts
+# ------------------------------------------------------------------------------
+.github/workflows/*.tmp
+coverage.xml

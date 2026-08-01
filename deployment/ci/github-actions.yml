@@ -1,0 +1,101 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (GitHub Actions CI/CD)
+# ==============================================================================
+# Intent:
+#   Provide a deterministic CI/CD pipeline for the CMS ingestion repo. This
+#   workflow enforces reproducible builds, tests, manifest validation, and
+#   optional Docker image publishing.
+#
+# Determinism Guarantees:
+#   - Pinned Python version.
+#   - Pinned dependency installation via uv.
+#   - Stable job names and steps.
+#
+# Side Effects:
+#   - Runs tests.
+#   - Validates manifests + artifacts.
+#   - Builds Docker image.
+#   - Optionally pushes image to registry.
+# ==============================================================================
+
+name: cms-ingestion-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-validate:
+    runs-on: ubuntu-latest
+
+    # ==========================================================================
+    # Checkout + Python Setup
+    # ==========================================================================
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ========================================================================
+      # Install Dependencies (Deterministic)
+      # ========================================================================
+      - name: Install uv and sync dependencies
+        run: |
+          pip install --upgrade pip
+          pip install uv
+          uv sync --frozen
+
+      # ========================================================================
+      # Run Tests
+      # ========================================================================
+      - name: Run tests
+        run: |
+          make test
+
+      # ========================================================================
+      # Validate Manifest
+      # ========================================================================
+      - name: Validate manifest
+        run: |
+          python scripts/diagnostics/stage05/check_pipeline.py
+
+      # ========================================================================
+      # Validate Artifact Registry
+      # ========================================================================
+      - name: Validate artifact registry
+        run: |
+          python scripts/diagnostics/stage04/check_reports.py
+
+      # ========================================================================
+      # Build Docker Image
+      # ========================================================================
+      - name: Build Docker image
+        run: |
+          docker build -f deployment/Dockerfile -t cms_ingestion:ci .
+
+  # ============================================================================
+  # Optional Publish Job
+  # ============================================================================
+  publish:
+    needs: build-test-validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker registry credentials
+        # Configure with secrets.DOCKER_USERNAME / secrets.DOCKER_PASSWORD
+        run: echo "Configure registry login here"
+
+      - name: Build and push image
+        run: |
+          docker build -f deployment/Dockerfile -t cms_ingestion:latest .
+          # docker push your-registry/cms_ingestion:latest

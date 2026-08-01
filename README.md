@@ -1,24 +1,22 @@
-# 📘 cms-data-quality-and-ingestion (Branch 1 MVP)
+# 📘 cms-data-quality-and-ingestion — Branch 1 (Deterministic Pipeline)
 
-A lightweight, reproducible, and scalable data‑engineering pipeline for ingesting, validating, and profiling large CMS public datasets.
-
-Branch 1 (MVP) focuses on **high‑volume ingestion**, **schema‑driven validation**, **baseline data-quality profiling**, and **structured reporting** for CMS POS and QIES before expanding to full provider/facility enrichment.
+A lightweight, reproducible, and scalable data‑engineering pipeline for ingesting, validating, profiling, and reporting on large **CMS POS** and **CMS QIES** public datasets.
+Branch 1 delivers a **fully deterministic**, **contract‑driven**, multi‑stage workflow (Stages 01–05) with structured artifacts, diagnostics, and deployment guarantees.
 
 ---
 
 ## 🚀 Overview
 
-This repository contains the first milestone of a multi‑stage CMS ingestion and quality pipeline.
-Branch 1 establishes a clean, testable workflow that:
+Branch 1 implements a clean, testable workflow that:
 
 - ingests large CMS datasets (POS, QIES)
-- validates schema structure (Stage 01)
-- loads raw data into canonical structures (Stage 02)
-- performs baseline data‑quality checks (Stage 03)
-- generates structured reporting artifacts (Stage 04)
-- orchestrates full pipeline execution (Stage 05)
+- validates schema structure (Stage 01)
+- loads raw data into canonical structures (Stage 02)
+- performs baseline data‑quality checks (Stage 03)
+- generates structured reporting artifacts (Stage 04)
+- orchestrates full pipeline execution (Stage 05)
 
-Future branches will introduce transformation layers, CCN/NPI validation, facility alignment, enrichment logic, and synthetic‑claims integration.
+Future branches introduce transformation layers, CCN/NPI alignment, facility enrichment, synthetic claims, and AI/RAG/agentic inference.
 
 ---
 
@@ -79,25 +77,25 @@ cms-data-quality-and-ingestion/
 
 ---
 
-## 🏥 Dataset (MVP Scope)
+## 🏥 Dataset Scope (POS + QIES)
 
-Branch 1 ingests **two** CMS datasets:
+Branch 1 ingests **two** CMS public datasets:
 
 ### POS (Provider of Services Master File)
 
 - Large, sparse, provider‑type‑specific fields
-- Many columns structurally null (expected)
+- Structurally null columns (expected)
 
 ### QIES (Quality Improvement and Evaluation System)
 
 - Smaller, more structured
 - Facility certification metadata
 
-These datasets are large, messy, and ideal for demonstrating real ingestion, validation, and quality-profiling workflows.
+These datasets are ideal for demonstrating real ingestion, validation, and profiling workflows.
 
 ---
 
-## 🔧 MVP Features
+## 🔧 Pipeline Features (Stages 01–05)
 
 - **Raw ingestion** — load POS/QIES files into canonical DataFrames
 - **Schema validation** — enforce structural consistency
@@ -119,13 +117,14 @@ Stage 03 produces lightweight quality metrics:
 - null counts
 - duplicate counts
 - schema drift indicators
-- warnings for high-null columns or duplicate keys
+- sparsity warnings
+- missing-key behavior
 
 Stage 04 transforms these into structured reporting artifacts.
 
 ---
 
-## 🛠️ How to Run the Pipeline (MVP)
+## 🛠️ Running the Pipeline
 
 ### 1. Create environment (optional)
 
@@ -170,7 +169,7 @@ make diag-qies FILE=/path/to/qies.csv
 make test
 ```
 
-### 7. Remove cache
+### 7. Cleanup: remove cache
 
 ```bash
 make clean-cache
@@ -220,43 +219,74 @@ make clean-cache
 
 ---
 
-## Branch 1 Status
+## 🏗 Deployment Layer (Branch 1)
 
-Branch 1 (Deterministic Pipeline) is nearly complete:
+Branch 1 includes a full deployment specification:
 
-- Stages 01–05 implemented
-- Diagrams added (pipeline + schema)
-- Diagnostics and Makefile orchestration finalized
+- deterministic Docker image
+- CI/CD pipeline
+- provenance validation
+- SBOM validation
+- artifact registry
+- drift detection
+- governance + compliance
+- security hardening
+- operational playbooks
 
-Stage 06 is being created to design infrastructure for non-deterministic AI systems.
+Deployment documentation lives under `deployment/`.
 
-Branch 2 (AI Inference) will depend on Stage 06.
+---
+
+## 🔮 Stage 06 Preview (AI Infrastructure Only)
+
+Stage 06 introduces **AI infrastructure only** (no inference):
+
+- deterministic embeddings
+- vector store
+- retrieval scaffolding
+- agent loop foundation
+- AI‑augmented quality checks
+- future API‑ready insights
+
+Full AI/RAG/agentic inference arrives in **Branch 2**.
 
 ---
 
 ## 📈 Roadmap
 
-- transformation layer (facility normalization, address cleaning)
-- validation layer (schema enforcement + integrity checks)
-- provider/facility enrichment
-- synthetic claims integration
+- transformation + enrichment
+- CCN/NPI alignment
+- facility normalization
+- synthetic claims
 - dashboard + metrics
-
-Stage 06 scaffolding will be added in Branch 1; full AI/RAG/agentic workflows arrive in Branch 2.
+- Stage 06 AI infrastructure
+- Branch 2 AI inference
 
 ---
 
 ## 🧭 Notes
 
 This README is intentionally concise — it will evolve as the pipeline grows.
-Branch 1 prioritizes **clarity, reproducibility, and correctness** over completeness.
+Branch 1 prioritizes **clarity, reproducibility, and correctness** over completeness.
+
+### Branch 1 Status
+
+Branch 1 (Deterministic Pipeline) is nearly complete:
+
+- Stages 01–05 implemented
+- diagnostics + Makefile orchestration finalized
+- pipeline + schema diagrams added
+- deployment layer added (provenance, SBOM, drift, contracts)
+
+Stage 06 scaffolding is in progress.
+Branch 2 (AI inference) will build on Stage 06.
 
 ---
 
 ## 👤 Author & Maintainer
 
-**Brian Deng** <br>
-Los Angeles, CA <br>
+**Brian Deng**  
+Los Angeles, CA  
 <bdeng.data.pipelines@gmail.com>
 
 ### Focus Areas

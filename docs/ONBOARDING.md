@@ -1,6 +1,6 @@
 # Developer Onboarding — CMS Data Quality & Ingestion Pipeline
 
-Welcome to the CMS Data Quality & Ingestion Pipeline.  
+Welcome to the CMS Data Quality & Ingestion Pipeline.
 This document provides everything you need to set up your environment, run the pipeline, debug issues, and contribute code.
 
 ---

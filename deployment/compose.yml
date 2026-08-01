@@ -1,0 +1,129 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (Deterministic Local Execution)
+# ==============================================================================
+# Intent:
+#   Provide a reproducible, contract-driven execution environment that mirrors CI/CD
+#   and future container orchestration (K8s/Helm). Ensures deterministic behavior,
+#   isolated artifacts, stable logs, and zero mutation of pipeline source code.
+#
+# Determinism Guarantees:
+#   - Identical outputs given identical inputs.
+#   - Read-only mounts for code/configs prevent accidental mutation.
+#   - Writable mounts only for data + logs.
+#   - Resource limits ensure reproducible performance characteristics.
+#
+# Side Effects:
+#   - Writes artifacts to /app/data.
+#   - Writes logs to /app/logs.
+#   - Produces manifest + artifact registry in Stage 05.
+# ==============================================================================
+
+version: "3.9"
+
+services:
+  cms_pipeline:
+    container_name: cms_pipeline
+
+    # ==========================================================================
+    # Build Configuration
+    # ==========================================================================
+    # Intent:
+    #   Build the deterministic Docker image defined in deployment/Dockerfile.
+    #   Ensures reproducible environment parity with CI/CD.
+    #
+    # Determinism:
+    #   - No dynamic dependency resolution.
+    #   - Build context pinned to repository root.
+    # ==========================================================================
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+
+    # ==========================================================================
+    # Environment Variables
+    # ==========================================================================
+    # Intent:
+    #   Define runtime behavior and provenance fields recorded in manifest.json.
+    #
+    # Determinism:
+    #   - CMS_ENV maps directly to manifest.provenance.executor.
+    #   - CMS_CONFIG_PATH ensures stable config resolution.
+    # ==========================================================================
+    environment:
+      CMS_ENV: "docker"
+      CMS_CONFIG_PATH: "/app/configs/pipeline.yml"
+      CMS_LOG_LEVEL: "INFO"
+
+    # ==========================================================================
+    # Volume Mounts (Isolation Contract)
+    # ==========================================================================
+    # Intent:
+    #   Enforce strict isolation between pipeline code (read-only) and artifacts/logs
+    #   (read-write). This is a principal-level reproducibility pattern.
+    #
+    # Determinism:
+    #   - Code/configs/scripts/deployment mounted read-only → no mutation.
+    #   - Data/logs mounted read-write → artifact isolation.
+    #
+    # Side Effects:
+    #   - Artifacts written to /app/data.
+    #   - Logs written to /app/logs.
+    # ==========================================================================
+    volumes:
+      # Read-only mounts (pipeline code + configs)
+      - ../configs:/app/configs:ro
+      - ../src:/app/src:ro
+      - ../utils:/app/utils:ro
+      - ../scripts:/app/scripts:ro
+      - ../deployment:/app/deployment:ro
+
+      # Writable mounts (artifacts + logs)
+      - ../data:/app/data
+      - ../logs:/app/logs
+
+    # ==========================================================================
+    # Entry Point
+    # ==========================================================================
+    # Intent:
+    #   Provide deterministic pipeline execution via Stage 05 runner.
+    #
+    # Future Extension:
+    #   Replace with `cms run` after CLI implementation.
+    # ==========================================================================
+    entrypoint: ["python", "-m", "src.stage05_pipeline_runner.run_pipeline"]
+
+    # ==========================================================================
+    # Logging Behavior
+    # ==========================================================================
+    # Intent:
+    #   Ensure stable log formatting and interactive output when needed.
+    #
+    # Determinism:
+    #   - TTY ensures consistent formatting across environments.
+    # ==========================================================================
+    tty: true
+
+    # ==========================================================================
+    # Resource Limits
+    # ==========================================================================
+    # Intent:
+    #   Provide reproducible performance characteristics and prevent nondeterministic
+    #   behavior due to host-level resource variability.
+    #
+    # Determinism:
+    #   - CPU + memory limits stabilize runtime duration and ordering.
+    # ==========================================================================
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "4G"
+
+    # ==========================================================================
+    # Future Extensions
+    # ==========================================================================
+    # - healthcheck: ensure container health for long-running ingestion jobs
+    # - restart policies: for production ingestion environments
+    # - multi-service support: Branch 3 AI/RAG indexing + metadata search
+    # - network definitions: for distributed ingestion or cloud storage integration
+    # ==========================================================================

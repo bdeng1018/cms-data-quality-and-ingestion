@@ -1,0 +1,35 @@
+# ==============================================================================
+# CMS Data Quality & Ingestion Pipeline (K8s Service Manifest)
+# ==============================================================================
+# Intent:
+#   Define a Kubernetes Service for exposing the CMS ingestion pipeline container.
+#   While the pipeline is batch-oriented, a Service enables future extensions such
+#   as metrics endpoints, health checks, or API-based ingestion triggers.
+#
+# Determinism Guarantees:
+#   - Stable selector labels.
+#   - Stable port definitions.
+#
+# Future Extensions:
+#   - Add metrics endpoint.
+#   - Add healthcheck endpoint.
+#   - Add RAG/AI indexing API.
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cms-pipeline-service
+  labels:
+    app: cms-pipeline
+
+spec:
+  selector:
+    app: cms-pipeline
+
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+
+  type: ClusterIP

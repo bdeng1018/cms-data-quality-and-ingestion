@@ -1,7 +1,9 @@
 # Architecture Overview - CMS Data Quality & Ingestion Pipeline
 
-This document describes the high‑level architecture of the CMS Data Quality & Ingestion Pipeline.  
+This document describes the high‑level architecture of the CMS Data Quality & Ingestion Pipeline.
 It explains how the system is structured, how each stage interacts, and how data flows from raw ingestion to final reporting.
+
+This document describes both the pipeline architecture and the deployment architecture that supports runtime execution, security, observability, and infrastructure provisioning.
 
 ---
 
@@ -18,6 +20,7 @@ The pipeline is designed to:
 - Support diagnostics at every stage
 - Maintain strict separation between code, configs, data, and diagnostics
 
+The architecture also includes a deterministic deployment layer providing containerization, orchestration, security, observability, and infrastructure provisioning.
 The architecture emphasizes **clarity**, **traceability**, and **reproducibility**.
 
 ---
@@ -120,6 +123,7 @@ data/
 logs/
 tests/
 docs/
+deployment/
 .vscode/
 Makefile
 ```
@@ -131,8 +135,11 @@ This structure enforces strict separation of:
 - **Configuration** (`configs/`)
 - **Artifacts** (`data/`)
 - **Developer documentation** (`docs/`)
+- **Deployment** (`deployment/`)
 - **Tooling** (`.vscode/`)
 - **Build orchestration** (`Makefile`)
+
+The `deployment/` directory defines the runtime architecture, including CI/CD, environment configuration, containerization, Kubernetes manifests, Helm packaging, Terraform infrastructure, logging, monitoring, and security.
 
 ---
 
@@ -259,12 +266,127 @@ The architecture supports:
 - Adding new ingestion sources
 - Adding new reporting formats
 - Adding new pipeline configurations
+- Extending deployment subsystems (Helm, k8s, Terraform, monitoring, security)
 
 Each stage is isolated, making extension straightforward.
 
 ---
 
-## 11. Contact
+## 11. Deployment Architecture
+
+The CMS Data Quality & Ingestion Pipeline includes a full deployment layer
+responsible for runtime execution, containerization, orchestration, security,
+observability, and infrastructure provisioning.
+
+Deployment supports multiple environments:
+
+- local development
+- docker-compose
+- Kubernetes (k8s)
+- Helm-based packaging
+- Terraform-managed infrastructure
+
+Deployment behavior is defined in:
+
+- `deployment/DEPLOYMENT.md` — runtime architecture
+- `deployment/OPERATIONS.md` — operational rules
+- `deployment/CONTRACTS.md` — deterministic deployment contracts
+
+The deployment layer ensures reproducible execution across all environments.
+
+---
+
+## 12. Provenance Architecture
+
+The pipeline maintains deterministic provenance across all layers. Provenance
+tracks version fields that describe the state of the system at every run:
+
+```text
+pipeline_version
+schema_version
+artifact_version
+manifest_version
+deployment_version
+sbom_version
+```
+
+These fields are written into:
+
+- manifest.provenance
+- SBOM metadata
+- release notes
+- audit logs
+
+Provenance ensures traceability, reproducibility, and compliance across pipeline
+execution, deployment changes, and artifact generation.
+
+Reference documents:
+
+- `deployment/MANIFEST_SPEC.md`
+- `deployment/SBOM.md`
+- `deployment/VERSIONING.md`
+
+---
+
+## 13. Governance & Compliance Architecture
+
+The pipeline includes a deterministic control plane governing:
+
+- change approval
+- compliance enforcement
+- risk modeling
+- audit logging
+- access control
+
+These rules ensure the system behaves consistently and predictably across all
+environments.
+
+Control plane documents:
+
+- `deployment/GOVERNANCE.md`
+- `deployment/COMPLIANCE.md`
+- `deployment/RISK_MODEL.md`
+- `deployment/AUDIT_LOGS.md`
+- `deployment/ACCESS_CONTROL.md`
+
+Governance and compliance integrate with CI/CD, provenance, and deployment
+validation.
+
+---
+
+## 14. Deployment Directory Structure
+
+The deployment layer is organized into subsystem directories:
+
+```text
+deployment/
+  ci/            # CI/CD workflows and validation
+  env/           # environment variable definitions
+  helm/          # Helm chart and values
+  k8s/           # Kubernetes manifests
+  terraform/     # infrastructure provisioning
+  logging/       # logging configuration
+  monitoring/    # metrics, alerts, dashboards
+  security/      # hardening and security policies
+```
+
+Each subsystem maps to a specific part of the runtime architecture:
+
+- **ci/** — GitHub Actions workflows, validation rules  
+- **env/** — deterministic environment configuration  
+- **helm/** — packaged deployment for Kubernetes  
+- **k8s/** — raw manifests for direct cluster deployment  
+- **terraform/** — infrastructure provisioning and drift detection  
+- **logging/** — Fluent Bit configuration and log routing  
+- **monitoring/** — Prometheus, Grafana, SLO/SLI contracts  
+- **security/** — hardening rules, network policies, RBAC alignment
+
+This structure ensures deployment is modular, reproducible, and fully aligned
+with the pipeline’s architecture.
+
+---
+
+## 15. Contact
 
 Maintainer: Brian Deng <br>
 Email: <bdeng.data.pipelines@gmail.com> <br>

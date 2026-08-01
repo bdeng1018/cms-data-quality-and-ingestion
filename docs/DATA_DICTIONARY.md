@@ -14,7 +14,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 1. Facility Information
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `facility_id` | string | Unique identifier for the facility (POS/QIES) | Normalized to uppercase; no spaces |
 | `facility_name` | string | Official facility name | Trimmed, de‑duplicated |
 | `facility_type` | string | Facility classification (e.g., SNF, HHA, Hospice) | Derived from POS |
@@ -30,7 +30,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 2. Provider & Certification
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `provider_number` | string | CMS provider number | Zero‑padded to 6 digits |
 | `ccn` | string | CMS Certification Number | Alias of provider_number if present |
 | `npi` | string | National Provider Identifier | 10‑digit numeric; may be null |
@@ -43,7 +43,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 3. Operational Status
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `operational_status` | string | Active / Closed / Pending | Normalized |
 | `status_effective_date` | date | Date status became effective | ISO‑8601 format |
 | `last_updated` | date | Last update timestamp from CMS source | ISO‑8601 format |
@@ -53,7 +53,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 4. POS‑Specific Fields
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `pos_region` | string | CMS region code | Derived from POS |
 | `pos_subregion` | string | Sub‑region classification | Optional |
 | `pos_source_file` | string | Original POS file name | Useful for traceability |
@@ -63,7 +63,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 5. QIES‑Specific Fields
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `qies_provider_category` | string | QIES provider category | Normalized |
 | `qies_status_code` | string | QIES operational status code | Mapped to operational_status |
 | `qies_source_file` | string | Original QIES file name | Useful for traceability |
@@ -73,7 +73,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 6. Geocoding & Location Normalization
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `latitude` | float | Facility latitude | Derived from geocoding |
 | `longitude` | float | Facility longitude | Derived from geocoding |
 | `geocode_accuracy` | string | Rooftop / Range / Approximate | Optional |
@@ -84,7 +84,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 7. Cleaning & Normalization Flags
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `address_cleaned` | boolean | Whether address was normalized | True/False |
 | `name_cleaned` | boolean | Whether facility name was normalized | True/False |
 | `duplicate_flag` | boolean | Whether record was identified as a duplicate | Used in Stage 03 |
@@ -95,7 +95,7 @@ Stage 01 regenerates `schema.json` from this dataset, and all downstream stages 
 ## 8. Quality & Validation Fields (Stage 03 Inputs)
 
 | Column | Type | Description | Notes |
-|--------|------|-------------|-------|
+| -------- | ------ | ------------- | ------- |
 | `schema_valid` | boolean | Whether record conforms to schema.json | Stage 03 input |
 | `quality_score` | float | Composite quality score | Stage 03 output |
 | `quality_flags` | string | Comma‑separated list of quality issues | Stage 03 output |
@@ -127,6 +127,6 @@ If new fields are added or removed, both this file and `schema.json` must be upd
 
 ## 11. Contact
 
-Maintainer: Brian Deng <br>
-Email: <bdeng.data.pipelines@gmail.com> <br>  
+Maintainer: Brian Deng  
+Email: <bdeng.data.pipelines@gmail.com>  
 GitHub: <https://github.com/bdeng1018>
