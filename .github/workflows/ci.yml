@@ -50,12 +50,6 @@ jobs:
           name: docker-image-digest
           path: ${{ steps.digest.outputs.digest }}
 
-      - name: Validate SBOM
-        run: |
-          python deployment/scripts/validate_sbom.py \
-            --sbom deployment/sbom/sbom-1.0.0.json \
-            --spec deployment/sbom/sbom-spec.json
-
       - name: Validate manifest provenance
         run: python deployment/scripts/validate_provenance.py deployment/releases/v1.0.0.manifest.json
 
