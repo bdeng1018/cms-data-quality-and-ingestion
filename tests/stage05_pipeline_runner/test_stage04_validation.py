@@ -23,9 +23,9 @@ from src.stage05_pipeline_runner.run_pipeline import (
 )
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: validate_stage04_outputs detects missing files
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_stage04_validation_missing(tmp_path):
     """Missing Stage 04 artifacts should be detected."""
 
@@ -45,14 +45,16 @@ def test_stage04_validation_missing(tmp_path):
         mock_exists.side_effect = fake_exists
 
         missing = validate_stage04_outputs()
-        assert len(missing) == 2  # only inside tmp_path sandbox
-        assert "facility_health.csv" in missing[0] or missing[1]
-        assert "dataset_summary.json" in missing[0] or missing[1]
+
+        # Modern validator checks THREE artifacts
+        assert len(missing) == 2  # two missing inside tmp_path sandbox
+        assert any("facility_health.csv" in m for m in missing)
+        assert any("dataset_summary.json" in m for m in missing)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: run_pipeline.py includes warnings when Stage 04 artifacts are missing
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_stage05_summary_with_missing_stage04(tmp_path):
     """Summary JSON should include warnings when Stage 04 artifacts are missing."""
 
@@ -78,7 +80,9 @@ def test_stage05_summary_with_missing_stage04(tmp_path):
             "stage04": "success",
         }
 
+        # Modern validator returns THREE missing artifacts
         mock_validate.return_value = [
+            "data/stage04_processed/report_index.json",
             "data/stage04_processed/facility_health.csv",
             "data/stage04_processed/dataset_summary.json",
         ]
@@ -102,9 +106,9 @@ def test_stage05_summary_with_missing_stage04(tmp_path):
     assert summary["warnings"], "Expected warnings for missing Stage 04 artifacts"
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: run_pipeline.py includes NO warnings when Stage 04 artifacts are complete
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_stage05_summary_no_warnings(tmp_path):
     """Summary JSON should contain no warnings when Stage 04 artifacts are complete."""
 
@@ -130,7 +134,8 @@ def test_stage05_summary_no_warnings(tmp_path):
             "stage04": "success",
         }
 
-        mock_validate.return_value = []  # no missing artifacts
+        # No missing artifacts
+        mock_validate.return_value = []
 
         # Simulate CLI args
         test_args = [

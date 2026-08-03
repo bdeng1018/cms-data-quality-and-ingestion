@@ -25,9 +25,9 @@ from unittest.mock import patch
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Helper: create fake upstream artifacts
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def _create_fake_upstream(tmpdir):
     """Create minimal fake Stage 01–04 artifacts for mutation testing."""
 
@@ -65,9 +65,9 @@ def _create_fake_upstream(tmpdir):
     }
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Stage 05 must not mutate upstream artifacts
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_stage05_no_mutation(tmp_path):
     """After Stage 05 runs, upstream artifacts must remain byte‑identical."""
 

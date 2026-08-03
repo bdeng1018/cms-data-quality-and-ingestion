@@ -23,9 +23,9 @@ import yaml
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Stage 05 loads and executes using real pipeline.yml
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_pipeline_yml_integration(tmp_path):
     """Stage 05 must load a real pipeline.yml and write summary JSON."""
 

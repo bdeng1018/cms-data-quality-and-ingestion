@@ -22,9 +22,9 @@ from unittest.mock import patch
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Stage 05 writes ONLY to the specified output path
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_stage05_output_isolated(tmp_path):
     """Stage 05 must not create any files outside the output directory."""
 

@@ -18,9 +18,9 @@ import yaml
 from src.stage05_pipeline_runner.config_loader import load_pipeline_config
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Successful load of valid configuration
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_config_loader_success(tmp_path):
     """Valid pipeline.yml should load correctly."""
 
@@ -33,9 +33,9 @@ def test_config_loader_success(tmp_path):
     assert cfg["stage05"]["output_dir"] == "data/stage05_reports"
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Missing configuration file
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_config_loader_missing_file(tmp_path):
     """Missing config file should raise FileNotFoundError."""
 
@@ -45,9 +45,9 @@ def test_config_loader_missing_file(tmp_path):
         load_pipeline_config(str(missing_path))
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Empty YAML file
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_config_loader_empty_yaml(tmp_path):
     """Empty YAML should raise an exception."""
 
@@ -58,9 +58,9 @@ def test_config_loader_empty_yaml(tmp_path):
         load_pipeline_config(str(cfg_path))
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Missing stage05 section
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_config_loader_missing_stage05(tmp_path):
     """Config missing 'stage05' section should raise an exception."""
 
@@ -71,9 +71,9 @@ def test_config_loader_missing_stage05(tmp_path):
         load_pipeline_config(str(cfg_path))
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Missing stage05.output_dir
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_config_loader_missing_output_dir(tmp_path):
     """Config missing stage05.output_dir should raise an exception."""
 

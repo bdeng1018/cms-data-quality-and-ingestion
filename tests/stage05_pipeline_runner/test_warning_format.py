@@ -21,9 +21,9 @@ from unittest.mock import patch
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Helper: run Stage 05 and return summary JSON
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def _run_stage05(tmp_path, missing_artifacts):
     """Run Stage 05 with mocked orchestrator + config loader + validation."""
 
@@ -63,9 +63,9 @@ def _run_stage05(tmp_path, missing_artifacts):
         return json.load(f)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: warnings list is empty when no issues exist
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_warning_format_empty(tmp_path):
     """Warnings must be empty when Stage 04 validation passes."""
 
@@ -75,9 +75,9 @@ def test_warning_format_empty(tmp_path):
     assert isinstance(summary["warnings"], list)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: warnings list contains readable strings
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_warning_format_nonempty(tmp_path):
     """Warnings must be readable strings referencing missing artifacts."""
 

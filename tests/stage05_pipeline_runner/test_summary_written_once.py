@@ -18,9 +18,9 @@ from unittest.mock import mock_open, patch
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Helper: run Stage 05 with mocked orchestrator + config loader
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def _run_stage05(tmp_path):
     """Run Stage 05 with mocks and return output path."""
 
@@ -59,9 +59,9 @@ def _run_stage05(tmp_path):
     return output_path
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Summary file is written exactly once
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_summary_written_once(tmp_path):
     """Summary JSON must be written exactly once."""
 
@@ -104,7 +104,6 @@ def test_summary_written_once(tmp_path):
 
     # Validate exactly one write call
     write_calls = [c for c in m.mock_calls if c[0] == "().write"]
-
     assert len(write_calls) == 1, f"Expected exactly one write, got {len(write_calls)}"
 
     # Validate file exists

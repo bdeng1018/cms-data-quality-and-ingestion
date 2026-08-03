@@ -21,9 +21,9 @@ from unittest.mock import call, patch
 from src.stage05_pipeline_runner.orchestrator import run_all_stages
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: subprocess arguments match exact contract
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_orchestrator_subprocess_arguments():
     """Orchestrator must call each stage with exact deterministic arguments."""
 

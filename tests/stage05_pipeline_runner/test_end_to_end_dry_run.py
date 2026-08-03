@@ -24,9 +24,9 @@ from unittest.mock import patch
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Full end‑to‑end dry‑run
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_end_to_end_dry_run(tmp_path):
     """Stage 05 must run end‑to‑end with all components mocked."""
 

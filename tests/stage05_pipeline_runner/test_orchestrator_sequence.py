@@ -19,9 +19,9 @@ from unittest.mock import call, patch
 from src.stage05_pipeline_runner.orchestrator import run_all_stages
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Successful execution sequence
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_orchestrator_sequence_success():
     """Stages should run in correct order and return all 'success'."""
 
@@ -39,22 +39,20 @@ def test_orchestrator_sequence_success():
             "stage04": "success",
         }
 
-        # Validate ordering of subprocess calls
+        # Validate ordering of subprocess calls (module-based execution)
         expected_calls = [
-            call(
-                ["python", "src/stage01_schema_definition/schema_loader.py"], check=True
-            ),
-            call(["python", "src/stage02_raw_ingestion/run_ingestion.py"], check=True),
-            call(["python", "src/stage03_data_quality/run_quality.py"], check=True),
-            call(["python", "src/stage04_reporting/run_reporting.py"], check=True),
+            call(["python", "-m", "src.stage01_schema_definition.schema_loader"], check=True),
+            call(["python", "-m", "src.stage02_raw_ingestion.run_ingestion"], check=True),
+            call(["python", "-m", "src.stage03_data_quality.run_quality"], check=True),
+            call(["python", "-m", "src.stage04_reporting.run_reporting"], check=True),
         ]
 
         mock_run.assert_has_calls(expected_calls)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Fail-fast behavior
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_orchestrator_sequence_fail_fast():
     """If Stage 01 fails, later stages must not run."""
 

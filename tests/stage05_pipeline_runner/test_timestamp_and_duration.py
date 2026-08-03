@@ -21,9 +21,9 @@ from unittest.mock import patch
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Helper: run Stage 05 and return summary JSON
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def _run_stage05(tmp_path, stage_results):
     """Run Stage 05 with mocked orchestrator + config loader."""
 
@@ -55,9 +55,9 @@ def _run_stage05(tmp_path, stage_results):
         return json.load(f)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Test: Timestamp + duration fields are valid
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_timestamp_and_duration(tmp_path):
     """Summary JSON must contain valid timestamps and duration."""
 
