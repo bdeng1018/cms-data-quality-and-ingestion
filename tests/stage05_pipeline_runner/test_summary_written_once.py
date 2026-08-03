@@ -79,7 +79,7 @@ def test_summary_written_once(tmp_path):
     ) as mock_orch, patch(
         "src.stage05_pipeline_runner.run_pipeline.validate_stage04_outputs"
     ) as mock_validate, patch(
-        "builtins.open", m
+        "pathlib.Path.open", m   # <-- CRITICAL FIX
     ):
 
         mock_cfg.return_value = {"stage05": {"output_dir": str(output_dir)}}
