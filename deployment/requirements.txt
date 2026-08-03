@@ -1,0 +1,51 @@
+# ==============================================================================
+# CMS POS/QIES Ingestion + Quality + Reporting Pipeline
+# Python dependency contract for containerized execution
+# ==============================================================================
+# Intent:
+#   Provide a deterministic, pip‑installable dependency set for the CMS ingestion
+#   pipeline when running inside Docker. This file mirrors the conda-based
+#   environment.yml used for local development, but excludes conda-only metadata.
+#
+# Determinism Guarantees:
+#   - Pinned Python package versions (major/minor).
+#   - No optional or dev-only dependencies beyond what the pipeline requires.
+#   - Fully compatible with python:3.11-slim base image.
+#
+# Notes:
+#   - This file is for *container execution only*.
+#   - Local development continues to use environment.yml (conda).
+#   - Future migration: pyproject.toml + uv.lock for frozen dependency graphs.
+# ==============================================================================
+
+
+# ==============================================================================
+# Core Python Runtime
+# ==============================================================================
+# Python 3.11 is provided by the base image (python:3.11-slim).
+# No runtime package needed here.
+
+
+# ==============================================================================
+# Developer Tooling (formatting, linting, testing)
+# Included because pipeline code may import tooling modules or rely on them.
+# ==============================================================================
+black==24.*
+isort==5.*
+ruff==0.*
+pytest==8.*
+
+
+# ==============================================================================
+# Data Handling + File Formats
+# Stage 02 ingestion, Stage 03 profiling, Stage 04 reporting
+# ==============================================================================
+pandas==2.*
+pyarrow==16.*
+requests==2.*
+
+
+# ==============================================================================
+# YAML + Configuration Parsing (Stage 05 runner)
+# ==============================================================================
+PyYAML==6.*

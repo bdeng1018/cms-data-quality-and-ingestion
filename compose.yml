@@ -36,7 +36,7 @@ services:
     #   - Build context pinned to repository root.
     # ==========================================================================
     build:
-      context: ..
+      context: .
       dockerfile: deployment/Dockerfile
 
     # ==========================================================================
@@ -71,15 +71,15 @@ services:
     # ==========================================================================
     volumes:
       # Read-only mounts (pipeline code + configs)
-      - ../configs:/app/configs:ro
-      - ../src:/app/src:ro
-      - ../utils:/app/utils:ro
-      - ../scripts:/app/scripts:ro
-      - ../deployment:/app/deployment:ro
+      - ./configs:/app/configs:ro
+      - ./src:/app/src:ro
+      - ./utils:/app/utils:ro
+      - ./scripts:/app/scripts:ro
+      - ./deployment:/app/deployment:ro
 
       # Writable mounts (artifacts + logs)
-      - ../data:/app/data
-      - ../logs:/app/logs
+      - ./data:/app/data
+      - ./logs:/app/logs
 
     # ==========================================================================
     # Entry Point

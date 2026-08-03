@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from stage03_data_quality.quality_engine import run_stage03_quality
-from stage03_data_quality.quality_writer import (
+from src.stage03_data_quality.quality_engine import run_stage03_quality
+from src.stage03_data_quality.quality_writer import (
     write_column_profiles,
     write_facility_metrics,
     write_quality_summary,

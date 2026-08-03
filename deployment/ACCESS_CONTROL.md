@@ -1,4 +1,3 @@
-
 # CMS Data Quality & Ingestion Pipeline — Access Control Contract
 
 ## Documentation Contract
@@ -70,10 +69,10 @@ Each role has pinned permissions and deterministic boundaries.
 
 ### **Deployment Engineer**
 
-- modify Dockerfile  
-- modify Compose  
-- modify Helm  
-- modify Terraform  
+- modify `deployment/Dockerfile`  
+- modify root‑level `compose.yml`  
+- modify Helm charts  
+- modify Terraform modules  
 - no schema modification  
 
 ### **Security Engineer**
@@ -134,6 +133,7 @@ Access control must be enforced at:
 Enforcement must be deterministic across:
 
 - local  
+- docker  
 - docker-compose  
 - Kubernetes  
 - Helm  

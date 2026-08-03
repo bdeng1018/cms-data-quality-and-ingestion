@@ -26,7 +26,9 @@ Future branches introduce transformation layers, CCN/NPI alignment, facility enr
 cms-data-quality-and-ingestion/
 │
 ├── Makefile
+├── compose.yml
 ├── environment.yml
+│
 ├── configs/
 │   ├── logging.yml
 │   └── pipeline.yml
@@ -39,9 +41,24 @@ cms-data-quality-and-ingestion/
 │   ├── stage04_processed/
 │   └── stage05_reports/
 │
-├── diagrams/
-│   ├── pipeline_architecture.png
-│   └── schema_overview.png
+├── deployment/
+│   ├── Dockerfile
+│   ├── Makefile.deploy
+│   ├── DEPLOYMENT.md
+│   ├── OPERATIONS.md
+│   ├── CONTRACTS.md
+│   ├── MANIFEST_SPEC.md
+│   ├── SBOM.md
+│   ├── VERSIONING.md
+│   ├── GOVERNANCE.md
+│   ├── COMPLIANCE.md
+│   ├── ACCESS_CONTROL.md
+│   ├── helm/
+│   ├── k8s/
+│   ├── terraform/
+│   ├── logging/
+│   ├── monitoring/
+│   └── security/
 │
 ├── logs/
 │   ├── ingestion.log
@@ -57,13 +74,6 @@ cms-data-quality-and-ingestion/
 │       └── stage05/
 │
 ├── src/
-│   ├── stage01_schema_definition/
-│   ├── stage02_raw_ingestion/
-│   ├── stage03_data_quality/
-│   ├── stage04_reporting/
-│   └── stage05_pipeline_runner/
-│
-├── tests/
 │   ├── stage01_schema_definition/
 │   ├── stage02_raw_ingestion/
 │   ├── stage03_data_quality/
@@ -104,6 +114,7 @@ These datasets are ideal for demonstrating real ingestion, validation, and profi
 - **Reporting layer** - structured JSON/CSV outputs (Stage 04)
 - **Logging + diagnostics** — ingestion, quality, and reporting logs
 - **Makefile workflow** — reproducible execution across all stages
+- **Deterministic deployment** — Docker + Compose + CI/CD parity
 
 This MVP focuses on **ingestion + validation + quality + reporting**, not full transformation.
 
@@ -124,7 +135,7 @@ Stage 04 transforms these into structured reporting artifacts.
 
 ---
 
-## 🛠️ Running the Pipeline
+## 🛠️ Running the Pipeline (Local)
 
 ### 1. Create environment (optional)
 
@@ -173,6 +184,41 @@ make test
 
 ```bash
 make clean-cache
+```
+
+---
+
+## 🏗 Deployment Layer (Deterministic)
+
+Branch 1 includes a full deterministic deployment subsystem:
+
+- Dockerfile (`deployment/Dockerfile`)  
+- root‑level Compose (`compose.yml`)  
+- deployment orchestrator (`deployment/Makefile.deplo`y)  
+- provenance validation  
+- SBOM validation  
+- artifact registry  
+- drift detection  
+- governance + compliance + access control  
+- operational playbooks  
+
+### Run full deployment (Docker + Compose)
+
+```bash
+make deploy
+```
+
+This performs:
+
+- deterministic Docker build  
+- deterministic Compose execution  
+- manifest validation  
+- artifact registry validation  
+
+### Bring down the Compose environment
+
+```bash
+docker compose down
 ```
 
 ---
@@ -276,7 +322,7 @@ Branch 1 (Deterministic Pipeline) is nearly complete:
 - Stages 01–05 implemented
 - diagnostics + Makefile orchestration finalized
 - pipeline + schema diagrams added
-- deployment layer added (provenance, SBOM, drift, contracts)
+- full deployment subsystem added (provenance, SBOM, drift, governance, compliance, access control)
 
 Stage 06 scaffolding is in progress.
 Branch 2 (AI inference) will build on Stage 06.

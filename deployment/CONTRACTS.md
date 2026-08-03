@@ -4,19 +4,23 @@ CMS Data Quality & Ingestion Pipeline — Deployment Contracts
 
 ## 1. Purpose
 
-This document defines the formal contracts governing deployment, execution, reproducibility, and artifact production for the CMS Data Quality & Ingestion Pipeline (Stages 01–05). These contracts ensure deterministic behavior across local, Docker, and CI/CD environments.
+This document defines the formal contracts governing deployment, execution,
+reproducibility, and artifact production for the CMS Data Quality & Ingestion
+Pipeline (Stages 01–05). These contracts ensure deterministic behavior across
+local, Docker, docker‑compose, and CI/CD environments.
 
 Contracts are binding for:
 
-- schema validation
-- ingestion behavior
-- artifact production
-- manifest structure
-- logging format
-- diagnostics output
-- reproducibility guarantees
+- schema validation  
+- ingestion behavior  
+- artifact production  
+- manifest structure  
+- logging format  
+- diagnostics output  
+- reproducibility guarantees  
 
-All deployment code, CLI tools, Docker images, and CI/CD workflows must comply with these contracts.
+All deployment code, CLI tools, Docker images, and CI/CD workflows must comply
+with these contracts.
 
 ---
 
@@ -26,82 +30,84 @@ The schema contract defines the rules for validating POS/QIES input data.
 
 ### 2.1 Requirements
 
-- Input schema must match `data/stage01_schema/schema.json`.
-- All required columns must be present.
-- Column types must match the schema definition.
-- No additional columns may be introduced without versioning the schema.
-- Schema changes require a MINOR or MAJOR version bump.
+- Input schema must match `data/stage01_schema/schema.json`.  
+- All required columns must be present.  
+- Column types must match the schema definition.  
+- No additional columns may be introduced without versioning the schema.  
+- Schema changes require a MINOR or MAJOR version bump.  
 
 ### 2.2 Enforcement
 
-- `src/stage01_schema_definition/schema_validator.py`
-- diagnostics: `scripts/diagnostics/stage01/check_schema.py`
+- `src/stage01_schema_definition/schema_validator.py`  
+- diagnostics: `scripts/diagnostics/stage01/check_schema.py`  
 
 ### 2.3 Output
 
-- `column_profiles.json`
-- `schema.json` (frozen copy)
-- schema version recorded in manifest
+- `column_profiles.json`  
+- `schema.json` (frozen copy)  
+- schema version recorded in manifest  
 
 ---
 
 ## 3. Ingestion Contract
 
-The ingestion contract defines how raw POS/QIES data is fetched, cleaned, and written.
+The ingestion contract defines how raw POS/QIES data is fetched, cleaned, and
+written.
 
 ### 3.1 Requirements
 
-- Raw data must be written to `data/stage02_raw/`.
-- Cleaned data must be written to `data/stage02_cleaned/`.
-- No mutation of raw data is allowed.
-- Cleaning rules must be deterministic.
-- Ingestion errors must be logged and surfaced in diagnostics.
+- Raw data must be written to `data/stage02_raw/`.  
+- Cleaned data must be written to `data/stage02_cleaned/`.  
+- No mutation of raw data is allowed.  
+- Cleaning rules must be deterministic.  
+- Ingestion errors must be logged and surfaced in diagnostics.  
 
 ### 3.2 Enforcement
 
-- `src/stage02_raw_ingestion/run_ingestion.py`
-- diagnostics: `scripts/diagnostics/stage02/check_ingestion.py`
+- `src/stage02_raw_ingestion/run_ingestion.py`  
+- diagnostics: `scripts/diagnostics/stage02/check_ingestion.py`  
 
 ### 3.3 Output
 
-- `pos_q2_2026.parquet`
-- `cleaned_data.csv`
-- ingestion metadata in manifest
+- `pos_q2_2026.parquet`  
+- `cleaned_data.csv`  
+- ingestion metadata in manifest  
 
 ---
 
 ## 4. Artifact Contract
 
-The artifact contract defines the structure, location, and versioning of all pipeline outputs.
+The artifact contract defines the structure, location, and versioning of all
+pipeline outputs.
 
 ### 4.1 Requirements
 
 Artifacts must:
 
-- be written only inside `data/stageXX_*` directories
-- include deterministic filenames
-- include deterministic content
-- include hashes recorded in the artifact registry
-- never overwrite previous artifacts unless explicitly versioned
+- be written only inside `data/stageXX_*` directories  
+- include deterministic filenames  
+- include deterministic content  
+- include hashes recorded in the artifact registry  
+- never overwrite previous artifacts unless explicitly versioned  
 
 ### 4.2 Artifact Types
 
-- schema artifacts (stage01)
-- cleaned ingestion artifacts (stage02)
-- intermediate quality artifacts (stage03)
-- processed reporting artifacts (stage04)
-- pipeline summary artifacts (stage05)
+- schema artifacts (stage01)  
+- cleaned ingestion artifacts (stage02)  
+- intermediate quality artifacts (stage03)  
+- processed reporting artifacts (stage04)  
+- pipeline summary artifacts (stage05)  
 
 ### 4.3 Artifact Registry
 
 The artifact registry must include:
 
-- artifact path
-- artifact type
-- hash
-- schema version
-- timestamp
-- diagnostics status
+- artifact path  
+- artifact type  
+- hash  
+- schema version  
+- timestamp  
+- diagnostics status  
 
 Registry schema is defined in `MANIFEST_SPEC.md`.
 
@@ -113,27 +119,27 @@ The manifest contract defines the JSON schema for run manifests.
 
 ### 5.1 Required Fields
 
-- `run_id`
-- `timestamp_start`
-- `timestamp_end`
-- `duration_seconds`
-- `config_path`
-- `config_hash`
-- `environment_hash`
-- `schema_version`
-- `artifact_registry_path`
-- `diagnostics_summary`
+- `run_id`  
+- `timestamp_start`  
+- `timestamp_end`  
+- `duration_seconds`  
+- `config_path`  
+- `config_hash`  
+- `environment_hash`  
+- `schema_version`  
+- `artifact_registry_path`  
+- `diagnostics_summary`  
 
 ### 5.2 Optional Fields
 
-- `warnings`
-- `notes`
-- `cli_arguments`
+- `warnings`  
+- `notes`  
+- `cli_arguments`  
 
 ### 5.3 Enforcement
 
-- manifest writer in `src/stage05_pipeline_runner`
-- CI/CD manifest validation
+- manifest writer in `src/stage05_pipeline_runner`  
+- CI/CD manifest validation  
 
 ---
 
@@ -145,43 +151,44 @@ The logging contract defines the required format for all logs.
 
 Logs must include:
 
-- timestamp
-- stage name
-- log level
-- message
-- duration (for stage boundaries)
+- timestamp  
+- stage name  
+- log level  
+- message  
+- duration (for stage boundaries)  
 
 ### 6.2 Log Files
 
-- `logs/ingestion.log`
-- `logs/quality.log`
-- `logs/runner.log`
+- `logs/ingestion.log`  
+- `logs/quality.log`  
+- `logs/runner.log`  
 
 ### 6.3 Enforcement
 
-- `utils/logging_utils.py`
+- `utils/logging_utils.py`  
 
 ---
 
 ## 7. Diagnostics Contract
 
-Diagnostics validate schema, ingestion, intermediate artifacts, reporting, and pipeline summary.
+Diagnostics validate schema, ingestion, intermediate artifacts, reporting, and
+pipeline summary.
 
 ### 7.1 Requirements
 
 Diagnostics must:
 
-- run deterministically
-- produce JSON output
-- include pass/fail status
-- include remediation hints
-- include artifact references
+- run deterministically  
+- produce JSON output  
+- include pass/fail status  
+- include remediation hints  
+- include artifact references  
 
 ### 7.2 Diagnostic Scripts
 
 Located in:
 
-```code
+```text
 scripts/diagnostics/stageXX/
 ```
 
@@ -208,7 +215,8 @@ The pipeline must produce identical outputs given identical inputs.
 
 ### 8.2 Enforcement
 
-- Docker image
+- Docker image (`deployment/Dockerfile`)
+- docker‑compose (`compose.yml` at repo root)
 - CI/CD pipeline
 - CLI execution
 - manifest validation

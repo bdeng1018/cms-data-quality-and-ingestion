@@ -2,8 +2,8 @@
 
 The `deployment/` directory defines the runtime architecture for the CMS Data
 Quality & Ingestion Pipeline. It provides deterministic, reproducible deployment
-behavior across local development, docker-compose, Kubernetes, Helm packaging,
-and Terraform-managed infrastructure.
+behavior across local development, Docker, Kubernetes, Helm packaging, and
+Terraform-managed infrastructure.
 
 This README serves as a navigation index for the deployment subsystem.
 
@@ -76,9 +76,39 @@ These files provide reproducible environment boundaries.
 
 ## 5. Containerization & Orchestration
 
+### Dockerfile
+
+The deterministic build recipe lives in:
+
+```code
+deployment/Dockerfile
+```
+
+It is invoked from the repository root using:
+
+```code
+docker build -f deployment/Dockerfile .
+```
+
 ### docker-compose  
 
-Defined in `compose.yml` for local development.
+Local development uses the root‑level Compose file:
+
+```code
+compose.yml
+```
+
+Run the pipeline via:
+
+```code
+docker compose up --build
+```
+
+or through the deployment orchestrator:
+
+```code
+make deploy
+```
 
 ### Kubernetes  
 
@@ -141,13 +171,14 @@ Security integrates with governance, compliance, and access control.
 
 Deployment integrates with the pipeline through:
 
-- containerized stage execution  
-- Kubernetes/Helm orchestration  
-- Terraform infrastructure  
-- SBOM + provenance tracking  
-- CI/CD validation  
-- audit logging  
-- governance + compliance enforcement  
+- deterministic containerized stage execution
+- docker‑compose orchestration for local runs
+- Kubernetes/Helm orchestration for cluster execution
+- Terraform infrastructure provisioning
+- SBOM + provenance tracking
+- CI/CD validation
+- audit logging
+- governance + compliance enforcement
 
 This ensures deterministic, reproducible behavior across all environments.
 

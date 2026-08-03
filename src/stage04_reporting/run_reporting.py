@@ -18,9 +18,9 @@ Design principles:
 import logging
 from pathlib import Path
 
-from stage04_reporting.report_engine import run_report_engine
-from stage04_reporting.report_formatter import format_reports
-from stage04_reporting.report_writer import DEFAULT_OUTPUT_DIR, write_reports
+from src.stage04_reporting.report_engine import run_report_engine
+from src.stage04_reporting.report_formatter import format_reports
+from src.stage04_reporting.report_writer import DEFAULT_OUTPUT_DIR, write_reports
 
 # ==============================================================================
 # Logging configuration

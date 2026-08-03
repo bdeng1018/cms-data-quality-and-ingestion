@@ -28,7 +28,7 @@ manifests, deployment configurations, and provenance metadata.
 
 The pipeline uses **Semantic Versioning (SemVer)**:
 
-```code
+```text
 MAJOR.MINOR.PATCH
 ```
 
@@ -157,6 +157,15 @@ Deployment version must appear in:
 - Terraform outputs  
 - CI/CD logs  
 
+### Deployment Components
+
+Deployment versioning applies to:
+
+- `deployment/Dockerfile`
+- root‑level `compose.yml`
+- `deployment/helm/Chart.yml`
+- `deployment/terraform/main.tf`
+
 ---
 
 ## Provenance Versioning
@@ -174,7 +183,9 @@ deployment_version
 This ensures reproducibility across:
 
 - local  
+- docker  
 - docker-compose  
+- CI/CD  
 - Kubernetes  
 - Helm  
 - cloud  

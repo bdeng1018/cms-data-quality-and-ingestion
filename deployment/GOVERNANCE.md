@@ -128,6 +128,15 @@ Deployment changes must follow:
 - deterministic Docker/Compose/Helm/Terraform rules  
 - deterministic CI/CD validation  
 
+### Deployment Components
+
+Deployment governance applies to:
+
+- `deployment/Dockerfile`  
+- root‑level `compose.yml`  
+- `deployment/helm/Chart.yml`  
+- `deployment/terraform/main.tf`  
+
 Deployment changes require:
 
 - SBOM update  
@@ -139,7 +148,7 @@ Deployment changes require:
 ## Versioning Governance
 
 Versioning must follow the pinned rules in  
-**[VERSIONING.md](ca://s?q=Show_VERSIONING_contract)**.
+**VERSIONING.md**.
 
 Version bumps require:
 
@@ -161,7 +170,7 @@ Versioning must be deterministic across:
 ## Release Governance
 
 Releases must follow the pinned structure in  
-**[RELEASE_NOTES.md](ca://s?q=Show_RELEASE_NOTES_contract)**.
+**RELEASE_NOTES.md**.
 
 Release requirements:
 

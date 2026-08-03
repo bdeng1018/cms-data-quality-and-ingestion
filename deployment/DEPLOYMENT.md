@@ -2,7 +2,11 @@
 
 ## 1. Overview
 
-This document defines the deployment architecture, environment guarantees, execution pathways, and operational expectations for the CMS Data Quality & Ingestion Pipeline (Stages 01–05). Deployment is contract‑driven and designed for deterministic, reproducible, and isolated execution across local, Docker, and CI/CD environments.
+This document defines the deployment architecture, environment guarantees,
+execution pathways, and operational expectations for the CMS Data Quality &
+Ingestion Pipeline (Stages 01–05). Deployment is contract‑driven and designed for
+deterministic, reproducible, and isolated execution across local, Docker,
+docker‑compose, and CI/CD environments.
 
 Guiding principles:
 
@@ -23,17 +27,18 @@ Deployment consists of four layers:
 ### 2.1 Execution Layer
 
 - CLI (`cms run`, `cms report`, `cms diagnose`, `cms manifest`)  
-- Makefile targets  
+- Makefile targets (root Makefile + deployment/Makefile.deploy)  
 - Python entrypoints  
 
 ### 2.2 Environment Layer
 
-- Docker image  
+- Docker image (`deployment/Dockerfile`)  
 - pinned Python dependencies  
 - reproducible runtime  
 
 ### 2.3 Orchestration Layer
 
+- docker‑compose (`compose.yml` at repository root)  
 - pipeline runner  
 - manifest writer  
 - artifact registry  
@@ -56,12 +61,13 @@ Each layer is deterministic and contract‑driven.
 
 Local execution uses:
 
-- `uv` or `pip-tools` for dependency management  
 - CLI commands  
 - Makefile targets  
 - local logs + artifacts  
+- reproducible Python environment  
 
-Local runs must produce identical manifests, artifacts, and diagnostics given identical inputs.
+Local runs must produce identical manifests, artifacts, and diagnostics given
+identical inputs.
 
 ### 3.2 Dockerized Execution
 
@@ -74,7 +80,22 @@ Docker execution provides:
 
 Docker runs must produce bit‑for‑bit identical artifacts to local runs.
 
-### 3.3 CI/CD Execution
+### 3.3 docker‑compose Execution
+
+Compose execution uses the root‑level `compose.yml`:
+
+```bash
+docker compose up --build
+```
+
+Compose provides:
+
+- deterministic mounts  
+- read‑only code/configs  
+- isolated data/logs  
+- CI/CD‑mirrored execution  
+
+### 3.4 CI/CD Execution
 
 CI/CD runs:
 
@@ -123,7 +144,22 @@ The Docker image must:
 - include diagnostics scripts  
 - mount input/output directories  
 
-### 4.3 CI/CD Pipeline
+### 4.3 docker‑compose
+
+Compose orchestrates deterministic local execution using:
+
+```code
+compose.yml
+```
+
+Compose must:
+
+- mirror CI/CD execution  
+- enforce read‑only mounts for code/configs  
+- isolate data + logs  
+- run the pipeline runner deterministically  
+
+### 4.4 CI/CD Pipeline
 
 CI/CD must:
 
@@ -141,7 +177,7 @@ Release artifacts include:
 - artifact registry schema  
 - deployment diagrams  
 
-### 4.4 Manifests
+### 4.5 Manifests
 
 Manifests must include:
 
@@ -155,7 +191,7 @@ Manifests must include:
 
 Manifest schema is defined in `MANIFEST_SPEC.md`.
 
-### 4.5 Artifact Registry
+### 4.6 Artifact Registry
 
 The artifact registry must:
 
@@ -230,13 +266,18 @@ deployment/
     MANIFEST_SPEC.md
     OPERATIONS.md
     Dockerfile
-    compose.yml
     Makefile.deploy
-    k8s/
-    helm/
-    terraform/
+    ci/
     env/
+    helm/
+    k8s/
+    terraform/
+    logging/
+    monitoring/
+    security/
 ```
+
+Note: `compose.yml` now lives at the repository root, not inside `deployment/`.
 
 ---
 

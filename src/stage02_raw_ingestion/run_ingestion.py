@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from stage02_raw_ingestion.pos_ingestion import PosIngestionSource
+from src.stage02_raw_ingestion.pos_ingestion import PosIngestionSource
 from utils.logging_utils import get_logger
 
 logger = get_logger("run_ingestion")

@@ -4,10 +4,13 @@ CMS Data Quality & Ingestion Pipeline — Operational Specification
 
 ## 1. Purpose
 
-This document defines the operational behavior, runtime guarantees, logging rules, diagnostics expectations, error‑handling requirements, and lifecycle management for the CMS Data Quality & Ingestion Pipeline (Stages 01–05).
+This document defines the operational behavior, runtime guarantees, logging rules,
+diagnostics expectations, error‑handling requirements, and lifecycle management
+for the CMS Data Quality & Ingestion Pipeline (Stages 01–05).
 
 Operations are deterministic, reproducible, and contract‑driven.  
-All execution environments (local, Docker, CI/CD) must comply with this specification.
+All execution environments (local, Docker, docker‑compose, CI/CD) must comply
+with this specification.
 
 ---
 
@@ -25,7 +28,8 @@ Operations follow these principles:
 - stable logging format  
 - stable artifact structure  
 
-These principles ensure reliability across ingestion, quality checks, reporting, and pipeline orchestration.
+These principles ensure reliability across ingestion, quality checks, reporting,
+and pipeline orchestration.
 
 ---
 
@@ -220,7 +224,16 @@ Docker environment must:
 - include diagnostics scripts  
 - mount input/output directories  
 
-### 8.3 CI/CD Environment
+### 8.3 docker‑compose Environment
+
+Compose execution uses the root‑level `compose.yml` and must:
+
+- mirror CI/CD execution
+- enforce read‑only mounts for code/configs
+- isolate data + logs
+- run the pipeline runner deterministically
+
+### 8.4 CI/CD Environment
 
 CI/CD must:
 
@@ -238,7 +251,7 @@ CI/CD must:
 
 Provenance must include:
 
-- executor (local, docker, ci)  
+- executor (local, docker, compose, ci)  
 - hostname  
 - Python version  
 - OS version  

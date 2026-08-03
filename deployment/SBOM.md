@@ -182,7 +182,7 @@ Example:
 ```yaml
 deployment:
   dockerfile: deployment/Dockerfile
-  compose: deployment/compose.yml
+  compose: compose.yml
   helm_chart: deployment/helm/Chart.yml
   terraform: deployment/terraform/main.tf
 ```

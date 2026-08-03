@@ -25,9 +25,9 @@ from utils.logging_utils import get_logger
 logger = get_logger("schema_generator")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Type inference helpers
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 
 def infer_type(series: pd.Series) -> str:
@@ -52,8 +52,11 @@ def infer_type(series: pd.Series) -> str:
 
     # Datetime detection
     if pd.api.types.is_datetime64_any_dtype(series):
-        # If time component exists → datetime
-        if series.dropna().dt.time.astype(str).str.contains(":").any():
+        # If time component exists → datetime    
+        times = series.dropna().dt.time
+        time_strings = times.astype("string")
+
+        if time_strings.str.contains(":").any():
             return "datetime"
         return "date"
 
@@ -61,9 +64,9 @@ def infer_type(series: pd.Series) -> str:
     return "string"
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Schema generation
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 
 def generate_schema(cleaned_path: str, out_path: str) -> Dict:
@@ -112,9 +115,9 @@ def generate_schema(cleaned_path: str, out_path: str) -> Dict:
     return schema
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # CLI entrypoint
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 if __name__ == "__main__":
     import argparse

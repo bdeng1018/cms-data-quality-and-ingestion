@@ -4,16 +4,19 @@ CMS Data Quality & Ingestion Pipeline — Manifest Specification
 
 ## 1. Purpose
 
-This document defines the formal JSON schema for pipeline run manifests.  
-Manifests capture run metadata, environment details, artifact registry references, diagnostics summaries, and provenance information for deterministic, reproducible execution.
+This document defines the formal JSON schema for pipeline run manifests.
+Manifests capture run metadata, environment details, artifact registry references,
+diagnostics summaries, and provenance information for deterministic, reproducible
+execution.
 
-All CLI tools, Docker execution, CI/CD workflows, and pipeline runner code must comply with this specification.
+All CLI tools, Docker execution, docker‑compose execution, CI/CD workflows, and
+pipeline runner code must comply with this specification.
 
 ---
 
 ## 2. Manifest Overview
 
-A manifest is a single JSON file written at the end of each pipeline run.  
+A manifest is a single JSON file written at the end of each pipeline run.
 It provides:
 
 - run metadata  
@@ -33,13 +36,13 @@ Manifests are immutable and versioned.
 
 Manifests must be written to:
 
-```code
+```text
 data/stage05_reports/manifest.json
 ```
 
 Alternate locations (e.g., versioned manifests) must follow:
 
-```code
+```text
 data/stage05_reports/manifests/manifest_<run_id>.json
 ```
 
@@ -125,7 +128,7 @@ The path to the pipeline config file and its SHA‑256 hash.
 
 ### 5.5 `environment_name` / `environment_hash`
 
-Name of the environment (local, docker, ci) and a hash of dependency versions.
+Name of the environment (`local`, `docker`, `compose`, `ci`) and a hash of dependency versions.
 
 ### 5.6 `schema_version`
 
@@ -147,7 +150,7 @@ Aggregated diagnostic results across all stages.
 
 Execution metadata including:
 
-- executor (CLI, Docker, CI)  
+- executor (`local`, `docker`, `compose`, `ci`)
 - hostname  
 - Python version  
 - OS version  
@@ -243,7 +246,7 @@ Manifests must never be overwritten unless versioned.
   "config_path": "configs/pipeline.yml",
   "config_hash": "b1c9d4...",
 
-  "environment_name": "docker",
+  "environment_name": "compose",
   "environment_hash": "a92f1e...",
 
   "schema_version": "1.0.0",
@@ -260,7 +263,7 @@ Manifests must never be overwritten unless versioned.
   },
 
   "provenance": {
-      "executor": "docker",
+      "executor": "compose",
       "hostname": "cms-runner",
       "python_version": "3.11.4",
       "os_version": "Ubuntu 22.04",

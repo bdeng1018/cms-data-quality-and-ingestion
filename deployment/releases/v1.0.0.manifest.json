@@ -1,0 +1,56 @@
+{
+    "version": "1.0.0",
+    "release_date": "2026-08-02",
+    "provenance": {
+        "pipeline_version": "1.0.0",
+        "schema_version": "1.0.0",
+        "artifact_version": "1.0.0",
+        "manifest_version": "1.0.0",
+        "deployment_version": "1.0.0",
+        "sbom_version": "1.0.0",
+        "sbom_hash": "sha256:9d2dac09fae17b8edbeb97a7bccf9b25612e004b3e35c86214ef549692edde51",
+        "validated_at": null,
+        "component_count": 6,
+        "dependencies_count": 6,
+        "artifact_count": 6
+    },
+    "artifacts": {
+        "docker_image": {
+            "name": "cms-pipeline:1.0.0",
+            "digest": "sha256:64e7fc5b4873b9aa07dc3da83b47ae269f7db1cae20c4a6e3bbb40734a"
+        },
+        "helm_chart": {
+            "path": "deployment/helm/Chart.yml",
+            "version": "1.0.0",
+            "digest": "sha256:ce6468838b53716a6a8d9885654521b55d1c3e485eec897274e35fa226a77063"
+        },
+        "k8s_manifests": {
+            "deployment": "deployment/k8s/deployment.yml",
+            "service": "deployment/k8s/service.yml",
+            "digest": "sha256:f8a0b9ac65ba29c7cf1c900137ed2cec5493393662a23970a518a88f17ab9cfd"
+        },
+        "terraform_module": {
+            "path": "deployment/terraform/",
+            "digest": "sha256:bcdd0518cea27517a56e95523968b5de676dd7dd444162b9a81ec0a678a65837"
+        },
+        "sbom": {
+            "path": "deployment/sbom/sbom-1.0.0.json",
+            "digest": "sha256:9d2dac09fae17b8edbeb97a7bccf9b25612e004b3e35c86214ef549692edde51"
+        },
+        "audit_logs": {
+            "generator": "deployment/scripts/generate_audit_logs.py",
+            "digest": "sha256:fff7f3c451eb6a1fdbf22cfa03c756dc8546d95f24c55fa3c8c10388ab1f090e"
+        }
+    },
+    "ci_cd": {
+        "workflow": "deployment/ci/github-actions.yml",
+        "run_id": "REPLACE_WITH_GITHUB_RUN_ID",
+        "commit_sha": "2979fa7105209f28fc9b2f5650c8ca36528c28b8"
+    },
+    "validation": {
+        "provenance_validator": "deployment/scripts/validate_provenance.py",
+        "sbom_validator": "deployment/scripts/validate_sbom.py",
+        "drift_detection": "deployment/Makefile.deploy",
+        "status": "pending"
+    }
+}

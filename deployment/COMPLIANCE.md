@@ -1,4 +1,3 @@
-
 # CMS Data Quality & Ingestion Pipeline — Compliance Contract
 
 ## Documentation Contract
@@ -73,6 +72,12 @@ Schema handling must comply with:
 - deterministic diagnostics validation  
 - deterministic schema provenance  
 
+### Schema Change Categories
+
+- **MAJOR** — breaking column changes  
+- **MINOR** — new optional fields  
+- **PATCH** — metadata corrections  
+
 Schema compliance requires:
 
 - schema_version bump  
@@ -90,6 +95,12 @@ Artifact generation must comply with:
 - deterministic artifact structure  
 - deterministic artifact registry validation  
 - deterministic artifact provenance  
+
+### Artifact Change Categories
+
+- **MAJOR** — breaking artifact structure changes  
+- **MINOR** — new fields added  
+- **PATCH** — formatting fixes  
 
 Artifact compliance requires:
 
@@ -125,6 +136,15 @@ Deployment configurations must comply with:
 - deterministic Docker/Compose/Helm/Terraform rules  
 - deterministic security posture  
 - deterministic CI/CD validation  
+
+### Deployment Components
+
+Deployment compliance applies to:
+
+- `deployment/Dockerfile`  
+- root‑level `compose.yml`  
+- `deployment/helm/Chart.yml`  
+- `deployment/terraform/main.tf`  
 
 Deployment compliance requires:
 
@@ -209,7 +229,7 @@ Audit compliance requires:
 
 ---
 
-# SBOM Compliance
+## SBOM Compliance
 
 SBOMs must comply with:
 

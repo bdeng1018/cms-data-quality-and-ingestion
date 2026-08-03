@@ -47,6 +47,14 @@ Deployment artifacts live under:
 deployment/
 ```
 
+Deployment includes:
+
+- `deployment/Dockerfile`
+- `deployment/Makefile.deploy`
+- root‑level `compose.yml`
+- governance, compliance, SBOM, provenance, versioning contracts
+- Helm, Terraform, logging, monitoring, security subsystems
+
 ---
 
 ## 🧰 Development Environment
@@ -93,7 +101,7 @@ Do not commit SVG or draw.io files unless explicitly required.
 
 ---
 
-## 🛠 Running the Pipeline
+## 🛠 Running the Pipeline (Local)
 
 Each stage can be executed individually via Makefile:
 
@@ -115,7 +123,7 @@ Example:
 
 ```bash
 python scripts/diagnostics/stage03/check_quality.py \
-    --file data/stage02_raw/pos_q2_2026.csv \
+    --file data/stage02_cleaned/cleaned_data.csv \
     --type pos
 ```
 
@@ -241,8 +249,8 @@ To add or modify a pipeline stage:
 
 ### Branch 1 Note
 
-Branch 1 is **fully deterministic** (Stages 01–06 infrastructure only).  
-AI/RAG/agentic inference will be introduced in **Branch 2** and should not be added to Branch 1.
+Branch 1 is **fully deterministic** (Stages 01–05 + Stage 06 infrastructure only).  
+AI/RAG/agentic inference arrives in **Branch 2** and should not be added to Branch 1.
 
 ---
 
@@ -264,6 +272,31 @@ target: ## Description
 ```
 
 This enables `make help`.
+
+---
+
+## 🏗 Deployment Contributions
+
+Deployment contributions must respect deterministic contracts:
+
+- `deployment/Dockerfile`
+- root‑level `compose.yml`
+- `deployment/Makefile.deploy`
+- provenance rules
+- SBOM rules
+- versioning rules
+- governance rules
+- compliance rules
+- access control rules
+
+Deployment changes **must not** break determinism.
+
+All deployment changes require:
+
+- SBOM update
+- RELEASE_NOTES update
+- provenance update
+- CI/CD validation
 
 ---
 
@@ -296,6 +329,7 @@ Pull requests should:
 - pass linting and formatting  
 - avoid multi‑stage changes in a single PR  
 - avoid modifying deployment contracts without justification  
+- preserve deterministic behavior  
 
 ---
 
@@ -310,4 +344,5 @@ See `CODE_OF_CONDUCT.md` for community guidelines.
 Maintainer: **Brian Deng**  
 Location: Los Angeles, CA  
 Email: **<bdeng.data.pipelines@gmail.com>**  
+
 Focus: healthcare data engineering, analytics systems design, scientific computing, data quality & governance, technical writing

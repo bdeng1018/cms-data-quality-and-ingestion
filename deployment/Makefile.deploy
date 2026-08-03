@@ -1,69 +1,44 @@
 # ==============================================================================
-# CMS Data Quality & Ingestion Pipeline (Deployment Makefile)
+# CMS Data Quality & Ingestion Pipeline — Deployment Makefile
 # ==============================================================================
 # Intent:
-#   Provide deterministic, contract-driven deployment commands for building,
-#   running, validating, and inspecting the CMS ingestion pipeline environment.
+#   Deterministic deployment orchestration for Docker + Compose execution.
+#   This Makefile is invoked from the repository root via:
+#
+#       make deploy
+#
+#   All paths resolve relative to the repository root.
 #
 # Determinism Guarantees:
-#   - Docker builds use pinned Python + dependency versions.
-#   - Compose runs mirror CI/CD execution.
-#   - Manifest + artifact registry validation ensures contract compliance.
-#
-# Side Effects:
-#   - Writes artifacts to data/.
-#   - Writes logs to logs/.
-#   - Produces manifest + artifact registry in Stage 05.
-#
-# Future Extensions:
-#   - Integrate with GitHub Actions CI/CD.
-#   - Add K8s/Helm/Terraform deployment targets.
+#   - Dockerfile pinned in deployment/
+#   - Compose file pinned at repo root
+#   - Read‑only mounts for code/configs
+#   - Stable artifact + log directories
 # ==============================================================================
 
 
 # ==============================================================================
 # Variables
 # ==============================================================================
-# Intent:
-#   Define deterministic paths and names used across deployment commands.
-#
-# Determinism:
-#   - Centralized variables prevent drift across commands.
-# ==============================================================================
-PROJECT_ROOT := ..
+PROJECT_ROOT := .
 DOCKERFILE := deployment/Dockerfile
-COMPOSE := deployment/compose.yml
+COMPOSE := compose.yml
 IMAGE_NAME := cms_ingestion
 IMAGE_TAG := latest
 
 
 # ==============================================================================
-# Docker Build (Deterministic)
+# Docker Build — Deterministic
 # ==============================================================================
-# Intent:
-#   Build the Docker image using pinned dependencies and deterministic filesystem
-#   layout. This mirrors CI/CD behavior exactly.
-#
-# Determinism:
-#   - No dynamic dependency resolution.
-#   - Build context pinned to repository root.
-# ==============================================================================
-docker-build:
+docker-build: ## Build deterministic Docker image
     @echo "=== Building deterministic Docker image ==="
     docker build -f $(DOCKERFILE) -t $(IMAGE_NAME):$(IMAGE_TAG) $(PROJECT_ROOT)
 
 
 # ==============================================================================
-# Docker Run (Deterministic Execution)
+# Docker Run — Deterministic (No Compose)
 # ==============================================================================
-# Intent:
-#   Execute the pipeline inside the deterministic Docker image without Compose.
-#
-# Side Effects:
-#   - Writes artifacts to data/.
-#   - Writes logs to logs/.
-# ==============================================================================
-docker-run:
+docker-run: ## Run pipeline inside Docker image (no Compose)
     @echo "=== Running pipeline inside Docker image ==="
     docker run --rm \
         -v $(PROJECT_ROOT)/configs:/app/configs:ro \
@@ -77,60 +52,33 @@ docker-run:
 
 
 # ==============================================================================
-# Compose Up (Full Deployment)
+# Compose Up — Full Deployment
 # ==============================================================================
-# Intent:
-#   Run the full deterministic deployment environment using docker-compose.yml.
-#
-# Determinism:
-#   - Mirrors CI/CD execution.
-#   - Enforces read-only mounts for code/configs.
-# ==============================================================================
-compose-up:
+compose-up: ## Start full deployment environment using Compose
     @echo "=== Starting deterministic deployment environment ==="
     docker compose -f $(COMPOSE) up --build
 
 
 # ==============================================================================
-# Compose Down (Cleanup)
+# Compose Down — Cleanup
 # ==============================================================================
-# Intent:
-#   Cleanly shut down the deployment environment.
-#
-# Side Effects:
-#   - Leaves artifacts + logs intact.
-# ==============================================================================
-compose-down:
+compose-down: ## Shut down deployment environment
     @echo "=== Shutting down deployment environment ==="
     docker compose -f $(COMPOSE) down
 
 
 # ==============================================================================
-# Validate Manifest
+# Manifest Validation
 # ==============================================================================
-# Intent:
-#   Validate manifest.json against MANIFEST_SPEC.md. Ensures contract compliance.
-#
-# Determinism:
-#   - Manifest keys must be sorted.
-#   - Required fields must exist.
-# ==============================================================================
-validate-manifest:
+validate-manifest: ## Validate manifest.json against MANIFEST_SPEC.md
     @echo "=== Validating manifest.json ==="
     python scripts/diagnostics/stage05/check_pipeline.py
 
 
 # ==============================================================================
-# Validate Artifact Registry
+# Artifact Registry Validation
 # ==============================================================================
-# Intent:
-#   Validate artifact_registry.json for completeness, hashing, and schema version.
-#
-# Determinism:
-#   - Hashes must match actual artifacts.
-#   - Registry must include all stage outputs.
-# ==============================================================================
-validate-artifacts:
+validate-artifacts: ## Validate artifact_registry.json
     @echo "=== Validating artifact registry ==="
     python scripts/diagnostics/stage04/check_reports.py
 
@@ -138,28 +86,16 @@ validate-artifacts:
 # ==============================================================================
 # Clean Deployment Artifacts
 # ==============================================================================
-# Intent:
-#   Remove data + logs to ensure a clean deterministic run.
-#
-# Side Effects:
-#   - Deletes all artifacts + logs.
-# ==============================================================================
-clean:
+clean: ## Remove data + logs (safe)
     @echo "=== Cleaning data + logs ==="
     rm -rf $(PROJECT_ROOT)/data/*
     rm -rf $(PROJECT_ROOT)/logs/*
 
 
 # ==============================================================================
-# Full Deterministic Run (Build → Up → Validate)
+# Full Deterministic Deployment (Build → Up → Validate)
 # ==============================================================================
-# Intent:
-#   Provide a single command for deterministic deployment execution.
-#
-# Determinism:
-#   - Ensures build, run, and validation occur in fixed order.
-# ==============================================================================
-deploy:
+deploy: ## Full deterministic deployment run
     $(MAKE) docker-build
     $(MAKE) compose-up
     $(MAKE) validate-manifest

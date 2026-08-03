@@ -23,6 +23,7 @@ This script is intentionally minimal and deterministic.
 import argparse
 import datetime
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -30,33 +31,43 @@ from pathlib import Path
 from .config_loader import load_pipeline_config
 from .orchestrator import run_all_stages
 
+# ==============================================================================
+# Logging setup
+# ==============================================================================
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [Stage05] %(levelname)s: %(message)s",
+)
 
-# ------------------------------------------------------------------------------
+
+# ==============================================================================
 # Custom ArgumentParser to match test expectations
-# ------------------------------------------------------------------------------
+# ==============================================================================
 class Stage05ArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         # Tests expect SystemExit(1) for CLI argument errors
         raise SystemExit(1)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Write summary JSON
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def write_summary(summary_path, summary_dict):
     """Write the pipeline summary JSON to Stage 05 output directory."""
-    # Ensure file exists even when open() is mocked
-    os.makedirs(os.path.dirname(summary_path), exist_ok=True)
-    Path(summary_path).touch(exist_ok=True)
+    summary_path = Path(summary_path)
 
-    with open(summary_path, "w") as f:
+    # Ensure parent directory exists
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.touch(exist_ok=True)
+
+    with summary_path.open("w") as f:
         f.write(json.dumps(summary_dict, indent=2))
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Validate Stage 04 outputs
-# ------------------------------------------------------------------------------
-def validate_stage04_outputs():
+# ==============================================================================
+def validate_stage04_outputs(root: Path | None = None):
     """
     Stage 05 must confirm Stage 04 produced its required artifacts.
 
@@ -67,22 +78,25 @@ def validate_stage04_outputs():
 
     Stage 05 does NOT read raw data, cleaned data, or intermediate artifacts.
     """
+    if root is None:
+        root = Path(__file__).resolve().parents[2]
+
     required = [
-        "data/stage04_processed/report_index.json",
-        "data/stage04_processed/facility_health.csv",
-        "data/stage04_processed/dataset_summary.json",
+        root / "data" / "stage04_processed" / "report_index.json",
+        root / "data" / "stage04_processed" / "facility_health.csv",
+        root / "data" / "stage04_processed" / "dataset_summary.json",
     ]
 
-    # Use the globally patched os.path.exists
-    missing = [p for p in required if not __import__("os").path.exists(p)]
-
+    missing = [str(p) for p in required if not p.exists()]
     return missing
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Main entrypoint
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def main():
+    root = Path(__file__).resolve().parents[2]
+
     # --------------------------------------------------------------------------
     # Parse CLI arguments
     # --------------------------------------------------------------------------
@@ -91,27 +105,63 @@ def main():
     )
     parser.add_argument(
         "--config",
-        required=True,
-        help="Path to pipeline.yml configuration file",
+        required=False,
+        default="configs/pipeline.yml",
+        help="Path to pipeline.yml configuration file (default: configs/pipeline.yml)",
     )
     parser.add_argument(
         "--output",
-        required=True,
-        help="Path to pipeline_summary.json output file",
+        required=False,
+        default="data/stage05_reports/pipeline_summary.json",
+        help=(
+            "Path to pipeline_summary.json output file "
+            "(default: data/stage05_reports/pipeline_summary.json)"
+        ),
     )
     args = parser.parse_args()
+
+    # Resolve paths relative to project root if not absolute
+    config_path = Path(args.config)
+    if not config_path.is_absolute():
+        config_path = root / args.config
+
+    output_path = Path(args.output)
+    if not output_path.is_absolute():
+        output_path = root / args.output
+
+    logging.info(f"Using config: {config_path}")
+    logging.info(f"Summary output: {output_path}")
 
     # --------------------------------------------------------------------------
     # Load configuration
     # --------------------------------------------------------------------------
-    config = load_pipeline_config(args.config)
+    try:
+        config = load_pipeline_config(config_path)
+    except Exception as e:
+        logging.error(f"Failed to load pipeline config from {config_path}: {e}")
+        summary = {
+            "pipeline": "cms-data-quality-and-ingestion",
+            "timestamp_start": None,
+            "timestamp_end": None,
+            "duration_seconds": 0.0,
+            "stages": {
+                "stage01": "skipped",
+                "stage02": "skipped",
+                "stage03": "skipped",
+                "stage04": "skipped",
+            },
+            "warnings": [f"Failed to load config: {str(e)}"],
+        }
+        write_summary(output_path, summary)
+        print(f"[Stage05] Config load failed. Summary written to {output_path}")
+        sys.exit(1)
 
     # --------------------------------------------------------------------------
     # Start pipeline timer
     # --------------------------------------------------------------------------
-    # First mocked timestamp
     start_dt = datetime.datetime.now()
     timestamp_start = start_dt.isoformat()
+    logging.info("Pipeline execution started.")
 
     # --------------------------------------------------------------------------
     # Execute orchestrator (Stage 01 → Stage 02 → Stage 03 → Stage 04)
@@ -119,13 +169,11 @@ def main():
     try:
         stage_results = run_all_stages(config)
     except Exception as e:
-        # Fail-fast behavior
-        # Second mocked timestamp
         end_dt = datetime.datetime.now()
         timestamp_end = end_dt.isoformat()
-
-        # Duration based on mocked timestamps
         duration = (end_dt - start_dt).total_seconds()
+
+        logging.error(f"Pipeline aborted due to error: {e}")
 
         summary = {
             "pipeline": "cms-data-quality-and-ingestion",
@@ -141,29 +189,28 @@ def main():
             "warnings": [f"Pipeline aborted due to error: {str(e)}"],
         }
 
-        write_summary(args.output, summary)
-        print(f"[Stage05] Pipeline aborted. Summary written to {args.output}")
+        write_summary(output_path, summary)
+        print(f"[Stage05] Pipeline aborted. Summary written to {output_path}")
         sys.exit(1)
 
     # --------------------------------------------------------------------------
     # Validate Stage 04 outputs
     # --------------------------------------------------------------------------
-    missing = validate_stage04_outputs()
-    warnings = []
+    missing = validate_stage04_outputs(root=root)
+    warnings: list[str] = []
 
     if missing:
-        # Format warnings without Python list repr
-        warnings.append("Missing Stage 04 artifacts: " + ", ".join(missing))
+        msg = "Missing Stage 04 artifacts: " + ", ".join(missing)
+        logging.warning(msg)
+        warnings.append(msg)
 
     # --------------------------------------------------------------------------
     # Stop timer
     # --------------------------------------------------------------------------
-    # Second mocked timestamp
     end_dt = datetime.datetime.now()
     timestamp_end = end_dt.isoformat()
-
-    # Duration based on mocked timestamps
     duration = (end_dt - start_dt).total_seconds()
+    logging.info("Pipeline execution completed.")
 
     # --------------------------------------------------------------------------
     # Build summary artifact
@@ -174,16 +221,16 @@ def main():
         "timestamp_end": timestamp_end,
         "duration_seconds": duration,
         "stages": stage_results,
-        "warnings": [str(w) for w in warnings],
+        "warnings": warnings,
     }
 
     # --------------------------------------------------------------------------
     # Write summary JSON
     # --------------------------------------------------------------------------
-    write_summary(args.output, summary)
+    write_summary(output_path, summary)
 
     print("[Stage05] Pipeline completed successfully.")
-    print(f"[Stage05] Summary written to: {args.output}")
+    print(f"[Stage05] Summary written to: {output_path}")
 
 
 if __name__ == "__main__":
