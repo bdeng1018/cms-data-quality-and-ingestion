@@ -69,13 +69,15 @@ jobs:
         id: digest
         run: |
           DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
+          echo "$DIGEST" > docker-image-digest.txt
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Upload Docker digest
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-digest
-          path: ${{ steps.digest.outputs.digest }}
+          path: docker-image-digest.txt
 
       - name: Print CI/CD metadata
         run: |
