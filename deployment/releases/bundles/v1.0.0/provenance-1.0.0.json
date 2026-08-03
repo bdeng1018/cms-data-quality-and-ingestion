@@ -1,0 +1,79 @@
+{
+    "provenance_version": "1.0.0",
+    "pipeline_version": "1.0.0",
+    "generated_at": "2026-08-02T20:00:00Z",
+    "build": {
+        "builder": "cms-pipeline-provenance-generator",
+        "spec": "slsa-1.0",
+        "mode": "deterministic",
+        "environment": {
+            "os": "ubuntu-22.04",
+            "runner": "github-actions",
+            "container_runtime": "docker-buildx",
+            "docker_version": "24.x",
+            "python_version": "3.11"
+        }
+    },
+    "source": {
+        "repository": "https://github.com/bdeng1018/cms-data-quality-and-ingestion",
+        "workflow_file": "deployment/ci/github-actions.yml",
+        "run_id": "30808660641",
+        "commit_sha": "2979fa7105209f28fc9b2f5650c8ca36528c28b8",
+        "ref": "refs/heads/main"
+    },
+    "artifacts": {
+        "docker_image": {
+            "name": "ghcr.io/bdeng1018/cms-pipeline:1.0.0",
+            "digest": "sha256:64e7fc5b4873b9aa07dc3da83b47ae269f7db1cae20c4a6e3bbb40734a",
+            "oci_labels": {
+                "org.opencontainers.image.source": "https://github.com/bdeng1018/cms-data-quality-and-ingestion",
+                "org.opencontainers.image.version": "1.0.0"
+            }
+        },
+        "manifest": {
+            "path": "deployment/releases/v1.0.0.manifest.json",
+            "digest": "sha256:42ca3e2e2a8b9ab344e9c4ac6fad6558818fc2fb2732fea077c9847dd6f1ab8a"
+        },
+        "sbom": {
+            "path": "deployment/sbom/sbom-1.0.0.json",
+            "digest": "sha256:5ea111b1130af6f2235fb8c7b2188f16bb35ea684fee02c51fdc61ae75b15408"
+        }
+    },
+    "steps": [
+        {
+            "name": "checkout",
+            "tool": "actions/checkout@v4",
+            "status": "success"
+        },
+        {
+            "name": "setup-python",
+            "tool": "actions/setup-python@v5",
+            "status": "success"
+        },
+        {
+            "name": "docker-build",
+            "tool": "docker/buildx",
+            "context": ".",
+            "dockerfile": "deployment/Dockerfile",
+            "status": "success"
+        },
+        {
+            "name": "docker-push",
+            "tool": "ghcr.io",
+            "status": "success"
+        },
+        {
+            "name": "digest-extraction",
+            "tool": "docker inspect",
+            "status": "success"
+        }
+    ],
+    "integrity": {
+        "self_hash": "pending",
+        "validated_at": null,
+        "validators": {
+            "provenance_validator": "deployment/scripts/validate_provenance.py",
+            "sbom_validator": "deployment/scripts/validate_sbom.py"
+        }
+    }
+}
