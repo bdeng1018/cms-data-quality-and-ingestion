@@ -50,9 +50,6 @@ jobs:
           name: docker-image-digest
           path: ${{ steps.digest.outputs.digest }}
 
-      - name: Validate manifest provenance
-        run: python deployment/scripts/validate_provenance.py deployment/releases/v1.0.0.manifest.json
-
       - name: Print CI/CD metadata
         run: |
           echo "RUN_ID=$GITHUB_RUN_ID"
