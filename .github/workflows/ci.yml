@@ -1,66 +1,69 @@
 name: CMS Pipeline CI/CD
 
 on:
-    push:
-        branches: ["main"]
-    pull_request:
-        branches: ["main"]
-    workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
-    build-test-validate:
-        runs-on: ubuntu-latest
+  build-test-validate:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          node-version: "24"
 
-            - name: Set up Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version: "3.11"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          node-version: "24"
 
-            - name: Install dependencies
-              run: |
-                  pip install -r deployment/requirements.txt
-                  pip install pytest flake8
+      - name: Install dependencies
+        run: |
+          pip install -r deployment/requirements.txt
+          pip install pytest flake8
 
-            - name: Run tests
-              run: pytest -q
+      - name: Run tests
+        run: pytest -q
 
-            - name: Lint code
-              run: flake8 src/ || true
+      - name: Lint code
+        run: flake8 src/ || true
 
-            - name: Build Docker image
-              run: docker build -t cms-pipeline:1.0.0 .
+      - name: Build Docker image
+        run: docker build -t cms-pipeline:1.0.0 .
 
-            - name: Compute Docker digest
-              id: digest
-              run: |
-                  DIGEST=$(docker inspect cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
-                  echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+      - name: Compute Docker digest
+        id: digest
+        run: |
+          DIGEST=$(docker inspect cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
-            - name: Upload Docker digest
-              uses: actions/upload-artifact@v4
-              with:
-                  name: docker-image-digest
-                  path: ${{ steps.digest.outputs.digest }}
+      - name: Upload Docker digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-digest
+          path: ${{ steps.digest.outputs.digest }}
 
-            - name: Validate SBOM
-              run: python deployment/scripts/validate_sbom.py deployment/sbom/sbom-1.0.0.json
+      - name: Validate SBOM
+        run: python deployment/scripts/validate_sbom.py deployment/sbom/sbom-1.0.0.json
 
-            - name: Validate manifest provenance
-              run: python deployment/scripts/validate_provenance.py deployment/releases/v1.0.0.manifest.json
+      - name: Validate manifest provenance
+        run: python deployment/scripts/validate_provenance.py deployment/releases/v1.0.0.manifest.json
 
-            - name: Print CI/CD metadata
-              run: |
-                  echo "RUN_ID=$GITHUB_RUN_ID"
-                  echo "COMMIT_SHA=$GITHUB_SHA"
+      - name: Print CI/CD metadata
+        run: |
+          echo "RUN_ID=$GITHUB_RUN_ID"
+          echo "COMMIT_SHA=$GITHUB_SHA"
 
-            - name: Upload metadata artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: cicd-metadata
-                  path: |
-                      deployment/releases/v1.0.0.manifest.json
-                      deployment/sbom/sbom-1.0.0.json
+      - name: Upload metadata artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cicd-metadata
+          path: |
+            deployment/releases/v1.0.0.manifest.json
+            deployment/sbom/sbom-1.0.0.json
