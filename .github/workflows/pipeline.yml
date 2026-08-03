@@ -1,12 +1,12 @@
+# force reindex
 name: CMS Pipeline CI/CD
 
 on:
   push:
     tags:
-      - v*
+      - "v*"
   pull_request:
-    branches:
-      - main
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:

@@ -1,6 +1,6 @@
 # ==============================================================================
 # CMS POS/QIES Ingestion + Quality + Reporting Pipeline
-# Conda environment for development, testing, and execution
+# Deterministic conda environment for development, testing, and execution
 # ==============================================================================
 
 name: pos_qies_pipeline
@@ -33,3 +33,16 @@ dependencies:
   # YAML + Configuration Parsing (Stage 05 runner)
   # ============================================================================
   - pyyaml=6.*
+
+  # ============================================================================
+  # Cryptographic + Hashing Utilities (Freeze Pipeline)
+  # ============================================================================
+  - openssl=3.*
+  - pip
+
+  # ============================================================================
+  # Pip-only dependencies (freeze pipeline + validators)
+  # ============================================================================
+  - pip:
+      - jsonschema==4.*
+      - rich==13.*

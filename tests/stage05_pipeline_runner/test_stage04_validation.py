@@ -27,30 +27,26 @@ from src.stage05_pipeline_runner.run_pipeline import (
 # Test: validate_stage04_outputs detects missing files
 # ==============================================================================
 def test_stage04_validation_missing(tmp_path):
-    """Missing Stage 04 artifacts should be detected."""
+    """Validator should detect missing Stage 04 artifacts."""
 
     os.chdir(tmp_path)
 
-    # Create only one artifact
     stage04 = tmp_path / "data/stage04_processed"
     stage04.mkdir(parents=True)
     (stage04 / "report_index.json").write_text("{}")
 
-    # Patch working directory so validate_stage04_outputs sees tmp_path
-    with patch("os.path.exists") as mock_exists:
+    from src.stage05_pipeline_runner.run_pipeline import validate_stage04_outputs
 
-        def fake_exists(path):
-            return Path(path).exists()
+    missing = validate_stage04_outputs(root=tmp_path)
 
-        mock_exists.side_effect = fake_exists
-
-        missing = validate_stage04_outputs()
-
-        # Modern validator checks THREE artifacts
-        assert len(missing) == 3
-        assert any("report_index.json" in m for m in missing)
-        assert any("facility_health.csv" in m for m in missing)
-        assert any("dataset_summary.json" in m for m in missing)
+    # Expect the two missing files
+    assert len(missing) == 2
+    assert (
+        tmp_path / "data/stage04_processed/facility_health.csv"
+    ).as_posix() in missing
+    assert (
+        tmp_path / "data/stage04_processed/dataset_summary.json"
+    ).as_posix() in missing
 
 
 # ==============================================================================

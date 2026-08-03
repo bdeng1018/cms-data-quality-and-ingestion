@@ -18,7 +18,7 @@
     },
     {
       "name": "CITY_NAME",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "ACPTBL_POC_SW",
@@ -30,7 +30,7 @@
     },
     {
       "name": "SSA_CNTY_CD",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "CROSS_REF_PROVIDER_NUMBER",
@@ -70,7 +70,7 @@
     },
     {
       "name": "PRVDR_NUM",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "RGN_CD",
@@ -82,7 +82,7 @@
     },
     {
       "name": "STATE_CD",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "SSA_STATE_CD",
@@ -90,7 +90,7 @@
     },
     {
       "name": "STATE_RGN_CD",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "ST_ADR",
@@ -118,7 +118,7 @@
     },
     {
       "name": "ZIP_CD",
-      "type": "float"
+      "type": "boolean"
     },
     {
       "name": "FIPS_STATE_CD",
@@ -238,7 +238,7 @@
     },
     {
       "name": "OVRRD_BED_CNT_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "CRTFD_BED_CNT",
@@ -354,11 +354,11 @@
     },
     {
       "name": "COLCTN_STUS_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "RN_24_HR_WVR_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "RN_7_DAY_WVR_SW",
@@ -370,7 +370,7 @@
     },
     {
       "name": "LSC_WVR_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "ROOM_SIZE_WVR_SW",
@@ -442,7 +442,7 @@
     },
     {
       "name": "MDCD_MDCR_PRTCPTG_PRVDR_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "MEDICARE_MEDICAID_PRVDR_NUMBER",
@@ -470,11 +470,11 @@
     },
     {
       "name": "MEET_1861_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "NPP_TYPE_CD",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "TOT_OFSITE_CNCR_HOSP_CNT",
@@ -562,7 +562,7 @@
     },
     {
       "name": "PRVNC_CD",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "PSYCH_UNIT_BED_CNT",
@@ -594,7 +594,7 @@
     },
     {
       "name": "REHAB_UNIT_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "REHAB_UNIT_TRMNTN_CD",
@@ -1270,7 +1270,7 @@
     },
     {
       "name": "OVRRD_STFG_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "PROFNL_ADMIN_CNTRCT_CNT",
@@ -1870,7 +1870,7 @@
     },
     {
       "name": "SB_SW",
-      "type": "string"
+      "type": "boolean"
     },
     {
       "name": "SB_SIZE_CD",

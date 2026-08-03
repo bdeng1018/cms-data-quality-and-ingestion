@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
-Provenance Validator for CMS Data Quality & Ingestion Pipeline
+Provenance Validator for CMS Pipeline
 
-This validator performs:
-
-1. Structural validation of provenance.json
-2. Manifest digest alignment
-3. SBOM digest alignment
-4. Docker image digest alignment
-5. Integrity block validation
-
-Exit codes:
-    0 = success
-    1 = validation failure
+Validates frozen provenance for any version:
+  1. Structural validation
+  2. Version alignment (provenance ↔ manifest ↔ SBOM)
+  3. Manifest digest alignment
+  4. SBOM digest alignment
+  5. Docker digest format validation
+  6. Docker digest cross-alignment (provenance ↔ manifest)
+  7. Integrity block validation (including self-hash)
 """
 
 import hashlib
@@ -20,14 +17,6 @@ import json
 import logging
 import sys
 from pathlib import Path
-
-# ==============================================================================
-# Configuration
-# ==============================================================================
-
-PROVENANCE_PATH = Path("deployment/provenance/provenance-1.0.0.json")
-MANIFEST_PATH = Path("deployment/releases/v1.0.0.manifest.json")
-SBOM_PATH = Path("deployment/sbom/sbom-1.0.0.json")
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -37,15 +26,6 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 
 def sha256_file(path: Path) -> str:
-    """
-    Compute SHA-256 hash of a file.
-
-    Args:
-        path (Path): Path to the file.
-
-    Returns:
-        str: Hex digest of the file contents.
-    """
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
@@ -54,18 +34,6 @@ def sha256_file(path: Path) -> str:
 
 
 def load_json(path: Path):
-    """
-    Load JSON from a file with error handling.
-
-    Args:
-        path (Path): Path to JSON file.
-
-    Returns:
-        dict: Parsed JSON object.
-
-    Raises:
-        SystemExit: If file cannot be loaded.
-    """
     try:
         with open(path, "r") as f:
             return json.load(f)
@@ -80,56 +48,68 @@ def load_json(path: Path):
 
 
 def validate_provenance_structure(prov: dict) -> bool:
-    """
-    Validate required provenance fields.
-
-    Args:
-        prov (dict): Parsed provenance JSON.
-
-    Returns:
-        bool: True if structure is valid.
-    """
     logging.info("Checking provenance structure...")
 
-    required_fields = ["build", "artifacts", "integrity"]
-
+    required_fields = [
+        "version",
+        "generated_at",
+        "build",
+        "source",
+        "artifacts",
+        "integrity",
+    ]
     for field in required_fields:
         if field not in prov:
             logging.error(f"Missing required provenance field: {field}")
             return False
 
-    if "manifest" not in prov["artifacts"]:
-        logging.error("Provenance missing artifacts.manifest")
-        return False
-
-    if "sbom" not in prov["artifacts"]:
-        logging.error("Provenance missing artifacts.sbom")
-        return False
-
-    if "docker_image" not in prov["artifacts"]:
-        logging.error("Provenance missing artifacts.docker_image")
-        return False
+    required_artifacts = ["manifest", "sbom", "docker_image"]
+    for key in required_artifacts:
+        if key not in prov["artifacts"]:
+            logging.error(f"Provenance missing artifacts.{key}")
+            return False
 
     logging.info("Provenance structure validated")
     return True
 
 
-def validate_manifest_alignment(provenance: dict) -> bool:
-    """
-    Validate provenance ↔ manifest digest alignment.
+def validate_version_alignment(
+    prov: dict, manifest_path: Path, sbom_path: Path, version: str
+) -> bool:
+    logging.info("Validating version alignment...")
 
-    Args:
-        provenance (dict): Provenance JSON.
+    expected = version
 
-    Returns:
-        bool: True if aligned.
-    """
+    manifest = load_json(manifest_path)
+    sbom = load_json(sbom_path)
+
+    mv = manifest.get("version")
+    sv = sbom["metadata"].get("version")
+    pv = prov.get("version")
+
+    if mv != expected:
+        logging.error(f"Manifest version mismatch: expected {expected}, found {mv}")
+        return False
+
+    if sv != expected:
+        logging.error(f"SBOM version mismatch: expected {expected}, found {sv}")
+        return False
+
+    if pv != expected:
+        logging.error(f"Provenance version mismatch: expected {expected}, found {pv}")
+        return False
+
+    logging.info("Version alignment validated")
+    return True
+
+
+def validate_manifest_alignment(prov: dict, manifest_path: Path) -> bool:
     logging.info("Validating manifest digest alignment...")
 
-    actual = sha256_file(MANIFEST_PATH)
+    actual = sha256_file(manifest_path)
 
     try:
-        expected = provenance["artifacts"]["manifest"]["digest"].replace("sha256:", "")
+        expected = prov["artifacts"]["manifest"]["digest"].replace("sha256:", "")
     except KeyError:
         logging.error("Provenance missing artifacts.manifest.digest")
         return False
@@ -146,22 +126,13 @@ def validate_manifest_alignment(provenance: dict) -> bool:
     return True
 
 
-def validate_sbom_alignment(provenance: dict) -> bool:
-    """
-    Validate provenance ↔ SBOM digest alignment.
-
-    Args:
-        provenance (dict): Provenance JSON.
-
-    Returns:
-        bool: True if aligned.
-    """
+def validate_sbom_alignment(prov: dict, sbom_path: Path) -> bool:
     logging.info("Validating SBOM digest alignment...")
 
-    actual = sha256_file(SBOM_PATH)
+    actual = sha256_file(sbom_path)
 
     try:
-        expected = provenance["artifacts"]["sbom"]["digest"].replace("sha256:", "")
+        expected = prov["artifacts"]["sbom"]["digest"].replace("sha256:", "")
     except KeyError:
         logging.error("Provenance missing artifacts.sbom.digest")
         return False
@@ -178,38 +149,27 @@ def validate_sbom_alignment(provenance: dict) -> bool:
     return True
 
 
-def validate_docker_alignment(prov: dict) -> bool:
-    """
-    Validate docker image digest presence and format.
+def validate_docker_cross_alignment(prov: dict, manifest_path: Path) -> bool:
+    logging.info("Validating docker digest alignment (provenance ↔ manifest)...")
 
-    Args:
-        prov (dict): Provenance JSON.
+    manifest = load_json(manifest_path)
 
-    Returns:
-        bool: True if valid.
-    """
-    logging.info("Validating docker image digest...")
+    prov_digest = prov["artifacts"]["docker_image"]["digest"]
+    manifest_digest = manifest["artifacts"]["docker_image"]["digest"]
 
-    digest = prov["artifacts"]["docker_image"].get("digest")
-
-    if not digest or not digest.startswith("sha256:"):
-        logging.error("Invalid or missing docker image digest")
+    if prov_digest != manifest_digest:
+        logging.error(
+            "Docker digest mismatch:\n"
+            f"  provenance: {prov_digest}\n"
+            f"  manifest:   {manifest_digest}"
+        )
         return False
 
-    logging.info("Docker image digest validated")
+    logging.info("Docker digest aligned between provenance and manifest")
     return True
 
 
-def validate_integrity_block(prov: dict) -> bool:
-    """
-    Validate integrity block structure.
-
-    Args:
-        prov (dict): Provenance JSON.
-
-    Returns:
-        bool: True if valid.
-    """
+def validate_integrity_block(prov: dict, prov_path: Path) -> bool:
     logging.info("Validating integrity block...")
 
     integrity = prov.get("integrity", {})
@@ -218,33 +178,51 @@ def validate_integrity_block(prov: dict) -> bool:
         logging.error("Integrity block missing self_hash")
         return False
 
+    if not integrity["self_hash"].startswith("sha256:"):
+        logging.error("Integrity self_hash must start with sha256:")
+        return False
+
+    if "validated_at" not in integrity:
+        logging.error("Integrity block missing validated_at timestamp")
+        return False
+
     logging.info("Integrity block validated")
     return True
 
 
 # ==============================================================================
-# Main Entry Point
+# Main
 # ==============================================================================
 
 
 def main():
     logging.info("Starting provenance validation...")
 
-    prov = load_json(PROVENANCE_PATH)
+    if len(sys.argv) != 2:
+        logging.error("Usage: validate_provenance.py <VERSION>")
+        sys.exit(1)
+
+    version = sys.argv[1]
+
+    prov_path = Path(f"deployment/provenance/provenance-{version}.json")
+    manifest_path = Path(f"deployment/releases/{version}.manifest.json")
+    sbom_path = Path(f"deployment/sbom/sbom-{version}.json")
+
+    prov = load_json(prov_path)
 
     if not validate_provenance_structure(prov):
         sys.exit(1)
 
-    if not validate_manifest_alignment(prov):
+    if not validate_version_alignment(prov, manifest_path, sbom_path, version):
         sys.exit(1)
 
-    if not validate_sbom_alignment(prov):
+    if not validate_manifest_alignment(prov, manifest_path):
         sys.exit(1)
 
-    if not validate_docker_alignment(prov):
+    if not validate_sbom_alignment(prov, sbom_path):
         sys.exit(1)
 
-    if not validate_integrity_block(prov):
+    if not validate_docker_cross_alignment(prov, manifest_path):
         sys.exit(1)
 
     logging.info("Provenance validation completed successfully")

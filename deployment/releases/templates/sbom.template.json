@@ -1,0 +1,78 @@
+{
+    "generated_at": "<ISO8601_TIMESTAMP>",
+    "spec": "SPDX-2.3",
+    "metadata": {
+        "name": "cms-data-quality-and-ingestion",
+        "description": "SBOM for CMS POS/QIES ingestion, quality, reporting, and deployment pipeline.",
+        "creator": "cms-pipeline-sbom-generator",
+        "license": "Apache-2.0",
+        "version": "<VERSION>",
+        "component_count": "<TO_BE_FILLED>",
+        "dependencies_count": "<TO_BE_FILLED>"
+    },
+    "components": [
+        {
+            "id": "python-3.11-slim",
+            "type": "container-base-image",
+            "version": "<PYTHON_BASE_VERSION>",
+            "source": "docker.io/library/python:<PYTHON_BASE_VERSION>-slim",
+            "license": "PSF-2.0"
+        },
+        {
+            "id": "cms-pipeline",
+            "type": "application",
+            "version": "<VERSION>",
+            "source": "local-build",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "docker-image",
+            "type": "oci-image",
+            "version": "<VERSION>",
+            "source": "ghcr.io/<GHCR_NAMESPACE>/cms-pipeline:<VERSION>",
+            "digest": "<DOCKER_DIGEST>",
+            "license": "Apache-2.0"
+        },
+        {
+            "id": "python-dependencies",
+            "type": "python-package-set",
+            "source": "deployment/requirements.txt",
+            "packages": [
+                {
+                    "name": "pandas",
+                    "version": "<PANDAS_VERSION>",
+                    "license": "BSD-3-Clause"
+                },
+                {
+                    "name": "pyyaml",
+                    "version": "<PYYAML_VERSION>",
+                    "license": "MIT"
+                },
+                {
+                    "name": "pytest",
+                    "version": "<PYTEST_VERSION>",
+                    "license": "MIT"
+                }
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "from": "cms-pipeline",
+            "to": "python-3.11-slim"
+        },
+        {
+            "from": "cms-pipeline",
+            "to": "python-dependencies"
+        },
+        {
+            "from": "cms-pipeline",
+            "to": "docker-image"
+        }
+    ],
+    "hash": "",
+    "provenance": {
+        "path": "deployment/provenance/provenance-<VERSION>.json",
+        "status": "pending"
+    }
+}

@@ -1,0 +1,50 @@
+{
+    "version": "<VERSION>",
+    "generated_at": "<ISO8601_TIMESTAMP>",
+    "build": {
+        "builder": "cms-pipeline-provenance-generator",
+        "spec": "slsa-1.0",
+        "mode": "deterministic",
+        "environment": {
+            "os": "ubuntu-22.04",
+            "execution_environment": "<EXECUTION_ENVIRONMENT>",
+            "container_runtime": "<CONTAINER_RUNTIME>",
+            "docker_version": "<DOCKER_VERSION>",
+            "python_version": "<PYTHON_VERSION>"
+        }
+    },
+    "source": {
+        "repository": "<REPOSITORY_URL>",
+        "workflow_file": "<WORKFLOW_FILE>",
+        "run_id": "<GITHUB_RUN_ID>",
+        "commit_sha": "<GITHUB_SHA>",
+        "ref": "<GIT_REF>"
+    },
+    "artifacts": {
+        "docker_image": {
+            "name": "ghcr.io/<GHCR_NAMESPACE>/cms-pipeline:<VERSION>",
+            "digest": "",
+            "oci_labels": {
+                "org.opencontainers.image.source": "<REPOSITORY_URL>",
+                "org.opencontainers.image.version": "<VERSION>"
+            }
+        },
+        "manifest": {
+            "path": "deployment/releases/<VERSION>.manifest.json",
+            "digest": ""
+        },
+        "sbom": {
+            "path": "deployment/sbom/sbom-<VERSION>.json",
+            "digest": ""
+        },
+        "provenance": {
+            "path": "deployment/provenance/provenance-<VERSION>.json",
+            "digest": ""
+        }
+    },
+    "integrity": {
+        "self_hash": "",
+        "validated_at": "",
+        "validators": {}
+    }
+}
