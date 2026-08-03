@@ -28,6 +28,11 @@
 FROM python:3.11-slim AS base
 
 # ==============================================================================
+# OCI Source Label (GHCR Linking)
+# ==============================================================================
+LABEL org.opencontainers.image.source="https://github.com/bdeng1018/cms-data-quality-and-ingestion"
+
+# ==============================================================================
 # Environment Setup
 # ==============================================================================
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -42,16 +47,12 @@ WORKDIR /app
 # ==============================================================================
 # Dependency Contracts
 # ==============================================================================
-# environment.yml is retained for local development (conda).
-# requirements.txt defines the container's pip-based dependency set.
 COPY environment.yml ./
 COPY deployment/requirements.txt ./
 
 # ==============================================================================
 # Deterministic Dependency Installation (pip)
 # ==============================================================================
-# The container uses pip-based dependencies for stability and ARM64 safety.
-# Local development continues to use conda via environment.yml.
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
