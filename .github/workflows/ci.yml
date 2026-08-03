@@ -41,7 +41,7 @@ jobs:
       - name: Compute Docker digest
         id: digest
         run: |
-          DIGEST=$(docker inspect cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
+          DIGEST=$(docker inspect cms-pipeline:1.0.0 --format='{{.Id}}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Upload Docker digest
