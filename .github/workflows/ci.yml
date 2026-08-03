@@ -42,15 +42,15 @@ jobs:
         run: docker build -t cms-pipeline:1.0.0 -f deployment/Dockerfile .
 
       - name: Tag Docker image for GHCR
-        run: docker tag cms-pipeline:1.0.0 ghcr.io/${{ github.repository }}/cms-pipeline:1.0.0
+        run: docker tag cms-pipeline:1.0.0 ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
 
       - name: Push Docker image to GHCR
-        run: docker push ghcr.io/${{ github.repository }}/cms-pipeline:1.0.0
+        run: docker push ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
 
       - name: Compute GHCR digest
         id: digest
         run: |
-          DIGEST=$(docker inspect ghcr.io/${{ github.repository }}/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
+          DIGEST=$(docker inspect ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Upload Docker digest
