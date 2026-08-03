@@ -39,10 +39,9 @@ jobs:
           echo "Ignoring flake8 failures"
           exit 0
 
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+      # Install Docker correctly (no apt conflicts)
+      - name: Set up Docker
+        uses: docker/setup-docker@v2
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u bdeng1018 --password-stdin
