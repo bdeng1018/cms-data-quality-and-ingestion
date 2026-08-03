@@ -33,7 +33,7 @@ jobs:
         run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest -q
 
       - name: Lint code
-        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/ ; true
+        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/ || exit 0
 
       # Use your classic PAT, not GITHUB_TOKEN
       - name: Log in to GHCR
