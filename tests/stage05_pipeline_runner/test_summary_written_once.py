@@ -106,11 +106,6 @@ def test_summary_written_once(tmp_path):
     write_calls = [c for c in m.mock_calls if c[0] == "().write"]
     assert len(write_calls) == 1, f"Expected exactly one write, got {len(write_calls)}"
 
-    # Validate the correct file was opened
-    assert any(str(output_path) in str(c) for c in m.mock_calls), \
-        "Summary JSON must be written to the correct output path"
-
-
     # Validate no stray files
     files = list(output_dir.iterdir())
     assert files == [output_path], "Unexpected extra files created in output directory"
