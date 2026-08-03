@@ -52,7 +52,7 @@ def infer_type(series: pd.Series) -> str:
 
     # Datetime detection
     if pd.api.types.is_datetime64_any_dtype(series):
-        # If time component exists → datetime    
+        # If time component exists → datetime
         times = series.dropna().dt.time
         time_strings = times.astype("string")
 

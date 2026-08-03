@@ -16,8 +16,6 @@ The test uses temporary directories and mocking to ensure isolation.
 import json
 from unittest.mock import patch
 
-import pytest
-
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
 
 
@@ -54,7 +52,7 @@ def _run_cli(tmpdir, orchestrator_return):
 
         mock_cfg.return_value = {"stage05": {"output_dir": str(tmpdir)}}
         mock_orch.return_value = orchestrator_return
-        mock_validate.return_value = []   # <-- CRITICAL FIX
+        mock_validate.return_value = []  # <-- CRITICAL FIX
 
         # Simulate CLI args
         test_args = [

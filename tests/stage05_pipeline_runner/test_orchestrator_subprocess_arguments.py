@@ -34,8 +34,13 @@ def test_orchestrator_subprocess_arguments():
         run_all_stages(config)
 
         expected_calls = [
-            call(["python", "-m", "src.stage01_schema_definition.schema_loader"], check=True),
-            call(["python", "-m", "src.stage02_raw_ingestion.run_ingestion"], check=True),
+            call(
+                ["python", "-m", "src.stage01_schema_definition.schema_loader"],
+                check=True,
+            ),
+            call(
+                ["python", "-m", "src.stage02_raw_ingestion.run_ingestion"], check=True
+            ),
             call(["python", "-m", "src.stage03_data_quality.run_quality"], check=True),
             call(["python", "-m", "src.stage04_reporting.run_reporting"], check=True),
         ]

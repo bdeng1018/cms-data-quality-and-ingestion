@@ -1,113 +1,254 @@
 #!/usr/bin/env python3
 """
-validate_provenance.py
+Provenance Validator for CMS Data Quality & Ingestion Pipeline
 
-Validates manifest.provenance against MANIFEST_SPEC.md.
+This validator performs:
 
-This validator enforces:
-- required fields exist
-- fields are non-empty
-- semantic versioning (X.Y.Z)
-- deterministic validation output
-- structured logging for CI/CD
+1. Structural validation of provenance.json
+2. Manifest digest alignment
+3. SBOM digest alignment
+4. Docker image digest alignment
+5. Integrity block validation
 
-It does NOT enforce business logic; that lives in MANIFEST_SPEC.md.
+Exit codes:
+    0 = success
+    1 = validation failure
 """
 
-import argparse
+import hashlib
 import json
-import re
+import logging
 import sys
 from pathlib import Path
 
-REQUIRED_FIELDS = [
-    "pipeline_version",
-    "schema_version",
-    "artifact_version",
-    "manifest_version",
-    "deployment_version",
-    "sbom_version",
-]
+# ==============================================================================
+# Configuration
+# ==============================================================================
 
-SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
+PROVENANCE_PATH = Path("deployment/provenance/provenance-1.0.0.json")
+MANIFEST_PATH = Path("deployment/releases/v1.0.0.manifest.json")
+SBOM_PATH = Path("deployment/sbom/sbom-1.0.0.json")
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+
+# ==============================================================================
+# Utility Functions
+# ==============================================================================
+
+
+def sha256_file(path: Path) -> str:
+    """
+    Compute SHA-256 hash of a file.
+
+    Args:
+        path (Path): Path to the file.
+
+    Returns:
+        str: Hex digest of the file contents.
+    """
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def load_json(path: Path):
-    """Load JSON with deterministic error handling."""
+    """
+    Load JSON from a file with error handling.
+
+    Args:
+        path (Path): Path to JSON file.
+
+    Returns:
+        dict: Parsed JSON object.
+
+    Raises:
+        SystemExit: If file cannot be loaded.
+    """
     try:
         with open(path, "r") as f:
             return json.load(f)
     except Exception as e:
-        print(f"[ERROR] Failed to load JSON '{path}': {e}")
+        logging.error(f"Failed to load {path}: {e}")
         sys.exit(1)
 
 
-def validate_semver(name: str, value: str):
-    """Validate semantic versioning (X.Y.Z)."""
-    if not SEMVER_PATTERN.match(value):
-        print(f"[ERROR] {name}='{value}' is not valid semantic versioning (X.Y.Z).")
+# ==============================================================================
+# Validation Steps
+# ==============================================================================
+
+
+def validate_provenance_structure(prov: dict) -> bool:
+    """
+    Validate required provenance fields.
+
+    Args:
+        prov (dict): Parsed provenance JSON.
+
+    Returns:
+        bool: True if structure is valid.
+    """
+    logging.info("Checking provenance structure...")
+
+    required_fields = ["build", "artifacts", "integrity"]
+
+    for field in required_fields:
+        if field not in prov:
+            logging.error(f"Missing required provenance field: {field}")
+            return False
+
+    if "manifest" not in prov["artifacts"]:
+        logging.error("Provenance missing artifacts.manifest")
         return False
-    print(f"[OK] {name}='{value}' is valid semantic versioning.")
+
+    if "sbom" not in prov["artifacts"]:
+        logging.error("Provenance missing artifacts.sbom")
+        return False
+
+    if "docker_image" not in prov["artifacts"]:
+        logging.error("Provenance missing artifacts.docker_image")
+        return False
+
+    logging.info("Provenance structure validated")
     return True
 
 
-def validate_required_fields(manifest: dict):
-    """Validate required fields exist and are non-empty."""
-    print("[INFO] Checking required fields...")
-    ok = True
-    for field in REQUIRED_FIELDS:
-        if field not in manifest:
-            print(f"[ERROR] Missing required field: {field}")
-            ok = False
-        elif manifest[field] in ("", None):
-            print(f"[ERROR] Field '{field}' is empty.")
-            ok = False
-        else:
-            print(f"[OK] Field '{field}' present.")
-    return ok
+def validate_manifest_alignment(provenance: dict) -> bool:
+    """
+    Validate provenance ↔ manifest digest alignment.
+
+    Args:
+        provenance (dict): Provenance JSON.
+
+    Returns:
+        bool: True if aligned.
+    """
+    logging.info("Validating manifest digest alignment...")
+
+    actual = sha256_file(MANIFEST_PATH)
+
+    try:
+        expected = provenance["artifacts"]["manifest"]["digest"].replace("sha256:", "")
+    except KeyError:
+        logging.error("Provenance missing artifacts.manifest.digest")
+        return False
+
+    if actual != expected:
+        logging.error(
+            "Manifest digest mismatch:\n"
+            f"  expected: sha256:{expected}\n"
+            f"  actual:   sha256:{actual}"
+        )
+        return False
+
+    logging.info("Manifest digest validated")
+    return True
 
 
-def validate_versions(manifest: dict):
-    """Validate all version fields follow semantic versioning."""
-    print("[INFO] Checking semantic versioning...")
-    ok = True
-    for field in REQUIRED_FIELDS:
-        value = manifest.get(field, "")
-        if not validate_semver(field, value):
-            ok = False
-    return ok
+def validate_sbom_alignment(provenance: dict) -> bool:
+    """
+    Validate provenance ↔ SBOM digest alignment.
+
+    Args:
+        provenance (dict): Provenance JSON.
+
+    Returns:
+        bool: True if aligned.
+    """
+    logging.info("Validating SBOM digest alignment...")
+
+    actual = sha256_file(SBOM_PATH)
+
+    try:
+        expected = provenance["artifacts"]["sbom"]["digest"].replace("sha256:", "")
+    except KeyError:
+        logging.error("Provenance missing artifacts.sbom.digest")
+        return False
+
+    if actual != expected:
+        logging.error(
+            "SBOM digest mismatch:\n"
+            f"  expected: sha256:{expected}\n"
+            f"  actual:   sha256:{actual}"
+        )
+        return False
+
+    logging.info("SBOM digest validated")
+    return True
+
+
+def validate_docker_alignment(prov: dict) -> bool:
+    """
+    Validate docker image digest presence and format.
+
+    Args:
+        prov (dict): Provenance JSON.
+
+    Returns:
+        bool: True if valid.
+    """
+    logging.info("Validating docker image digest...")
+
+    digest = prov["artifacts"]["docker_image"].get("digest")
+
+    if not digest or not digest.startswith("sha256:"):
+        logging.error("Invalid or missing docker image digest")
+        return False
+
+    logging.info("Docker image digest validated")
+    return True
+
+
+def validate_integrity_block(prov: dict) -> bool:
+    """
+    Validate integrity block structure.
+
+    Args:
+        prov (dict): Provenance JSON.
+
+    Returns:
+        bool: True if valid.
+    """
+    logging.info("Validating integrity block...")
+
+    integrity = prov.get("integrity", {})
+
+    if "self_hash" not in integrity:
+        logging.error("Integrity block missing self_hash")
+        return False
+
+    logging.info("Integrity block validated")
+    return True
+
+
+# ==============================================================================
+# Main Entry Point
+# ==============================================================================
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate manifest.provenance")
-    parser.add_argument("--manifest", required=True, help="Path to manifest.provenance")
-    parser.add_argument("--spec", required=True, help="Path to MANIFEST_SPEC.md")
-    args = parser.parse_args()
+    logging.info("Starting provenance validation...")
 
-    manifest_path = Path(args.manifest)
-    spec_path = Path(args.spec)
+    prov = load_json(PROVENANCE_PATH)
 
-    if not manifest_path.exists():
-        print(f"[ERROR] Manifest file not found: {manifest_path}")
+    if not validate_provenance_structure(prov):
         sys.exit(1)
 
-    if not spec_path.exists():
-        print(f"[ERROR] Spec file not found: {spec_path}")
+    if not validate_manifest_alignment(prov):
         sys.exit(1)
 
-    print("=== Provenance Validation ===")
-    manifest = load_json(manifest_path)
+    if not validate_sbom_alignment(prov):
+        sys.exit(1)
 
-    ok_required = validate_required_fields(manifest)
-    ok_versions = validate_versions(manifest)
+    if not validate_docker_alignment(prov):
+        sys.exit(1)
 
-    print("\n=== Validation Summary ===")
-    if ok_required and ok_versions:
-        print("[OK] manifest.provenance is valid.")
-        sys.exit(0)
-    else:
-        print("[FAIL] manifest.provenance failed validation.")
-        sys.exit(2)
+    if not validate_integrity_block(prov):
+        sys.exit(1)
+
+    logging.info("Provenance validation completed successfully")
+    sys.exit(0)
 
 
 if __name__ == "__main__":

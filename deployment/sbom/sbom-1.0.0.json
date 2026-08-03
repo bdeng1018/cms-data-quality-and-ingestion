@@ -8,7 +8,6 @@
         "description": "SBOM for CMS POS/QIES ingestion, quality, reporting, and deployment pipeline.",
         "creator": "cms-pipeline-sbom-generator",
         "license": "Apache-2.0",
-        "self_hash": "sha256:9d2dac09fae17b8edbeb97a7bccf9b25612e004b3e35c86214ef549692edde51",
         "component_count": 6,
         "dependencies_count": 6
     },
@@ -115,8 +114,6 @@
     ],
     "provenance": {
         "manifest": "deployment/releases/v1.0.0.manifest.json",
-        "manifest_hash": "sha256:2d8905163a36e7591261a5792db124f716632eba0119bfeff7dd2725670d8dd9",
-        "sbom_hash": "sha256:9d2dac09fae17b8edbeb97a7bccf9b25612e004b3e35c86214ef549692edde51",
         "validator": "deployment/scripts/validate_sbom.py",
         "status": "pending",
         "validated_at": null
