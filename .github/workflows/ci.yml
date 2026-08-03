@@ -14,25 +14,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          node-version: "24"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          node-version: "24"
 
       - name: Install dependencies
         run: |
           pip install -r deployment/requirements.txt
           pip install pytest flake8
 
+      - name: Add project root to PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts" >> $GITHUB_ENV
+
       - name: Run tests
-        run: pytest -q
+        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest -q
 
       - name: Lint code
-        run: flake8 src/ || true
+        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/ || true
 
       - name: Build Docker image
         run: docker build -t cms-pipeline:1.0.0 .
