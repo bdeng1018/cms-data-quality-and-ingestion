@@ -35,22 +35,24 @@ jobs:
       - name: Lint code
         run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/ || true
 
+      # Use your classic PAT, not GITHUB_TOKEN
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u bdeng1018 --password-stdin
 
       - name: Build Docker image
         run: docker build -t cms-pipeline:1.0.0 -f deployment/Dockerfile .
 
+      # Hardcode your namespace (fixes the permission error)
       - name: Tag Docker image for GHCR
-        run: docker tag cms-pipeline:1.0.0 ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
+        run: docker tag cms-pipeline:1.0.0 ghcr.io/bdeng1018/cms-pipeline:1.0.0
 
       - name: Push Docker image to GHCR
-        run: docker push ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
+        run: docker push ghcr.io/bdeng1018/cms-pipeline:1.0.0
 
       - name: Compute GHCR digest
         id: digest
         run: |
-          DIGEST=$(docker inspect ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
+          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Upload Docker digest
