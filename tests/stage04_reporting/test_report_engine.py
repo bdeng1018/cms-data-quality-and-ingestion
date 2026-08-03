@@ -29,9 +29,9 @@ from src.stage04_reporting.report_engine import (
     identify_sparse_columns,
 )
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Configure test logger
-# ------------------------------------------------------------------------------
+# ==============================================================================
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -43,9 +43,9 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Column Health Tests
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_compute_column_health_basic():
     """
     Validate column health classification and notes generation.
@@ -77,9 +77,9 @@ def test_compute_column_health_basic():
     logger.info("✓ Column health classification validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Facility Health Tests
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_compute_facility_health_basic():
     """
     Validate facility-level health classification based on completeness.
@@ -101,9 +101,9 @@ def test_compute_facility_health_basic():
     logger.info("✓ Facility health classification validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Sparse Column Detection Tests
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_identify_sparse_columns():
     """
     Validate identification of sparse and critical columns.
@@ -123,9 +123,9 @@ def test_identify_sparse_columns():
     logger.info("✓ Sparse column detection validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Top/Bottom Facility Ranking Tests
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_compute_top_bottom_facilities():
     """
     Validate ranking of facilities by completeness score.
@@ -147,9 +147,9 @@ def test_compute_top_bottom_facilities():
     logger.info("✓ Facility ranking validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Dataset Summary Tests
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_compute_dataset_summary():
     """
     Validate dataset-level summary construction, including:

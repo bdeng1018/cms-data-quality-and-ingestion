@@ -28,9 +28,9 @@ import pandas as pd
 from src.stage04_reporting import run_reporting
 from src.stage04_reporting.run_reporting import main as run_stage04
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Configure test logger
-# ------------------------------------------------------------------------------
+# ==============================================================================
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -42,9 +42,9 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Helper: Create synthetic Stage 03 artifacts
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def _create_stage03_artifacts(base_dir: Path):
     """
     Creates synthetic Stage 03 artifacts inside a temporary directory.
@@ -94,9 +94,9 @@ def _create_stage03_artifacts(base_dir: Path):
     return stage03_dir
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Main Runner Test
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_run_reporting(tmp_path, monkeypatch):
     """
     Validate Stage 04 runner end‑to‑end using synthetic Stage 03 artifacts.

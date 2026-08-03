@@ -31,9 +31,9 @@ from src.stage04_reporting.report_formatter import (
     format_top_bottom_facilities,
 )
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Configure test logger
-# ------------------------------------------------------------------------------
+# ==============================================================================
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -45,9 +45,9 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Dataset Summary Formatting
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_format_dataset_summary():
     """
     Validate JSON‑ready dataset summary formatting.
@@ -73,9 +73,9 @@ def test_format_dataset_summary():
     logger.info("✓ Dataset summary formatting validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Column Health Formatting
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_format_column_health():
     """
     Validate JSON‑friendly column health formatting.
@@ -108,9 +108,9 @@ def test_format_column_health():
     logger.info("✓ Column health formatting validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Sparse Columns Formatting
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_format_sparse_columns():
     """
     Validate sparse column list formatting.
@@ -125,9 +125,9 @@ def test_format_sparse_columns():
     logger.info("✓ Sparse column formatting validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Facility Health Formatting
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_format_facility_health():
     """
     Validate DataFrame passthrough for facility health CSV formatting.
@@ -151,9 +151,9 @@ def test_format_facility_health():
     logger.info("✓ Facility health DataFrame formatting validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Top/Bottom Facility Formatting
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_format_top_bottom_facilities():
     """
     Validate DataFrame passthrough for top/bottom facility CSV formatting.
@@ -173,9 +173,9 @@ def test_format_top_bottom_facilities():
     logger.info("✓ Top/bottom facility formatting validated.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Full Report Formatting
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def test_format_reports_end_to_end():
     """
     Validate full formatting pipeline using synthetic engine output.

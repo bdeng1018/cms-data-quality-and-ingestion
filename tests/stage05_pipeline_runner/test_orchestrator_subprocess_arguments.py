@@ -6,10 +6,10 @@ This test verifies that the Stage 05 orchestrator invokes each stage using the
 EXACT deterministic subprocess arguments defined in the pipeline contract.
 
 Required behavior:
-- Stage 01 command must match schema_loader.py
-- Stage 02 command must match run_ingestion.py
-- Stage 03 command must match run_quality.py
-- Stage 04 command must match run_reporting.py
+- Stage 01 command must match module invocation
+- Stage 02 command must match module invocation
+- Stage 03 command must match module invocation
+- Stage 04 command must match module invocation
 - No additional flags, env vars, or arguments may be added
 - Ordering must be preserved
 
@@ -34,12 +34,10 @@ def test_orchestrator_subprocess_arguments():
         run_all_stages(config)
 
         expected_calls = [
-            call(
-                ["python", "src/stage01_schema_definition/schema_loader.py"], check=True
-            ),
-            call(["python", "src/stage02_raw_ingestion/run_ingestion.py"], check=True),
-            call(["python", "src/stage03_data_quality/run_quality.py"], check=True),
-            call(["python", "src/stage04_reporting/run_reporting.py"], check=True),
+            call(["python", "-m", "src.stage01_schema_definition.schema_loader"], check=True),
+            call(["python", "-m", "src.stage02_raw_ingestion.run_ingestion"], check=True),
+            call(["python", "-m", "src.stage03_data_quality.run_quality"], check=True),
+            call(["python", "-m", "src.stage04_reporting.run_reporting"], check=True),
         ]
 
         mock_run.assert_has_calls(expected_calls)

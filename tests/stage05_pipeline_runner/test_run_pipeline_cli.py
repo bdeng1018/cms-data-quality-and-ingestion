@@ -43,15 +43,18 @@ def _run_cli(tmpdir, orchestrator_return):
 
     output_path = tmpdir / "pipeline_summary.json"
 
-    # Mock config loader + orchestrator
+    # Mock config loader + orchestrator + stage04 validator
     with patch(
         "src.stage05_pipeline_runner.run_pipeline.load_pipeline_config"
     ) as mock_cfg, patch(
         "src.stage05_pipeline_runner.run_pipeline.run_all_stages"
-    ) as mock_orch:
+    ) as mock_orch, patch(
+        "src.stage05_pipeline_runner.run_pipeline.validate_stage04_outputs"
+    ) as mock_validate:
 
         mock_cfg.return_value = {"stage05": {"output_dir": str(tmpdir)}}
         mock_orch.return_value = orchestrator_return
+        mock_validate.return_value = []   # <-- CRITICAL FIX
 
         # Simulate CLI args
         test_args = [
