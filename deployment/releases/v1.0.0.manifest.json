@@ -5,10 +5,9 @@
         "pipeline_version": "1.0.0",
         "schema_version": "1.0.0",
         "artifact_version": "1.0.0",
-        "manifest_version": "1.0.0",
+        "manifest_version": "0.0.0",
         "deployment_version": "1.0.0",
         "sbom_version": "1.0.0",
-        "sbom_hash": "sha256:9d2dac09fae17b8edbeb97a7bccf9b25612e004b3e35c86214ef549692edde51",
         "validated_at": null,
         "component_count": 6,
         "dependencies_count": 6,
@@ -44,12 +43,13 @@
     },
     "ci_cd": {
         "workflow": "deployment/ci/github-actions.yml",
-        "run_id": "REPLACE_WITH_GITHUB_RUN_ID",
+        "run_id": "30808660641",
         "commit_sha": "2979fa7105209f28fc9b2f5650c8ca36528c28b8"
     },
     "validation": {
         "provenance_validator": "deployment/scripts/validate_provenance.py",
         "sbom_validator": "deployment/scripts/validate_sbom.py",
+        "manifest_validator": "deployment/scripts/validate_manifest.py",
         "drift_detection": "deployment/Makefile.deploy",
         "status": "pending"
     }

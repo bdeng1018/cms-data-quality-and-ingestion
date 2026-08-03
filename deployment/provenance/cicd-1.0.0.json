@@ -1,0 +1,72 @@
+{
+    "cicd_version": "1.0.0",
+    "generated_at": "2026-08-02T20:00:00Z",
+    "runner": {
+        "provider": "github-actions",
+        "os": "ubuntu-22.04",
+        "architecture": "x86_64",
+        "runner_type": "hosted",
+        "image": "ubuntu-22.04",
+        "labels": [
+            "ubuntu-latest",
+            "ubuntu-22.04",
+            "github-hosted"
+        ]
+    },
+    "workflow": {
+        "file": "deployment/ci/github-actions.yml",
+        "run_id": "30808660641",
+        "run_number": 27,
+        "trigger": "push",
+        "ref": "refs/heads/main",
+        "commit_sha": "2979fa7105209f28fc9b2f5650c8ca36528c28b8"
+    },
+    "tools": {
+        "actions": {
+            "checkout": "actions/checkout@v4",
+            "setup_python": "actions/setup-python@v5",
+            "setup_docker": "docker/setup-docker@v2",
+            "login_ghcr": "docker/login-action@v3"
+        },
+        "docker": {
+            "version": "24.x",
+            "buildx_version": "0.12.x",
+            "builder": "docker-container",
+            "driver": "docker-container",
+            "platform": "linux/amd64"
+        },
+        "python": {
+            "version": "3.11",
+            "requirements": "deployment/requirements.txt"
+        }
+    },
+    "build": {
+        "dockerfile": "deployment/Dockerfile",
+        "context": ".",
+        "mode": "deterministic",
+        "oci_labels": {
+            "org.opencontainers.image.source": "https://github.com/bdeng1018/cms-data-quality-and-ingestion",
+            "org.opencontainers.image.version": "1.0.0"
+        },
+        "image_digest": "sha256:64e7fc5b4873b9aa07dc3da83b47ae269f7db1cae20c4a6e3bbb40734a"
+    },
+    "artifacts": {
+        "manifest": {
+            "path": "deployment/releases/v1.0.0.manifest.json"
+        },
+        "sbom": {
+            "path": "deployment/sbom/sbom-1.0.0.json"
+        },
+        "provenance": {
+            "path": "deployment/provenance/provenance-1.0.0.json"
+        }
+    },
+    "validation": {
+        "status": "pending",
+        "validators": {
+            "manifest_validator": "deployment/scripts/validate_manifest.py",
+            "sbom_validator": "deployment/scripts/validate_sbom.py",
+            "provenance_validator": "deployment/scripts/validate_provenance.py"
+        }
+    }
+}

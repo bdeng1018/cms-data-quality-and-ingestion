@@ -149,18 +149,9 @@ def check_consistency_with_cleaned_data():
 
     # Facility ID consistency --------------------------------------------------
     # Normalize facility_id types to string for consistent comparison
-    df_clean["facility_id"] = (
-        df_clean["facility_id"]
-        .astype("string")
-        .str.strip()
-    )
+    df_clean["facility_id"] = df_clean["facility_id"].astype("string").str.strip()
 
-    df_facility["facility_id"] = (
-        df_facility["facility_id"]
-        .astype("string")
-        .str.strip()
-    )
-
+    df_facility["facility_id"] = df_facility["facility_id"].astype("string").str.strip()
 
     cleaned_facilities = set(df_clean["facility_id"].unique())
     facility_metrics_facilities = set(df_facility["facility_id"].unique())
