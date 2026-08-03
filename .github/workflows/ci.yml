@@ -32,17 +32,24 @@ jobs:
       - name: Run tests
         run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest -q
 
-      - name: Lint code
-        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/ || true
+      - name: Lint code (non-blocking)
+        run: |
+          set +e
+          PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/
+          echo "Ignoring flake8 failures"
+          exit 0
 
-      # Use your classic PAT, not GITHUB_TOKEN
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
       - name: Log in to GHCR
         run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u bdeng1018 --password-stdin
 
       - name: Build Docker image
         run: docker build -t cms-pipeline:1.0.0 -f deployment/Dockerfile .
 
-      # Hardcode your namespace (fixes the permission error)
       - name: Tag Docker image for GHCR
         run: docker tag cms-pipeline:1.0.0 ghcr.io/bdeng1018/cms-pipeline:1.0.0
 
