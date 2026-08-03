@@ -8,6 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ============================================================================
+  # 1. Build, Test, Lint, Docker Build & Push, Metadata Upload
+  # ============================================================================
   build-test-validate:
     runs-on: ubuntu-22.04
 
@@ -91,3 +94,32 @@ jobs:
           path: |
             deployment/releases/v1.0.0.manifest.json
             deployment/sbom/sbom-1.0.0.json
+
+  # ============================================================================
+  # 2. Drift Detection — Enforce Deterministic Pipeline
+  # ============================================================================
+  drift-check:
+    runs-on: ubuntu-22.04
+    needs: build-test-validate # ensures build completes first
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r deployment/requirements.txt
+
+      - name: Validate manifest
+        run: python deployment/scripts/validate_manifest.py
+
+      - name: Validate SBOM
+        run: python deployment/scripts/validate_sbom.py
+
+      - name: Validate provenance
+        run: python deployment/scripts/validate_provenance.py
