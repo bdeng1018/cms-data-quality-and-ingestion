@@ -36,7 +36,7 @@ jobs:
         run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/ || true
 
       - name: Build Docker image
-        run: docker build -t cms-pipeline:1.0.0 .
+        run: docker build -t cms-pipeline:1.0.0 -f deployment/Dockerfile deployment/
 
       - name: Compute Docker digest
         id: digest
