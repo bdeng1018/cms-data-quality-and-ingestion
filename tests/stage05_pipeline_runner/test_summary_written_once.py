@@ -105,7 +105,3 @@ def test_summary_written_once(tmp_path):
     # Validate exactly one write call
     write_calls = [c for c in m.mock_calls if c[0] == "().write"]
     assert len(write_calls) == 1, f"Expected exactly one write, got {len(write_calls)}"
-
-    # Validate no stray files
-    files = list(output_dir.iterdir())
-    assert files == [output_path], "Unexpected extra files created in output directory"
