@@ -2,13 +2,14 @@
 """
 Provenance Validator for CMS Data Quality & Ingestion Pipeline
 
-This validator performs:
+Validates the frozen v1.0.0 provenance:
 
-1. Structural validation of provenance.json
+1. Structural validation
 2. Manifest digest alignment
 3. SBOM digest alignment
 4. Docker image digest alignment
 5. Integrity block validation
+6. Version assertion for frozen release
 
 Exit codes:
     0 = success
@@ -22,7 +23,7 @@ import sys
 from pathlib import Path
 
 # ==============================================================================
-# Configuration
+# Configuration (Frozen Release)
 # ==============================================================================
 
 PROVENANCE_PATH = Path("deployment/provenance/provenance-1.0.0.json")
@@ -37,15 +38,7 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 
 def sha256_file(path: Path) -> str:
-    """
-    Compute SHA-256 hash of a file.
-
-    Args:
-        path (Path): Path to the file.
-
-    Returns:
-        str: Hex digest of the file contents.
-    """
+    """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
@@ -54,18 +47,7 @@ def sha256_file(path: Path) -> str:
 
 
 def load_json(path: Path):
-    """
-    Load JSON from a file with error handling.
-
-    Args:
-        path (Path): Path to JSON file.
-
-    Returns:
-        dict: Parsed JSON object.
-
-    Raises:
-        SystemExit: If file cannot be loaded.
-    """
+    """Load JSON with error handling."""
     try:
         with open(path, "r") as f:
             return json.load(f)
@@ -80,15 +62,7 @@ def load_json(path: Path):
 
 
 def validate_provenance_structure(prov: dict) -> bool:
-    """
-    Validate required provenance fields.
-
-    Args:
-        prov (dict): Parsed provenance JSON.
-
-    Returns:
-        bool: True if structure is valid.
-    """
+    """Validate required provenance fields."""
     logging.info("Checking provenance structure...")
 
     required_fields = ["build", "artifacts", "integrity"]
@@ -98,16 +72,21 @@ def validate_provenance_structure(prov: dict) -> bool:
             logging.error(f"Missing required provenance field: {field}")
             return False
 
-    if "manifest" not in prov["artifacts"]:
-        logging.error("Provenance missing artifacts.manifest")
-        return False
+    artifacts = prov["artifacts"]
 
-    if "sbom" not in prov["artifacts"]:
-        logging.error("Provenance missing artifacts.sbom")
-        return False
+    for key in ["manifest", "sbom", "docker_image"]:
+        if key not in artifacts:
+            logging.error(f"Provenance missing artifacts.{key}")
+            return False
 
-    if "docker_image" not in prov["artifacts"]:
-        logging.error("Provenance missing artifacts.docker_image")
+    # Freeze reminder + version assertion
+    version = prov.get("version")
+    if version == "1.0.0":
+        logging.info(
+            "Provenance version v1.0.0 detected — frozen release, no regeneration allowed."
+        )
+    else:
+        logging.error(f"Provenance version mismatch — expected v1.0.0, found {version}")
         return False
 
     logging.info("Provenance structure validated")
@@ -115,15 +94,7 @@ def validate_provenance_structure(prov: dict) -> bool:
 
 
 def validate_manifest_alignment(provenance: dict) -> bool:
-    """
-    Validate provenance ↔ manifest digest alignment.
-
-    Args:
-        provenance (dict): Provenance JSON.
-
-    Returns:
-        bool: True if aligned.
-    """
+    """Validate provenance ↔ manifest digest alignment."""
     logging.info("Validating manifest digest alignment...")
 
     actual = sha256_file(MANIFEST_PATH)
@@ -147,15 +118,7 @@ def validate_manifest_alignment(provenance: dict) -> bool:
 
 
 def validate_sbom_alignment(provenance: dict) -> bool:
-    """
-    Validate provenance ↔ SBOM digest alignment.
-
-    Args:
-        provenance (dict): Provenance JSON.
-
-    Returns:
-        bool: True if aligned.
-    """
+    """Validate provenance ↔ SBOM digest alignment."""
     logging.info("Validating SBOM digest alignment...")
 
     actual = sha256_file(SBOM_PATH)
@@ -179,15 +142,7 @@ def validate_sbom_alignment(provenance: dict) -> bool:
 
 
 def validate_docker_alignment(prov: dict) -> bool:
-    """
-    Validate docker image digest presence and format.
-
-    Args:
-        prov (dict): Provenance JSON.
-
-    Returns:
-        bool: True if valid.
-    """
+    """Validate docker image digest presence and format."""
     logging.info("Validating docker image digest...")
 
     digest = prov["artifacts"]["docker_image"].get("digest")
@@ -201,15 +156,7 @@ def validate_docker_alignment(prov: dict) -> bool:
 
 
 def validate_integrity_block(prov: dict) -> bool:
-    """
-    Validate integrity block structure.
-
-    Args:
-        prov (dict): Provenance JSON.
-
-    Returns:
-        bool: True if valid.
-    """
+    """Validate integrity block structure."""
     logging.info("Validating integrity block...")
 
     integrity = prov.get("integrity", {})

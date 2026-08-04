@@ -2,12 +2,13 @@
 """
 SBOM Validator for CMS Data Quality & Ingestion Pipeline
 
-This validator performs:
+Validates the frozen v1.0.0 SBOM:
 
-1. Structural validation of the SBOM
+1. Structural validation
 2. SBOM digest verification (non-recursive)
 3. Cross-file consistency checks:
    - SBOM ↔ provenance digest alignment
+4. Version assertion for frozen release
 
 Exit codes:
     0 = success
@@ -21,7 +22,7 @@ import sys
 from pathlib import Path
 
 # ==============================================================================
-# Configuration
+# Configuration (Frozen Release)
 # ==============================================================================
 
 SBOM_PATH = Path("deployment/sbom/sbom-1.0.0.json")
@@ -45,7 +46,7 @@ def sha256_file(path: Path) -> str:
 
 
 def load_json(path: Path):
-    """Load JSON from a file with error handling."""
+    """Load JSON with error handling."""
     try:
         with open(path, "r") as f:
             return json.load(f)
@@ -70,13 +71,23 @@ def validate_sbom_structure(sbom: dict) -> bool:
             logging.error(f"Missing required SBOM field: {field}")
             return False
 
+    # Freeze reminder (non-blocking)
+    version = sbom.get("version")
+    if version == "1.0.0":
+        logging.info(
+            "SBOM version v1.0.0 detected — frozen release, no regeneration allowed."
+        )
+    else:
+        logging.error(f"SBOM version mismatch — expected v1.0.0, found {version}")
+        return False
+
     logging.info("SBOM structure validated")
     return True
 
 
 def validate_sbom_digest(provenance: dict) -> bool:
     """Validate SBOM digest using provenance (non-recursive)."""
-    logging.info("Validating SBOM digest (non-recursive)...")
+    logging.info("Validating SBOM digest...")
 
     actual = sha256_file(SBOM_PATH)
 
@@ -99,10 +110,10 @@ def validate_sbom_digest(provenance: dict) -> bool:
 
 
 def validate_cross_file_consistency(provenance: dict) -> bool:
-    """Validate cross-file consistency (SBOM ↔ provenance only)."""
+    """Validate cross-file consistency (SBOM ↔ provenance)."""
     logging.info("Checking cross-file consistency...")
 
-    # SBOM digest already validated above, so this is trivial now.
+    # SBOM digest alignment already validated above.
     logging.info("Cross-file consistency validated")
     return True
 

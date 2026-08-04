@@ -2,11 +2,11 @@
 """
 Manifest Validator for CMS Data Quality & Ingestion Pipeline
 
-This script validates the integrity and internal consistency of the
-v1.0.0 pipeline manifest. It performs:
+Validates the integrity and internal consistency of the frozen v1.0.0
+pipeline manifest. Performs:
 
 1. Structural validation (required fields)
-2. Manifest hash verification (self-hash)
+2. Manifest hash verification (non-recursive)
 3. Cross-file consistency checks:
    - Manifest ↔ SBOM digest alignment
    - Manifest ↔ Provenance manifest digest alignment
@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 # ==============================================================================
-# Configuration
+# Configuration (Frozen Release)
 # ==============================================================================
 
 MANIFEST_PATH = Path("deployment/releases/v1.0.0.manifest.json")
@@ -32,21 +32,14 @@ PROVENANCE_PATH = Path("deployment/provenance/provenance-1.0.0.json")
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
+
 # ==============================================================================
 # Utility Functions
 # ==============================================================================
 
 
 def sha256_file(path: Path) -> str:
-    """
-    Compute SHA-256 hash of a file.
-
-    Args:
-        path (Path): Path to the file.
-
-    Returns:
-        str: Hex digest of the file contents.
-    """
+    """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
@@ -55,18 +48,7 @@ def sha256_file(path: Path) -> str:
 
 
 def load_json(path: Path):
-    """
-    Load JSON from a file with error handling.
-
-    Args:
-        path (Path): Path to JSON file.
-
-    Returns:
-        dict: Parsed JSON object.
-
-    Raises:
-        SystemExit: If file cannot be loaded.
-    """
+    """Load JSON with error handling."""
     try:
         with open(path, "r") as f:
             return json.load(f)
@@ -81,15 +63,7 @@ def load_json(path: Path):
 
 
 def validate_manifest_structure(manifest: dict) -> bool:
-    """
-    Validate required top-level fields in the manifest.
-
-    Args:
-        manifest (dict): Parsed manifest JSON.
-
-    Returns:
-        bool: True if structure is valid, False otherwise.
-    """
+    """Validate required top-level fields in the manifest."""
     required_fields = [
         "version",
         "release_date",
@@ -106,31 +80,23 @@ def validate_manifest_structure(manifest: dict) -> bool:
             logging.error(f"Missing required field: {field}")
             return False
 
+    # Freeze reminder (non-blocking)
+    if manifest.get("version") == "1.0.0":
+        logging.info("v1.0.0 is frozen — validation only, no regeneration allowed.")
+
     logging.info("Manifest structure validated")
     return True
 
 
 def validate_manifest_hash(manifest: dict, provenance: dict) -> bool:
     """
-    Validate manifest hash using external provenance digest.
-
-    The manifest no longer contains its own hash (to avoid recursion),
-    so we compute the hash of the manifest file and compare it to the
-    digest stored in provenance.artifacts.manifest.digest.
-
-    Args:
-        manifest (dict): Parsed manifest JSON.
-        provenance (dict): Parsed provenance JSON.
-
-    Returns:
-        bool: True if hash matches, False otherwise.
+    Validate manifest hash using provenance digest.
+    Manifest does not contain its own hash (avoids recursion).
     """
-    logging.info("Validating manifest hash (non-recursive)...")
+    logging.info("Validating manifest hash...")
 
-    # 1. Compute actual manifest hash
     actual = sha256_file(MANIFEST_PATH)
 
-    # 2. Load expected hash from provenance
     try:
         expected = provenance["artifacts"]["manifest"]["digest"]
     except KeyError:
@@ -139,7 +105,6 @@ def validate_manifest_hash(manifest: dict, provenance: dict) -> bool:
 
     expected_clean = expected.replace("sha256:", "")
 
-    # 3. Compare
     if actual != expected_clean:
         logging.error(
             "Manifest hash mismatch:\n"
@@ -152,21 +117,13 @@ def validate_manifest_hash(manifest: dict, provenance: dict) -> bool:
     return True
 
 
-def validate_cross_file_consistency(manifest: dict, sbom: dict, provenance: dict):
-    """
-    Validate consistency between manifest, SBOM, and provenance.
-
-    Args:
-        manifest (dict): Manifest JSON.
-        sbom (dict): SBOM JSON.
-        provenance (dict): Provenance JSON.
-
-    Returns:
-        bool: True if all cross-file checks pass.
-    """
+def validate_cross_file_consistency(
+    manifest: dict, sbom: dict, provenance: dict
+) -> bool:
+    """Validate consistency between manifest, SBOM, and provenance."""
     logging.info("Checking cross-file consistency...")
 
-    # SBOM digest alignment (non-recursive)
+    # SBOM digest alignment
     actual_sbom_digest = sha256_file(SBOM_PATH)
 
     try:
@@ -179,7 +136,7 @@ def validate_cross_file_consistency(manifest: dict, sbom: dict, provenance: dict
 
     if actual_sbom_digest != expected_sbom_digest:
         logging.error(
-            "SBOM digest mismatch between provenance and actual SBOM file\n"
+            "SBOM digest mismatch:\n"
             f"  expected: sha256:{expected_sbom_digest}\n"
             f"  actual:   sha256:{actual_sbom_digest}"
         )

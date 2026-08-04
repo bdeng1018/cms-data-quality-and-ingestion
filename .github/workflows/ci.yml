@@ -42,11 +42,9 @@ jobs:
           echo "Ignoring flake8 failures"
           exit 0
 
-      # Enable Docker Buildx (required for modern GHCR pushes)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Log in to GHCR using your PAT
       - name: Log in to GHCR
         if: always()
         uses: docker/login-action@v3
@@ -71,16 +69,21 @@ jobs:
         if: always()
         id: digest
         run: |
-          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}')
-          echo "$DIGEST" > docker-image-digest.txt
+          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
-      - name: Upload Docker digest
+      - name: Write docker digest file for bump_version.py
+        if: always()
+        run: |
+          mkdir -p deployment
+          echo "${{ steps.digest.outputs.digest }}" > deployment/docker-digest.txt
+
+      - name: Upload Docker digest (optional)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-digest
-          path: docker-image-digest.txt
+          path: deployment/docker-digest.txt
 
       - name: Print CI/CD metadata
         run: |
@@ -100,7 +103,7 @@ jobs:
   # ============================================================================
   drift-check:
     runs-on: ubuntu-22.04
-    needs: build-test-validate # ensures build completes first
+    needs: build-test-validate
 
     steps:
       - name: Checkout repository
@@ -123,3 +126,84 @@ jobs:
 
       - name: Validate provenance
         run: python deployment/scripts/validate_provenance.py
+
+  # ============================================================================
+  # 3. Freeze Job — Run bump_version.py + Validate Release
+  # ============================================================================
+  freeze-release:
+    runs-on: ubuntu-22.04
+    needs: build-test-validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download docker digest from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-digest
+          path: deployment/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r deployment/requirements.txt
+
+      - name: Run version bump script
+        run: |
+          python scripts/bump_version.py 1.0.1
+
+      - name: Validate manifest
+        run: python deployment/scripts/validate_manifest.py
+
+      - name: Validate SBOM
+        run: python deployment/scripts/validate_sbom.py
+
+      - name: Validate provenance
+        run: python deployment/scripts/validate_provenance.py
+
+      - name: Upload frozen release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-release-1.0.1
+          path: |
+            deployment/releases/1.0.1.manifest.json
+            deployment/sbom/sbom-1.0.1.json
+            deployment/provenance/provenance-1.0.1.json
+            deployment/docker-digest.txt
+
+  # ============================================================================
+  # 4. Bundle Builder — Create Release Bundle (tar.gz)
+  # ============================================================================
+  bundle-release:
+    runs-on: ubuntu-22.04
+    needs: freeze-release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download frozen release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frozen-release-1.0.1
+          path: deployment/bundles/1.0.1/
+
+      - name: Create release bundle
+        run: |
+          cd deployment/bundles/1.0.1
+          tar -czf cms-pipeline-1.0.1.tar.gz \
+            1.0.1.manifest.json \
+            sbom-1.0.1.json \
+            provenance-1.0.1.json \
+            docker-digest.txt
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: cms-pipeline-1.0.1-bundle
+          path: deployment/bundles/1.0.1/cms-pipeline-1.0.1.tar.gz
