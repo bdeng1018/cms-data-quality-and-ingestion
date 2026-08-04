@@ -36,7 +36,6 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 # Utility Functions
 # ==============================================================================
 
-
 def sha256_file(path: Path) -> str:
     """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
@@ -59,7 +58,6 @@ def load_json(path: Path):
 # ==============================================================================
 # Validation Steps
 # ==============================================================================
-
 
 def validate_provenance_structure(prov: dict) -> bool:
     """Validate required provenance fields."""
@@ -173,11 +171,28 @@ def validate_integrity_block(prov: dict) -> bool:
 # Main Entry Point
 # ==============================================================================
 
-
 def main():
     logging.info("Starting provenance validation...")
 
+    if len(sys.argv) != 2:
+        logging.error("Usage: validate_provenance.py <VERSION>")
+        sys.exit(1)
+
+    version = sys.argv[1]
+
+    PROVENANCE_PATH = Path(f"deployment/provenance/provenance-{version}.json")
+    MANIFEST_PATH = Path(f"deployment/releases/{version}.manifest.json")
+    SBOM_PATH = Path(f"deployment/sbom/sbom-{version}.json")
+
     prov = load_json(PROVENANCE_PATH)
+
+    # version check
+    prov_version = prov.get("version")
+    if prov_version != f"v{version}":
+        logging.error(
+            f"Provenance version mismatch — expected v{version}, found {prov_version}"
+        )
+        sys.exit(1)
 
     if not validate_provenance_structure(prov):
         sys.exit(1)

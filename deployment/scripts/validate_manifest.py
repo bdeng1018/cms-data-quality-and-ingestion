@@ -37,7 +37,6 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 # Utility Functions
 # ==============================================================================
 
-
 def sha256_file(path: Path) -> str:
     """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
@@ -60,7 +59,6 @@ def load_json(path: Path):
 # ==============================================================================
 # Validation Steps
 # ==============================================================================
-
 
 def validate_manifest_structure(manifest: dict) -> bool:
     """Validate required top-level fields in the manifest."""
@@ -150,13 +148,29 @@ def validate_cross_file_consistency(
 # Main Entry Point
 # ==============================================================================
 
-
 def main():
     logging.info("Starting manifest validation...")
+
+    if len(sys.argv) != 2:
+        logging.error("Usage: validate_manifest.py <VERSION>")
+        sys.exit(1)
+
+    version = sys.argv[1]
+
+    MANIFEST_PATH = Path(f"deployment/releases/{version}.manifest.json")
+    SBOM_PATH = Path(f"deployment/sbom/sbom-{version}.json")
+    PROVENANCE_PATH = Path(f"deployment/provenance/provenance-{version}.json")
 
     manifest = load_json(MANIFEST_PATH)
     sbom = load_json(SBOM_PATH)
     provenance = load_json(PROVENANCE_PATH)
+
+    # version check
+    if manifest.get("version") != f"v{version}":
+        logging.error(
+            f"Manifest version mismatch: expected v{version}, found {manifest.get('version')}"
+        )
+        sys.exit(1)
 
     if not validate_manifest_structure(manifest):
         sys.exit(1)

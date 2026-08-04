@@ -272,6 +272,21 @@ def main():
     # Step 2: Populate placeholders
     populate_all_templates(version)
 
+    # Insert version metadata into all artifacts
+    manifest = json.loads(manifest_path.read_text())
+    manifest["version"] = f"v{version}"
+    manifest_path.write_text(json.dumps(manifest, indent=4))
+
+    sbom = json.loads(sbom_path.read_text())
+    sbom["metadata"]["version"] = f"v{version}"
+    sbom_path.write_text(json.dumps(sbom, indent=4))
+
+    prov = json.loads(prov_path.read_text())
+    prov["version"] = f"v{version}"
+    prov_path.write_text(json.dumps(prov, indent=4))
+
+    print(f"[INFO] Inserted version metadata v{version} into manifest, SBOM, and provenance")
+
     # Step 3: Digests + counts
     update_sbom_counts(sbom_path)
     manifest_digest = update_manifest_digest(manifest_path)

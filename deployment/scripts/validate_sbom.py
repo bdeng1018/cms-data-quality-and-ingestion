@@ -35,7 +35,6 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 # Utility Functions
 # ==============================================================================
 
-
 def sha256_file(path: Path) -> str:
     """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
@@ -58,7 +57,6 @@ def load_json(path: Path):
 # ==============================================================================
 # Validation Steps
 # ==============================================================================
-
 
 def validate_sbom_structure(sbom: dict) -> bool:
     """Validate required SBOM fields."""
@@ -122,12 +120,29 @@ def validate_cross_file_consistency(provenance: dict) -> bool:
 # Main Entry Point
 # ==============================================================================
 
-
 def main():
     logging.info("Starting SBOM validation...")
 
+    if len(sys.argv) != 2:
+        logging.error("Usage: validate_sbom.py <VERSION>")
+        sys.exit(1)
+
+    version = sys.argv[1]
+
+    SBOM_PATH = Path(f"deployment/sbom/sbom-{version}.json")
+    MANIFEST_PATH = Path(f"deployment/releases/{version}.manifest.json")
+    PROVENANCE_PATH = Path(f"deployment/provenance/provenance-{version}.json")
+
     sbom = load_json(SBOM_PATH)
     provenance = load_json(PROVENANCE_PATH)
+
+    # version check
+    sbom_version = sbom.get("metadata", {}).get("version")
+    if sbom_version != f"v{version}":
+        logging.error(
+            f"SBOM version mismatch — expected v{version}, found {sbom_version}"
+        )
+        sys.exit(1)
 
     if not validate_sbom_structure(sbom):
         sys.exit(1)

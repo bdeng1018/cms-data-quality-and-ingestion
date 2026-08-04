@@ -55,21 +55,21 @@ jobs:
 
       - name: Build Docker image
         if: always()
-        run: docker build -t cms-pipeline:1.0.0 -f deployment/Dockerfile .
+        run: docker build -t cms-pipeline:1.0.1 -f deployment/Dockerfile .
 
       - name: Tag Docker image for GHCR
         if: always()
-        run: docker tag cms-pipeline:1.0.0 ghcr.io/bdeng1018/cms-pipeline:1.0.0
+        run: docker tag cms-pipeline:1.0.1 ghcr.io/bdeng1018/cms-pipeline:1.0.1
 
       - name: Push Docker image to GHCR
         if: always()
-        run: docker push ghcr.io/bdeng1018/cms-pipeline:1.0.0
+        run: docker push ghcr.io/bdeng1018/cms-pipeline:1.0.1
 
       - name: Compute GHCR digest
         if: always()
         id: digest
         run: |
-          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
+          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.1 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Write docker digest file for bump_version.py
@@ -95,17 +95,21 @@ jobs:
         with:
           name: cicd-metadata
           path: |
-            deployment/releases/v1.0.0.manifest.json
-            deployment/sbom/sbom-1.0.0.json
 
   # ============================================================================
   # 2. Drift Detection — Enforce Deterministic Pipeline
   # ============================================================================
   drift-check:
     runs-on: ubuntu-22.04
-    needs: build-test-validate
+    needs: freeze-release
 
     steps:
+      - name: Download frozen artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frozen-release-1.0.1
+          path: deployment/
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -119,13 +123,13 @@ jobs:
           pip install -r deployment/requirements.txt
 
       - name: Validate manifest
-        run: python deployment/scripts/validate_manifest.py
+        run: python deployment/scripts/validate_manifest.py 1.0.1
 
       - name: Validate SBOM
-        run: python deployment/scripts/validate_sbom.py
+        run: python deployment/scripts/validate_sbom.py 1.0.1
 
       - name: Validate provenance
-        run: python deployment/scripts/validate_provenance.py
+        run: python deployment/scripts/validate_provenance.py 1.0.1
 
   # ============================================================================
   # 3. Freeze Job — Run bump_version.py + Validate Release
@@ -155,16 +159,16 @@ jobs:
 
       - name: Run version bump script
         run: |
-          python scripts/bump_version.py 1.0.1
+          python deployment/scripts/bump_version.py 1.0.1
 
       - name: Validate manifest
-        run: python deployment/scripts/validate_manifest.py
+        run: python deployment/scripts/validate_manifest.py 1.0.1
 
       - name: Validate SBOM
-        run: python deployment/scripts/validate_sbom.py
+        run: python deployment/scripts/validate_sbom.py 1.0.1
 
       - name: Validate provenance
-        run: python deployment/scripts/validate_provenance.py
+        run: python deployment/scripts/validate_provenance.py 1.0.1
 
       - name: Upload frozen release artifacts
         uses: actions/upload-artifact@v4
