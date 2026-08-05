@@ -76,7 +76,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: bdeng1018
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # ------------------------------------------------------------------------
@@ -89,13 +89,13 @@ jobs:
       # Tag Docker image for GHCR
       # ------------------------------------------------------------------------
       - name: Tag Docker image for GHCR
-        run: docker tag cms-pipeline:1.0.0 ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
+        run: docker tag cms-pipeline:1.0.0 ghcr.io/bdeng1018/cms-pipeline:1.0.0
 
       # ------------------------------------------------------------------------
       # Push Docker image to GHCR
       # ------------------------------------------------------------------------
       - name: Push Docker image to GHCR
-        run: docker push ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
+        run: docker push ghcr.io/bdeng1018/cms-pipeline:1.0.0
 
       # ------------------------------------------------------------------------
       # Compute GHCR digest
@@ -103,7 +103,7 @@ jobs:
       - name: Compute GHCR digest
         id: digest
         run: |
-          DIGEST=$(docker inspect ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
+          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       # ------------------------------------------------------------------------
