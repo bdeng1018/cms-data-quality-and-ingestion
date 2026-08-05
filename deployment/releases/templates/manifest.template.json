@@ -1,60 +1,28 @@
 {
     "version": "<VERSION>",
-    "release_date": "<YYYY-MM-DD>",
-    "provenance": {
-        "pipeline_version": "<VERSION>",
-        "schema_version": "<SCHEMA_VERSION>",
-        "artifact_version": "<VERSION>",
-        "manifest_version": "<MANIFEST_SCHEMA_VERSION>",
-        "deployment_version": "<DEPLOYMENT_VERSION>",
-        "sbom_version": "<VERSION>",
-        "validated_at": null,
-        "component_count": "<TO_BE_FILLED>",
-        "dependencies_count": "<TO_BE_FILLED>",
-        "artifact_count": "<TO_BE_FILLED>"
-    },
+    "schema_version": "<MANIFEST_SCHEMA_VERSION>",
+    "generated_at": "<ISO8601_TIMESTAMP>",
     "artifacts": {
         "manifest": {
-            "name": "deployment/releases/v<VERSION>.manifest.json",
-            "digest": "<MANIFEST_DIGEST>"
+            "path": "deployment/releases/<VERSION>.manifest.json",
+            "digest": ""
         },
         "docker_image": {
-            "name": "cms-pipeline:<VERSION>",
-            "digest": "<DOCKER_DIGEST>"
-        },
-        "helm_chart": {
-            "path": "deployment/helm/Chart.yml",
-            "version": "<VERSION>",
-            "digest": "<HELM_DIGEST>"
-        },
-        "k8s_manifests": {
-            "deployment": "deployment/k8s/deployment.yml",
-            "service": "deployment/k8s/service.yml",
-            "digest": "<K8S_DIGEST>"
-        },
-        "terraform_module": {
-            "path": "deployment/terraform/",
-            "digest": "<TERRAFORM_DIGEST>"
+            "name": "ghcr.io/<GHCR_NAMESPACE>/cms-pipeline:<VERSION>",
+            "digest": ""
         },
         "sbom": {
             "path": "deployment/sbom/sbom-<VERSION>.json",
-            "digest": "<SBOM_DIGEST>"
-        },
-        "audit_logs": {
-            "generator": "deployment/scripts/generate_audit_logs.py",
-            "digest": "<AUDIT_LOGS_DIGEST>"
+            "digest": ""
         }
     },
-    "ci_cd": {
-        "workflow": "deployment/ci/github-actions.yml",
-        "run_id": "<GITHUB_RUN_ID>",
-        "commit_sha": "<GITHUB_SHA>"
+    "metadata": {
+        "repository": "<REPOSITORY_URL>",
+        "deployment_version": "<DEPLOYMENT_VERSION>",
+        "python_version": "<PYTHON_VERSION>",
+        "docker_version": "<DOCKER_VERSION>"
     },
     "validation": {
-        "provenance_validator": "deployment/scripts/validate_provenance.py",
-        "sbom_validator": "deployment/scripts/validate_sbom.py",
-        "manifest_validator": "deployment/scripts/validate_manifest.py",
-        "drift_detection": "deployment/Makefile.deploy",
-        "status": "pending"
+        "status": ""
     }
 }

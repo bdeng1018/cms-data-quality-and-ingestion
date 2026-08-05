@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
 """
-SBOM Validator for CMS Data Quality & Ingestion Pipeline
+SBOM Validator for CMS Pipeline
 
-Validates the frozen v1.0.0 SBOM:
-
-1. Structural validation
-2. SBOM digest verification (non-recursive)
-3. Cross-file consistency checks:
-   - SBOM ↔ provenance digest alignment
-4. Version assertion for frozen release
-
-Exit codes:
-    0 = success
-    1 = validation failure
+Validates frozen SBOM for any version:
+  1. Structural validation
+  2. SBOM digest alignment (via provenance)
+  3. SBOM internal hash validation
+  4. Version alignment across SBOM ↔ manifest ↔ provenance
 """
 
 import hashlib
@@ -21,14 +15,6 @@ import logging
 import sys
 from pathlib import Path
 
-# ==============================================================================
-# Configuration (Frozen Release)
-# ==============================================================================
-
-SBOM_PATH = Path("deployment/sbom/sbom-1.0.0.json")
-MANIFEST_PATH = Path("deployment/releases/v1.0.0.manifest.json")
-PROVENANCE_PATH = Path("deployment/provenance/provenance-1.0.0.json")
-
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 # ==============================================================================
@@ -36,16 +22,13 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 # ==============================================================================
 
 def sha256_file(path: Path) -> str:
-    """Compute SHA-256 hash of a file."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return h.hexdigest()
 
-
 def load_json(path: Path):
-    """Load JSON with error handling."""
     try:
         with open(path, "r") as f:
             return json.load(f)
@@ -53,41 +36,33 @@ def load_json(path: Path):
         logging.error(f"Failed to load {path}: {e}")
         sys.exit(1)
 
-
 # ==============================================================================
 # Validation Steps
 # ==============================================================================
 
 def validate_sbom_structure(sbom: dict) -> bool:
-    """Validate required SBOM fields."""
     logging.info("Checking SBOM structure...")
 
-    required_fields = ["metadata", "components"]
+    required_fields = ["metadata", "components", "dependencies", "hash"]
 
     for field in required_fields:
         if field not in sbom:
             logging.error(f"Missing required SBOM field: {field}")
             return False
 
-    # Freeze reminder (non-blocking)
-    version = sbom.get("version")
-    if version == "1.0.0":
-        logging.info(
-            "SBOM version v1.0.0 detected — frozen release, no regeneration allowed."
-        )
-    else:
-        logging.error(f"SBOM version mismatch — expected v1.0.0, found {version}")
+    # metadata.version must exist
+    if "version" not in sbom["metadata"]:
+        logging.error("SBOM metadata missing version")
         return False
 
     logging.info("SBOM structure validated")
     return True
 
 
-def validate_sbom_digest(provenance: dict) -> bool:
-    """Validate SBOM digest using provenance (non-recursive)."""
-    logging.info("Validating SBOM digest...")
+def validate_sbom_digest_alignment(provenance: dict, sbom_path: Path) -> bool:
+    logging.info("Validating SBOM digest alignment (provenance ↔ SBOM)...")
 
-    actual = sha256_file(SBOM_PATH)
+    actual = sha256_file(sbom_path)
 
     try:
         expected = provenance["artifacts"]["sbom"]["digest"].replace("sha256:", "")
@@ -107,17 +82,55 @@ def validate_sbom_digest(provenance: dict) -> bool:
     return True
 
 
-def validate_cross_file_consistency(provenance: dict) -> bool:
-    """Validate cross-file consistency (SBOM ↔ provenance)."""
-    logging.info("Checking cross-file consistency...")
+def validate_sbom_internal_hash(sbom: dict, sbom_path: Path) -> bool:
+    logging.info("Validating SBOM internal hash...")
 
-    # SBOM digest alignment already validated above.
-    logging.info("Cross-file consistency validated")
+    actual = sha256_file(sbom_path)
+
+    try:
+        expected = sbom["hash"].replace("sha256:", "")
+    except KeyError:
+        logging.error("SBOM missing internal hash field")
+        return False
+
+    if actual != expected:
+        logging.error(
+            "SBOM internal hash mismatch:\n"
+            f"  expected: sha256:{expected}\n"
+            f"  actual:   sha256:{actual}"
+        )
+        return False
+
+    logging.info("SBOM internal hash validated")
     return True
 
 
+def validate_version_alignment(sbom: dict, manifest: dict, provenance: dict, version: str) -> bool:
+    logging.info("Validating version alignment...")
+
+    expected = f"v{version}"
+
+    sbom_v = sbom["metadata"].get("version")
+    manifest_v = manifest.get("version")
+    prov_v = provenance.get("version")
+
+    if sbom_v != expected:
+        logging.error(f"SBOM version mismatch: expected {expected}, found {sbom_v}")
+        return False
+
+    if manifest_v != expected:
+        logging.error(f"Manifest version mismatch: expected {expected}, found {manifest_v}")
+        return False
+
+    if prov_v != expected:
+        logging.error(f"Provenance version mismatch: expected {expected}, found {prov_v}")
+        return False
+
+    logging.info("Version alignment validated")
+    return True
+
 # ==============================================================================
-# Main Entry Point
+# Main
 # ==============================================================================
 
 def main():
@@ -129,33 +142,28 @@ def main():
 
     version = sys.argv[1]
 
-    SBOM_PATH = Path(f"deployment/sbom/sbom-{version}.json")
-    MANIFEST_PATH = Path(f"deployment/releases/{version}.manifest.json")
-    PROVENANCE_PATH = Path(f"deployment/provenance/provenance-{version}.json")
+    sbom_path = Path(f"deployment/sbom/sbom-{version}.json")
+    manifest_path = Path(f"deployment/releases/{version}.manifest.json")
+    provenance_path = Path(f"deployment/provenance/provenance-{version}.json")
 
-    sbom = load_json(SBOM_PATH)
-    provenance = load_json(PROVENANCE_PATH)
-
-    # version check
-    sbom_version = sbom.get("metadata", {}).get("version")
-    if sbom_version != f"v{version}":
-        logging.error(
-            f"SBOM version mismatch — expected v{version}, found {sbom_version}"
-        )
-        sys.exit(1)
+    sbom = load_json(sbom_path)
+    manifest = load_json(manifest_path)
+    provenance = load_json(provenance_path)
 
     if not validate_sbom_structure(sbom):
         sys.exit(1)
 
-    if not validate_sbom_digest(provenance):
+    if not validate_version_alignment(sbom, manifest, provenance, version):
         sys.exit(1)
 
-    if not validate_cross_file_consistency(provenance):
+    if not validate_sbom_digest_alignment(provenance, sbom_path):
+        sys.exit(1)
+
+    if not validate_sbom_internal_hash(sbom, sbom_path):
         sys.exit(1)
 
     logging.info("SBOM validation completed successfully")
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

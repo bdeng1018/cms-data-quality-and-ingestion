@@ -1,0 +1,28 @@
+{
+    "version": "v1.0.0",
+    "schema_version": "0.0.0",
+    "generated_at": "",
+    "artifacts": {
+        "manifest": {
+            "path": "deployment/releases/1.0.0.manifest.json",
+            "digest": ""
+        },
+        "docker_image": {
+            "name": "ghcr.io/bdeng1018/cms-pipeline:1.0.0",
+            "digest": "sha256:402fa25e334d1ea388c48590a4446fab96284fe9a8b84b737edca9569c4c0eb4"
+        },
+        "sbom": {
+            "path": "deployment/sbom/sbom-1.0.0.json",
+            "digest": ""
+        }
+    },
+    "metadata": {
+        "repository": "https://github.com/bdeng1018/cms-data-quality-and-ingestion",
+        "deployment_version": "1.0.0",
+        "python_version": "3.11",
+        "docker_version": "24.x"
+    },
+    "validation": {
+        "status": "pending"
+    }
+}

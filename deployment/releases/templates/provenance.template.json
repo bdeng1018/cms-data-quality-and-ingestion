@@ -1,6 +1,5 @@
 {
-    "provenance_version": "<VERSION>",
-    "pipeline_version": "<VERSION>",
+    "version": "<VERSION>",
     "generated_at": "<ISO8601_TIMESTAMP>",
     "build": {
         "builder": "cms-pipeline-provenance-generator",
@@ -8,15 +7,15 @@
         "mode": "deterministic",
         "environment": {
             "os": "ubuntu-22.04",
-            "runner": "github-actions",
-            "container_runtime": "docker-buildx",
+            "execution_environment": "",
+            "container_runtime": "",
             "docker_version": "<DOCKER_VERSION>",
             "python_version": "<PYTHON_VERSION>"
         }
     },
     "source": {
         "repository": "<REPOSITORY_URL>",
-        "workflow_file": "deployment/ci/github-actions.yml",
+        "workflow_file": "",
         "run_id": "<GITHUB_RUN_ID>",
         "commit_sha": "<GITHUB_SHA>",
         "ref": "<GIT_REF>"
@@ -24,7 +23,7 @@
     "artifacts": {
         "docker_image": {
             "name": "ghcr.io/<GHCR_NAMESPACE>/cms-pipeline:<VERSION>",
-            "digest": "sha256:<TO_BE_FILLED>",
+            "digest": "",
             "oci_labels": {
                 "org.opencontainers.image.source": "<REPOSITORY_URL>",
                 "org.opencontainers.image.version": "<VERSION>"
@@ -32,48 +31,16 @@
         },
         "manifest": {
             "path": "deployment/releases/<VERSION>.manifest.json",
-            "digest": "sha256:<TO_BE_FILLED>"
+            "digest": ""
         },
         "sbom": {
             "path": "deployment/sbom/sbom-<VERSION>.json",
-            "digest": "sha256:<TO_BE_FILLED>"
+            "digest": ""
         }
     },
-    "steps": [
-        {
-            "name": "checkout",
-            "tool": "actions/checkout@v4",
-            "status": "success"
-        },
-        {
-            "name": "setup-python",
-            "tool": "actions/setup-python@v5",
-            "status": "success"
-        },
-        {
-            "name": "docker-build",
-            "tool": "docker/buildx",
-            "context": ".",
-            "dockerfile": "deployment/Dockerfile",
-            "status": "success"
-        },
-        {
-            "name": "docker-push",
-            "tool": "ghcr.io",
-            "status": "success"
-        },
-        {
-            "name": "digest-extraction",
-            "tool": "docker inspect",
-            "status": "success"
-        }
-    ],
     "integrity": {
-        "self_hash": "pending",
-        "validated_at": null,
-        "validators": {
-            "provenance_validator": "deployment/scripts/validate_provenance.py",
-            "sbom_validator": "deployment/scripts/validate_sbom.py"
-        }
+        "self_hash": "",
+        "validated_at": "",
+        "validators": {}
     }
 }
