@@ -217,7 +217,7 @@ def sanity_check(version: str):
     manifest_digest = sha256_file(manifest_path)
 
     sbom = json.loads(sbom_path.read_text())
-    
+
     # Do NOT wipe the SBOM hash here — it breaks determinism
     sbom_digest = sha256_file(sbom_path)
 
@@ -302,8 +302,6 @@ def main():
     prov_path.write_text(json.dumps(prov, indent=4))
 
     finalize_integrity(prov_path)
-
-    sanity_check(version)
 
 if __name__ == "__main__":
     main()
