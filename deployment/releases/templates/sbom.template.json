@@ -70,7 +70,7 @@
             "to": "docker-image"
         }
     ],
-    "hash": "",
+    "hash": "sha256:{{ sbom_digest }}",
     "provenance": {
         "path": "deployment/provenance/provenance-<VERSION>.json",
         "status": "pending"
