@@ -14,6 +14,10 @@
         "sbom": {
             "path": "deployment/sbom/sbom-<VERSION>.json",
             "digest": ""
+        },
+        "provenance": {
+            "path": "deployment/provenance/provenance-<VERSION>.json",
+            "digest": ""
         }
     },
     "metadata": {

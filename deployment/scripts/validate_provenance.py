@@ -7,9 +7,9 @@ Validates frozen provenance for any version:
   2. Version alignment (provenance ↔ manifest ↔ SBOM)
   3. Manifest digest alignment
   4. SBOM digest alignment
-  5. Docker digest validation
+  5. Docker digest format validation
   6. Docker digest cross-alignment (provenance ↔ manifest)
-  7. Integrity block validation
+  7. Integrity block validation (including self-hash)
 """
 
 import hashlib
@@ -46,7 +46,7 @@ def load_json(path: Path):
 def validate_provenance_structure(prov: dict) -> bool:
     logging.info("Checking provenance structure...")
 
-    required_fields = ["version", "artifacts", "integrity"]
+    required_fields = ["version", "generated_at", "build", "source", "artifacts", "integrity"]
     for field in required_fields:
         if field not in prov:
             logging.error(f"Missing required provenance field: {field}")
@@ -65,7 +65,7 @@ def validate_provenance_structure(prov: dict) -> bool:
 def validate_version_alignment(prov: dict, manifest_path: Path, sbom_path: Path, version: str) -> bool:
     logging.info("Validating version alignment...")
 
-    expected = f"v{version}"
+    expected = version
 
     manifest = load_json(manifest_path)
     sbom = load_json(sbom_path)
@@ -94,7 +94,12 @@ def validate_manifest_alignment(prov: dict, manifest_path: Path) -> bool:
     logging.info("Validating manifest digest alignment...")
 
     actual = sha256_file(manifest_path)
-    expected = prov["artifacts"]["manifest"]["digest"].replace("sha256:", "")
+
+    try:
+        expected = prov["artifacts"]["manifest"]["digest"].replace("sha256:", "")
+    except KeyError:
+        logging.error("Provenance missing artifacts.manifest.digest")
+        return False
 
     if actual != expected:
         logging.error(
@@ -112,7 +117,12 @@ def validate_sbom_alignment(prov: dict, sbom_path: Path) -> bool:
     logging.info("Validating SBOM digest alignment...")
 
     actual = sha256_file(sbom_path)
-    expected = prov["artifacts"]["sbom"]["digest"].replace("sha256:", "")
+
+    try:
+        expected = prov["artifacts"]["sbom"]["digest"].replace("sha256:", "")
+    except KeyError:
+        logging.error("Provenance missing artifacts.sbom.digest")
+        return False
 
     if actual != expected:
         logging.error(
@@ -159,7 +169,7 @@ def validate_docker_cross_alignment(prov: dict, manifest_path: Path) -> bool:
     return True
 
 
-def validate_integrity_block(prov: dict) -> bool:
+def validate_integrity_block(prov: dict, prov_path: Path) -> bool:
     logging.info("Validating integrity block...")
 
     integrity = prov.get("integrity", {})
@@ -170,6 +180,17 @@ def validate_integrity_block(prov: dict) -> bool:
 
     if not integrity["self_hash"].startswith("sha256:"):
         logging.error("Integrity self_hash must start with sha256:")
+        return False
+
+    actual = sha256_file(prov_path)
+    expected = integrity["self_hash"].replace("sha256:", "")
+
+    if actual != expected:
+        logging.error(
+            "Integrity self-hash mismatch:\n"
+            f"  expected: sha256:{expected}\n"
+            f"  actual:   sha256:{actual}"
+        )
         return False
 
     if "validated_at" not in integrity:
@@ -216,11 +237,12 @@ def main():
     if not validate_docker_cross_alignment(prov, manifest_path):
         sys.exit(1)
 
-    if not validate_integrity_block(prov):
+    if not validate_integrity_block(prov, prov_path):
         sys.exit(1)
 
     logging.info("Provenance validation completed successfully")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

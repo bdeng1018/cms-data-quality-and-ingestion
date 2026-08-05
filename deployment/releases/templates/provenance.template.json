@@ -7,15 +7,15 @@
         "mode": "deterministic",
         "environment": {
             "os": "ubuntu-22.04",
-            "execution_environment": "",
-            "container_runtime": "",
+            "execution_environment": "<EXECUTION_ENVIRONMENT>",
+            "container_runtime": "<CONTAINER_RUNTIME>",
             "docker_version": "<DOCKER_VERSION>",
             "python_version": "<PYTHON_VERSION>"
         }
     },
     "source": {
         "repository": "<REPOSITORY_URL>",
-        "workflow_file": "",
+        "workflow_file": "<WORKFLOW_FILE>",
         "run_id": "<GITHUB_RUN_ID>",
         "commit_sha": "<GITHUB_SHA>",
         "ref": "<GIT_REF>"

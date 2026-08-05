@@ -100,6 +100,11 @@ def replace_placeholders(path: Path, version: str):
     text = text.replace("<DEPLOYMENT_VERSION>", version)
     text = text.replace("<YYYY-MM-DD>", "")
 
+    # CI metadata fields
+    text = text.replace("<WORKFLOW_FILE>", "")
+    text = text.replace("<EXECUTION_ENVIRONMENT>", "")
+    text = text.replace("<CONTAINER_RUNTIME>", "")
+
     path.write_text(text)
     print(f"[INFO] Populated placeholders in {path}")
 
@@ -177,7 +182,10 @@ def finalize_release(manifest_path: Path, sbom_path: Path, prov_path: Path):
     prov = json.loads(prov_path.read_text())
 
     manifest["validation"]["status"] = "pending"
+
     sbom["provenance"]["status"] = "pending"
+    sbom["provenance"]["path"] = f"deployment/provenance/provenance-{manifest['version']}.json"
+    sbom["provenance"]["digest"] = ""
 
     manifest_path.write_text(json.dumps(manifest, indent=4))
     sbom_path.write_text(json.dumps(sbom, indent=4))
@@ -208,7 +216,6 @@ def sanity_check(version: str):
 
     manifest_digest = sha256_file(manifest_path)
 
-    # SBOM: blank hash before hashing, same as main()
     sbom = json.loads(sbom_path.read_text())
     sbom["hash"] = ""
     sbom_path.write_text(json.dumps(sbom, indent=4))
@@ -216,13 +223,8 @@ def sanity_check(version: str):
 
     prov = json.loads(prov_path.read_text())
 
-    print("Computed SBOM digest:", sbom_digest)
-    print("Provenance SBOM digest:", prov["artifacts"]["sbom"]["digest"])
-
     assert prov["artifacts"]["manifest"]["digest"] == f"sha256:{manifest_digest}", "Manifest digest mismatch"
     assert prov["artifacts"]["sbom"]["digest"] == f"sha256:{sbom_digest}", "SBOM digest mismatch"
-
-    # Integrity hash is already finalized in main(), so just trust it exists
     assert prov["integrity"]["self_hash"].startswith("sha256:"), "Integrity hash missing"
 
     print("[OK] Freeze sanity check passed")
@@ -260,18 +262,18 @@ def main():
     populate_all_templates(version)
 
     manifest = json.loads(manifest_path.read_text())
-    manifest["version"] = f"v{version}"
+    manifest["version"] = version
     manifest_path.write_text(json.dumps(manifest, indent=4))
 
     sbom = json.loads(sbom_path.read_text())
-    sbom["metadata"]["version"] = f"v{version}"
+    sbom["metadata"]["version"] = version
     sbom_path.write_text(json.dumps(sbom, indent=4))
 
     prov = json.loads(prov_path.read_text())
-    prov["version"] = f"v{version}"
+    prov["version"] = version
     prov_path.write_text(json.dumps(prov, indent=4))
 
-    print(f"[INFO] Inserted version metadata v{version}")
+    print(f"[INFO] Inserted version metadata {version}")
 
     update_sbom_counts(sbom_path)
 
@@ -288,20 +290,16 @@ def main():
     prov["artifacts"]["manifest"]["digest"] = f"sha256:{final_manifest_digest}"
     prov_path.write_text(json.dumps(prov, indent=4))
 
-    # --- SBOM DIGEST (correct ordering) ---
-    # 1. Blank hash field BEFORE hashing
+    # --- SBOM DIGEST ---
     sbom = json.loads(sbom_path.read_text())
     sbom["hash"] = ""
     sbom_path.write_text(json.dumps(sbom, indent=4))
 
-    # 2. Compute digest over final SBOM file
     final_sbom_digest = sha256_file(sbom_path)
 
-    # 3. Write digest into SBOM
     sbom["hash"] = f"sha256:{final_sbom_digest}"
     sbom_path.write_text(json.dumps(sbom, indent=4))
 
-    # 4. Write digest into provenance
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["sbom"]["digest"] = f"sha256:{final_sbom_digest}"
     prov_path.write_text(json.dumps(prov, indent=4))

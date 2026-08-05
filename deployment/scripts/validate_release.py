@@ -57,7 +57,6 @@ def validate_no_placeholders(text: str, path: Path):
 def validate_manifest(manifest_path: Path, provenance: dict):
     manifest = json.loads(manifest_path.read_text())
 
-    # manifest digest alignment
     expected = provenance["artifacts"]["manifest"]["digest"].replace("sha256:", "")
     actual = sha256_file(manifest_path)
 
@@ -70,19 +69,16 @@ def validate_manifest(manifest_path: Path, provenance: dict):
 def validate_sbom(sbom_path: Path, provenance: dict):
     sbom = json.loads(sbom_path.read_text())
 
-    # SBOM digest alignment (provenance ↔ SBOM)
     expected = provenance["artifacts"]["sbom"]["digest"].replace("sha256:", "")
     actual = sha256_file(sbom_path)
 
     if expected != actual:
         fail(f"SBOM digest mismatch: expected {expected}, got {actual}")
 
-    # SBOM internal hash
     internal = sbom["hash"].replace("sha256:", "")
     if internal != actual:
         fail(f"SBOM internal hash mismatch: expected {internal}, got {actual}")
 
-    # Count validation
     if sbom["metadata"]["component_count"] != len(sbom.get("components", [])):
         fail("SBOM component_count mismatch")
 
@@ -95,24 +91,20 @@ def validate_sbom(sbom_path: Path, provenance: dict):
 def validate_provenance(prov_path: Path, manifest_path: Path, sbom_path: Path):
     prov = json.loads(prov_path.read_text())
 
-    # manifest digest alignment
     expected_manifest = prov["artifacts"]["manifest"]["digest"].replace("sha256:", "")
     actual_manifest = sha256_file(manifest_path)
     if expected_manifest != actual_manifest:
         fail("Provenance manifest digest mismatch")
 
-    # SBOM digest alignment
     expected_sbom = prov["artifacts"]["sbom"]["digest"].replace("sha256:", "")
     actual_sbom = sha256_file(sbom_path)
     if expected_sbom != actual_sbom:
         fail("Provenance SBOM digest mismatch")
 
-    # docker digest placeholder check
     docker_digest = prov["artifacts"]["docker_image"]["digest"]
     if "<TO_BE_FILLED" in docker_digest:
         fail("Docker digest placeholder still present in provenance")
 
-    # integrity block
     expected_self_hash = prov["integrity"]["self_hash"].replace("sha256:", "")
     actual_self_hash = sha256_file(prov_path)
     if expected_self_hash != actual_self_hash:
@@ -146,7 +138,7 @@ def validate_docker_digest_file():
 
 
 def validate_version_alignment(manifest: dict, sbom: dict, provenance: dict, version: str):
-    expected = f"v{version}"
+    expected = version
 
     if manifest.get("version") != expected:
         fail("Manifest version mismatch")
@@ -171,31 +163,23 @@ def main():
     sbom_path = SBOM_DIR / f"sbom-{version}.json"
     prov_path = PROV_DIR / f"provenance-{version}.json"
 
-    # existence check
     for p in [manifest_path, sbom_path, prov_path]:
         if not p.exists():
             fail(f"Missing required file: {p}")
 
-    # placeholder check
     validate_no_placeholders(manifest_path.read_text(), manifest_path)
     validate_no_placeholders(sbom_path.read_text(), sbom_path)
     validate_no_placeholders(prov_path.read_text(), prov_path)
 
-    # docker digest file
     validate_docker_digest_file()
 
-    # load artifacts
     manifest = json.loads(manifest_path.read_text())
     sbom = json.loads(sbom_path.read_text())
     provenance = json.loads(prov_path.read_text())
 
-    # version alignment
     validate_version_alignment(manifest, sbom, provenance, version)
-
-    # docker digest alignment
     validate_docker_alignment(manifest, provenance)
 
-    # validate each artifact
     validate_manifest(manifest_path, provenance)
     validate_sbom(sbom_path, provenance)
     validate_provenance(prov_path, manifest_path, sbom_path)

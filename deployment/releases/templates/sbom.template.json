@@ -26,6 +26,14 @@
             "license": "Apache-2.0"
         },
         {
+            "id": "docker-image",
+            "type": "oci-image",
+            "version": "<VERSION>",
+            "source": "ghcr.io/<GHCR_NAMESPACE>/cms-pipeline:<VERSION>",
+            "digest": "<DOCKER_DIGEST>",
+            "license": "Apache-2.0"
+        },
+        {
             "id": "python-dependencies",
             "type": "python-package-set",
             "source": "deployment/requirements.txt",
@@ -56,11 +64,15 @@
         {
             "from": "cms-pipeline",
             "to": "python-dependencies"
+        },
+        {
+            "from": "cms-pipeline",
+            "to": "docker-image"
         }
     ],
     "hash": "",
     "provenance": {
-        "path": "deployment/releases/<VERSION>.manifest.json",
+        "path": "deployment/provenance/provenance-<VERSION>.json",
         "status": "pending"
     }
 }

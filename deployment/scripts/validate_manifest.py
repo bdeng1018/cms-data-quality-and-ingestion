@@ -4,11 +4,13 @@ Manifest Validator for CMS Pipeline
 
 Validates frozen manifest for any version:
   1. Structural validation
-  2. Manifest digest alignment (via provenance)
-  3. SBOM digest alignment (via provenance)
-  4. Docker digest alignment (manifest ↔ provenance)
+  2. Version alignment across manifest, SBOM, provenance
+  3. Manifest digest alignment (via provenance)
+  4. SBOM digest alignment (via provenance)
   5. SBOM internal hash validation
-  6. Version alignment across manifest, SBOM, provenance
+  6. Docker digest alignment (manifest ↔ provenance)
+  7. Provenance digest alignment (manifest ↔ provenance)
+  8. Provenance self-hash validation
 """
 
 import hashlib
@@ -47,10 +49,10 @@ def validate_manifest_structure(manifest: dict) -> bool:
 
     required_fields = [
         "version",
-        "release_date",
-        "provenance",
+        "schema_version",
+        "generated_at",
         "artifacts",
-        "ci_cd",
+        "metadata",
         "validation",
     ]
 
@@ -59,14 +61,12 @@ def validate_manifest_structure(manifest: dict) -> bool:
             logging.error(f"Missing required field: {field}")
             return False
 
-    # Required artifact blocks
-    required_artifacts = ["manifest", "sbom", "docker_image"]
+    required_artifacts = ["manifest", "sbom", "docker_image", "provenance"]
     for key in required_artifacts:
         if key not in manifest["artifacts"]:
             logging.error(f"Manifest missing artifacts.{key}")
             return False
 
-    # Validation block
     if "status" not in manifest["validation"]:
         logging.error("Manifest missing validation.status")
         return False
@@ -75,10 +75,35 @@ def validate_manifest_structure(manifest: dict) -> bool:
     return True
 
 
+def validate_version_alignment(manifest: dict, sbom: dict, provenance: dict, version: str) -> bool:
+    logging.info("Validating version alignment...")
+
+    mv = manifest.get("version")
+    sv = sbom["metadata"].get("version")
+    pv = provenance.get("version")
+
+    expected = version
+
+    if mv != expected:
+        logging.error(f"Manifest version mismatch: expected {expected}, found {mv}")
+        return False
+
+    if sv != expected:
+        logging.error(f"SBOM version mismatch: expected {expected}, found {sv}")
+        return False
+
+    if pv != expected:
+        logging.error(f"Provenance version mismatch: expected {expected}, found {pv}")
+        return False
+
+    logging.info("Version alignment validated")
+    return True
+
+
 def validate_manifest_hash(manifest: dict, provenance: dict, manifest_path: Path) -> bool:
     logging.info("Validating manifest digest alignment...")
 
-    actual = sha256_file(manifest_path).replace("sha256:", "")
+    actual = sha256_file(manifest_path)
 
     try:
         expected = provenance["artifacts"]["manifest"]["digest"].replace("sha256:", "")
@@ -101,7 +126,7 @@ def validate_manifest_hash(manifest: dict, provenance: dict, manifest_path: Path
 def validate_sbom_alignment(provenance: dict, sbom_path: Path) -> bool:
     logging.info("Validating SBOM digest alignment...")
 
-    actual = sha256_file(sbom_path).replace("sha256:", "")
+    actual = sha256_file(sbom_path)
 
     try:
         expected = provenance["artifacts"]["sbom"]["digest"].replace("sha256:", "")
@@ -124,7 +149,7 @@ def validate_sbom_alignment(provenance: dict, sbom_path: Path) -> bool:
 def validate_sbom_internal_hash(sbom: dict, sbom_path: Path) -> bool:
     logging.info("Validating SBOM internal hash...")
 
-    actual = sha256_file(sbom_path).replace("sha256:", "")
+    actual = sha256_file(sbom_path)
 
     try:
         expected = sbom["hash"].replace("sha256:", "")
@@ -166,28 +191,49 @@ def validate_docker_alignment(manifest: dict, provenance: dict) -> bool:
     return True
 
 
-def validate_version_alignment(manifest: dict, sbom: dict, provenance: dict, version: str) -> bool:
-    logging.info("Validating version alignment...")
+def validate_provenance_alignment(manifest: dict, provenance: dict, provenance_path: Path) -> bool:
+    logging.info("Validating provenance digest alignment...")
 
-    mv = manifest.get("version")
-    sv = sbom["metadata"].get("version")
-    pv = provenance.get("version")
+    actual = sha256_file(provenance_path)
 
-    expected = f"v{version}"
-
-    if mv != expected:
-        logging.error(f"Manifest version mismatch: expected {expected}, found {mv}")
+    try:
+        expected = manifest["artifacts"]["provenance"]["digest"].replace("sha256:", "")
+    except KeyError:
+        logging.error("Manifest missing artifacts.provenance.digest")
         return False
 
-    if sv != expected:
-        logging.error(f"SBOM version mismatch: expected {expected}, found {sv}")
+    if actual != expected:
+        logging.error(
+            "Provenance digest mismatch:\n"
+            f"  expected: sha256:{expected}\n"
+            f"  actual:   sha256:{actual}"
+        )
         return False
 
-    if pv != expected:
-        logging.error(f"Provenance version mismatch: expected {expected}, found {pv}")
+    logging.info("Provenance digest validated")
+    return True
+
+
+def validate_provenance_self_hash(provenance: dict, provenance_path: Path) -> bool:
+    logging.info("Validating provenance self-hash...")
+
+    actual = sha256_file(provenance_path)
+
+    try:
+        expected = provenance["integrity"]["self_hash"].replace("sha256:", "")
+    except KeyError:
+        logging.error("Provenance missing integrity.self_hash")
         return False
 
-    logging.info("Version alignment validated")
+    if actual != expected:
+        logging.error(
+            "Provenance self-hash mismatch:\n"
+            f"  expected: sha256:{expected}\n"
+            f"  actual:   sha256:{actual}"
+        )
+        return False
+
+    logging.info("Provenance self-hash validated")
     return True
 
 # ==============================================================================
@@ -229,8 +275,15 @@ def main():
     if not validate_docker_alignment(manifest, provenance):
         sys.exit(1)
 
+    if not validate_provenance_alignment(manifest, provenance, provenance_path):
+        sys.exit(1)
+
+    if not validate_provenance_self_hash(provenance, provenance_path):
+        sys.exit(1)
+
     logging.info("Manifest validation completed successfully")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

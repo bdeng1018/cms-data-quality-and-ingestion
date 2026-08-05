@@ -7,6 +7,7 @@ Validates frozen SBOM for any version:
   2. SBOM digest alignment (via provenance)
   3. SBOM internal hash validation
   4. Version alignment across SBOM ↔ manifest ↔ provenance
+  5. OCI image digest alignment (SBOM ↔ manifest ↔ provenance)
 """
 
 import hashlib
@@ -50,7 +51,6 @@ def validate_sbom_structure(sbom: dict) -> bool:
             logging.error(f"Missing required SBOM field: {field}")
             return False
 
-    # metadata.version must exist
     if "version" not in sbom["metadata"]:
         logging.error("SBOM metadata missing version")
         return False
@@ -108,7 +108,7 @@ def validate_sbom_internal_hash(sbom: dict, sbom_path: Path) -> bool:
 def validate_version_alignment(sbom: dict, manifest: dict, provenance: dict, version: str) -> bool:
     logging.info("Validating version alignment...")
 
-    expected = f"v{version}"
+    expected = version
 
     sbom_v = sbom["metadata"].get("version")
     manifest_v = manifest.get("version")
@@ -127,6 +127,40 @@ def validate_version_alignment(sbom: dict, manifest: dict, provenance: dict, ver
         return False
 
     logging.info("Version alignment validated")
+    return True
+
+
+def validate_oci_image_digest(sbom: dict, manifest: dict, provenance: dict) -> bool:
+    logging.info("Validating OCI image digest alignment...")
+
+    try:
+        sbom_digest = sbom["components"][2]["digest"].replace("sha256:", "")
+    except Exception:
+        logging.error("SBOM missing OCI image digest in components[2].digest")
+        return False
+
+    try:
+        manifest_digest = manifest["artifacts"]["docker_image"]["digest"].replace("sha256:", "")
+    except Exception:
+        logging.error("Manifest missing artifacts.docker_image.digest")
+        return False
+
+    try:
+        provenance_digest = provenance["artifacts"]["docker_image"]["digest"].replace("sha256:", "")
+    except Exception:
+        logging.error("Provenance missing artifacts.docker_image.digest")
+        return False
+
+    if sbom_digest != manifest_digest or sbom_digest != provenance_digest:
+        logging.error(
+            "OCI image digest mismatch:\n"
+            f"  SBOM:       sha256:{sbom_digest}\n"
+            f"  Manifest:   sha256:{manifest_digest}\n"
+            f"  Provenance: sha256:{provenance_digest}"
+        )
+        return False
+
+    logging.info("OCI image digest validated")
     return True
 
 # ==============================================================================
@@ -162,8 +196,12 @@ def main():
     if not validate_sbom_internal_hash(sbom, sbom_path):
         sys.exit(1)
 
+    if not validate_oci_image_digest(sbom, manifest, provenance):
+        sys.exit(1)
+
     logging.info("SBOM validation completed successfully")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

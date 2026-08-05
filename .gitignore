@@ -49,7 +49,6 @@ data/stage04_processed/*
 data/stage05_reports/*
 !data/stage05_reports/.gitkeep
 
-
 # Keep Stage 01 schema tracked
 !data/stage01_schema/schema.json
 !data/stage01_schema/sample_rows.csv
@@ -85,8 +84,6 @@ Thumbs.db
 # ==============================================================================
 diagrams/*.svg
 diagrams/*.jpg
-
-# Keep PNGs tracked
 !diagrams/*.png
 
 # ==============================================================================
@@ -129,8 +126,13 @@ deployment/helm/charts/
 *.squashfs
 
 # ==============================================================================
-# Deployment: CI/CD runtime artifacts
+# Deployment: CI/CD runtime artifacts (CRITICAL FOR FREEZE PIPELINE)
 # ==============================================================================
+deployment/docker-digest.txt
+deployment/bundles/
+deployment/releases/*.tar.gz
+
+# GitHub Actions temp files
 .github/workflows/*.tmp
 coverage.xml
 

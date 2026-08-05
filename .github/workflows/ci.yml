@@ -1,5 +1,8 @@
 name: CMS Pipeline CI/CD
 
+# ------------------------------------------------------------------------------
+# Workflow Triggers
+# ------------------------------------------------------------------------------
 on:
   push:
     branches: ["main"]
@@ -9,32 +12,50 @@ on:
 
 jobs:
   # ============================================================================
-  # 1. Build, Test, Lint, Docker Build & Push, Metadata Upload
+  # 1. BUILD + TEST + LINT + DOCKER BUILD/PUSH + DIGEST EXTRACTION
   # ============================================================================
   build-test-validate:
     runs-on: ubuntu-22.04
 
     steps:
+      # ------------------------------------------------------------------------
+      # Checkout repository
+      # ------------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------------------
+      # Python setup
+      # ------------------------------------------------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # ------------------------------------------------------------------------
+      # Install dependencies
+      # ------------------------------------------------------------------------
       - name: Install dependencies
         run: |
           pip install -r deployment/requirements.txt
           pip install pytest flake8
 
+      # ------------------------------------------------------------------------
+      # Add project root to PYTHONPATH
+      # ------------------------------------------------------------------------
       - name: Add project root to PYTHONPATH
         run: |
           echo "PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts" >> $GITHUB_ENV
 
+      # ------------------------------------------------------------------------
+      # Run tests
+      # ------------------------------------------------------------------------
       - name: Run tests
         run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest -q
 
+      # ------------------------------------------------------------------------
+      # Lint (non-blocking)
+      # ------------------------------------------------------------------------
       - name: Lint code (non-blocking)
         run: |
           set +e
@@ -42,91 +63,76 @@ jobs:
           echo "Ignoring flake8 failures"
           exit 0
 
+      # ------------------------------------------------------------------------
+      # Docker Buildx setup
+      # ------------------------------------------------------------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        if: always()
+      # ------------------------------------------------------------------------
+      # GHCR Login (correct + secure)
+      # ------------------------------------------------------------------------
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: bdeng1018
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      # ------------------------------------------------------------------------
+      # Build Docker image
+      # ------------------------------------------------------------------------
       - name: Build Docker image
-        if: always()
-        run: docker build -t cms-pipeline:1.0.1 -f deployment/Dockerfile .
+        run: docker build -t cms-pipeline:1.0.0 -f deployment/Dockerfile .
 
+      # ------------------------------------------------------------------------
+      # Tag Docker image for GHCR
+      # ------------------------------------------------------------------------
       - name: Tag Docker image for GHCR
-        if: always()
-        run: docker tag cms-pipeline:1.0.1 ghcr.io/bdeng1018/cms-pipeline:1.0.1
+        run: docker tag cms-pipeline:1.0.0 ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
 
+      # ------------------------------------------------------------------------
+      # Push Docker image to GHCR
+      # ------------------------------------------------------------------------
       - name: Push Docker image to GHCR
-        if: always()
-        run: docker push ghcr.io/bdeng1018/cms-pipeline:1.0.1
+        run: docker push ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0
 
+      # ------------------------------------------------------------------------
+      # Compute GHCR digest
+      # ------------------------------------------------------------------------
       - name: Compute GHCR digest
-        if: always()
         id: digest
         run: |
-          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:1.0.1 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
+          DIGEST=$(docker inspect ghcr.io/${{ github.actor }}/cms-pipeline:1.0.0 --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
-      - name: Write docker digest file for bump_version.py
-        if: always()
+      # ------------------------------------------------------------------------
+      # Write digest file for freeze pipeline
+      # ------------------------------------------------------------------------
+      - name: Write docker digest file
         run: |
           mkdir -p deployment
           echo "${{ steps.digest.outputs.digest }}" > deployment/docker-digest.txt
 
-      - name: Upload Docker digest (optional)
-        if: always()
+      # ------------------------------------------------------------------------
+      # Upload digest artifact
+      # ------------------------------------------------------------------------
+      - name: Upload Docker digest
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-digest
           path: deployment/docker-digest.txt
 
+      # ------------------------------------------------------------------------
+      # Print metadata
+      # ------------------------------------------------------------------------
       - name: Print CI/CD metadata
         run: |
           echo "RUN_ID=$GITHUB_RUN_ID"
           echo "COMMIT_SHA=$GITHUB_SHA"
 
   # ============================================================================
-  # 2. Drift Detection — Enforce Deterministic Pipeline
-  # ============================================================================
-  drift-check:
-    runs-on: ubuntu-22.04
-    needs: freeze-release
-
-    steps:
-      - name: Download frozen artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frozen-release-1.0.1
-          path: deployment/
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          pip install -r deployment/requirements.txt
-
-      - name: Validate manifest
-        run: python deployment/scripts/validate_manifest.py 1.0.1
-
-      - name: Validate SBOM
-        run: python deployment/scripts/validate_sbom.py 1.0.1
-
-      - name: Validate provenance
-        run: python deployment/scripts/validate_provenance.py 1.0.1
-
-  # ============================================================================
-  # 3. Freeze Job — Run bump_version.py + Validate Release
+  # 2. FREEZE RELEASE — bump_version.py + validate + upload freeze artifacts
   # ============================================================================
   freeze-release:
     runs-on: ubuntu-22.04
@@ -136,7 +142,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download docker digest from build job
+      - name: Download docker digest
         uses: actions/download-artifact@v4
         with:
           name: docker-image-digest
@@ -151,31 +157,82 @@ jobs:
         run: |
           pip install -r deployment/requirements.txt
 
-      - name: Run version bump script
+      # ------------------------------------------------------------------------
+      # Set workflow metadata required by provenance template
+      # ------------------------------------------------------------------------
+      - name: Set workflow metadata
         run: |
-          python deployment/scripts/bump_version.py 1.0.1
+          echo "WORKFLOW_FILE=.github/workflows/ci.yml" >> $GITHUB_ENV
+          echo "EXECUTION_ENVIRONMENT=github-actions" >> $GITHUB_ENV
+          echo "CONTAINER_RUNTIME=docker" >> $GITHUB_ENV
+
+      # ------------------------------------------------------------------------
+      # Run freeze pipeline
+      # ------------------------------------------------------------------------
+      - name: Run version bump script
+        run: python deployment/scripts/bump_version.py 1.0.0
 
       - name: Validate manifest
-        run: python deployment/scripts/validate_manifest.py 1.0.1
+        run: python deployment/scripts/validate_manifest.py 1.0.0
 
       - name: Validate SBOM
-        run: python deployment/scripts/validate_sbom.py 1.0.1
+        run: python deployment/scripts/validate_sbom.py 1.0.0
 
       - name: Validate provenance
-        run: python deployment/scripts/validate_provenance.py 1.0.1
+        run: python deployment/scripts/validate_provenance.py 1.0.0
 
+      # ------------------------------------------------------------------------
+      # Upload freeze artifacts
+      # ------------------------------------------------------------------------
       - name: Upload frozen release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: frozen-release-1.0.1
+          name: frozen-release-1.0.0
           path: |
-            deployment/releases/1.0.1.manifest.json
-            deployment/sbom/sbom-1.0.1.json
-            deployment/provenance/provenance-1.0.1.json
+            deployment/releases/1.0.0.manifest.json
+            deployment/sbom/sbom-1.0.0.json
+            deployment/provenance/provenance-1.0.0.json
             deployment/docker-digest.txt
 
   # ============================================================================
-  # 4. Bundle Builder — Create Release Bundle (tar.gz)
+  # 3. DRIFT CHECK — ensure deterministic freeze pipeline
+  # ============================================================================
+  drift-check:
+    runs-on: ubuntu-22.04
+    needs: freeze-release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download frozen artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frozen-release-1.0.0
+          path: deployment/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r deployment/requirements.txt
+
+      # ------------------------------------------------------------------------
+      # Deterministic validation
+      # ------------------------------------------------------------------------
+      - name: Validate manifest
+        run: python deployment/scripts/validate_manifest.py 1.0.0
+
+      - name: Validate SBOM
+        run: python deployment/scripts/validate_sbom.py 1.0.0
+
+      - name: Validate provenance
+        run: python deployment/scripts/validate_provenance.py 1.0.0
+
+  # ============================================================================
+  # 4. BUNDLE RELEASE — tar.gz packaging of freeze artifacts
   # ============================================================================
   bundle-release:
     runs-on: ubuntu-22.04
@@ -185,23 +242,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download frozen release artifacts
+      - name: Download frozen artifacts
         uses: actions/download-artifact@v4
         with:
-          name: frozen-release-1.0.1
-          path: deployment/bundles/1.0.1/
+          name: frozen-release-1.0.0
+          path: deployment/bundles/1.0.0/
 
+      # ------------------------------------------------------------------------
+      # Create deterministic bundle
+      # ------------------------------------------------------------------------
       - name: Create release bundle
         run: |
-          cd deployment/bundles/1.0.1
-          tar -czf cms-pipeline-1.0.1.tar.gz \
-            1.0.1.manifest.json \
-            sbom-1.0.1.json \
-            provenance-1.0.1.json \
+          cd deployment/bundles/1.0.0
+          tar -czf cms-pipeline-1.0.0.tar.gz \
+            1.0.0.manifest.json \
+            sbom-1.0.0.json \
+            provenance-1.0.0.json \
             docker-digest.txt
 
+      # ------------------------------------------------------------------------
+      # Upload bundle
+      # ------------------------------------------------------------------------
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
         with:
-          name: cms-pipeline-1.0.1-bundle
-          path: deployment/bundles/1.0.1/cms-pipeline-1.0.1.tar.gz
+          name: cms-pipeline-1.0.0-bundle
+          path: deployment/bundles/1.0.0/cms-pipeline-1.0.0.tar.gz
