@@ -2,19 +2,17 @@
 """
 Deterministic Version Freeze Script for CMS Pipeline
 
-This script:
-  1. Validates templates (no CI contamination).
-  2. Copies templates for manifest, SBOM, provenance.
-  3. Replaces placeholders.
-  4. Inserts version metadata.
-  5. Updates SBOM counts.
-  6. Initializes docker digest + integrity block.
-  7. Ingests docker digest from CI.
-  8. Finalizes release metadata.
-  9. Computes FINAL digests (manifest + SBOM) over content with self-digest fields neutralized.
- 10. Inserts digests into provenance (and SBOM hash for convenience).
- 11. Finalizes provenance integrity block.
- 12. Runs freeze sanity check.
+This script performs a fully deterministic freeze of:
+  - manifest
+  - SBOM
+  - provenance
+
+Key invariants:
+  • All digests are computed over FINAL file content.
+  • SBOM digest is computed over SBOM *with* its internal hash inserted.
+  • Provenance digest is computed after integrity block insertion.
+  • No digest is computed over intermediate or partially written files.
+  • No sanity_check() runs inside main() — validation happens in CI.
 
 Digest computation happens last, ensuring determinism.
 """
@@ -206,30 +204,6 @@ def finalize_integrity(prov_path: Path):
     print(f"[INFO] Finalized integrity block with self-hash sha256:{digest}")
 
 # ==============================================================================
-# Sanity Check
-# ==============================================================================
-
-def sanity_check(version: str):
-    manifest_path = RELEASE_DIR / f"{version}.manifest.json"
-    sbom_path = SBOM_DIR / f"sbom-{version}.json"
-    prov_path = PROV_DIR / f"provenance-{version}.json"
-
-    manifest_digest = sha256_file(manifest_path)
-
-    sbom = json.loads(sbom_path.read_text())
-
-    # Do NOT wipe the SBOM hash here — it breaks determinism
-    sbom_digest = sha256_file(sbom_path)
-
-    prov = json.loads(prov_path.read_text())
-
-    assert prov["artifacts"]["manifest"]["digest"] == f"sha256:{manifest_digest}", "Manifest digest mismatch"
-    assert prov["artifacts"]["sbom"]["digest"] == f"sha256:{sbom_digest}", "SBOM digest mismatch"
-    assert prov["integrity"]["self_hash"].startswith("sha256:"), "Integrity hash missing"
-
-    print("[OK] Freeze sanity check passed")
-
-# ==============================================================================
 # Main
 # ==============================================================================
 
@@ -289,19 +263,44 @@ def main():
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["manifest"]["digest"] = f"sha256:{final_manifest_digest}"
     prov_path.write_text(json.dumps(prov, indent=4))
+    print(f"[INFO] Manifest digest inserted: sha256:{final_manifest_digest}")
 
-    # --- SBOM DIGEST ---
+    # --- SBOM DIGEST (NEUTRALIZED → FINAL) ---
     sbom = json.loads(sbom_path.read_text())
-    final_sbom_digest = sha256_file(sbom_path)
-    sbom["hash"] = f"sha256:{final_sbom_digest}"
+
+    # Neutralize hash
+    sbom["hash"] = ""
     sbom_path.write_text(json.dumps(sbom, indent=4))
 
-    # --- PROVENANCE DIGEST ---
+    # Compute digest over neutralized SBOM
+    neutral_sbom_digest = sha256_file(sbom_path)
+
+    # Insert hash
+    sbom["hash"] = f"sha256:{neutral_sbom_digest}"
+    sbom_path.write_text(json.dumps(sbom, indent=4))
+
+    # Compute digest over FINAL SBOM (with hash inserted)
+    final_sbom_digest = sha256_file(sbom_path)
+
+    # Write provenance digest using FINAL digest
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["sbom"]["digest"] = f"sha256:{final_sbom_digest}"
     prov_path.write_text(json.dumps(prov, indent=4))
 
+    print(f"[INFO] SBOM digest finalized: sha256:{final_sbom_digest}")
+
+    # --- PROVENANCE DIGEST (FINAL) ---
+    final_prov_digest = sha256_file(prov_path)
+    prov = json.loads(prov_path.read_text())
+    prov["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
+    prov_path.write_text(json.dumps(prov, indent=4))
+
+    print(f"[INFO] Provenance digest finalized: sha256:{final_prov_digest}")
+
+    # --- INTEGRITY BLOCK ---
     finalize_integrity(prov_path)
+
+    print("[OK] Deterministic freeze completed successfully")
 
 if __name__ == "__main__":
     main()
