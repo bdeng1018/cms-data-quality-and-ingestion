@@ -217,8 +217,8 @@ def sanity_check(version: str):
     manifest_digest = sha256_file(manifest_path)
 
     sbom = json.loads(sbom_path.read_text())
-    sbom["hash"] = ""
-    sbom_path.write_text(json.dumps(sbom, indent=4))
+    
+    # Do NOT wipe the SBOM hash here — it breaks determinism
     sbom_digest = sha256_file(sbom_path)
 
     prov = json.loads(prov_path.read_text())
@@ -292,14 +292,11 @@ def main():
 
     # --- SBOM DIGEST ---
     sbom = json.loads(sbom_path.read_text())
-    sbom["hash"] = ""
-    sbom_path.write_text(json.dumps(sbom, indent=4))
-
     final_sbom_digest = sha256_file(sbom_path)
-
     sbom["hash"] = f"sha256:{final_sbom_digest}"
     sbom_path.write_text(json.dumps(sbom, indent=4))
 
+    # --- PROVENANCE DIGEST ---
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["sbom"]["digest"] = f"sha256:{final_sbom_digest}"
     prov_path.write_text(json.dumps(prov, indent=4))
