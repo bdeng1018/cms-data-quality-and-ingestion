@@ -1,3 +1,4 @@
+# force reindex
 name: CMS Pipeline CI/CD
 
 on:
