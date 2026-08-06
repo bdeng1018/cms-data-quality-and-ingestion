@@ -163,12 +163,12 @@ jobs:
       - name: Upload frozen release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: frozen-release-${VERSION}
+          name: frozen-release-${{ env.VERSION }}
           path: |
-            deployment/releases/${VERSION}.manifest.json
-            deployment/sbom/sbom-${VERSION}.json
-            deployment/provenance/provenance-${VERSION}.json
-            deployment/provenance/provenance-${VERSION}.sig
+            deployment/releases/${{ env.VERSION }}.manifest.json
+            deployment/sbom/sbom-${{ env.VERSION }}.json
+            deployment/provenance/provenance-${{ env.VERSION }}.json
+            deployment/provenance/provenance-${{ env.VERSION }}.sig
             deployment/docker-digest.txt
 
   # ============================================================================
@@ -189,7 +189,7 @@ jobs:
       - name: Download frozen artifacts
         uses: actions/download-artifact@v4
         with:
-          name: frozen-release-${VERSION}
+          name: frozen-release-${{ env.VERSION }}
           path: deployment/
 
       - name: Ensure frozen artifacts exist
@@ -237,8 +237,8 @@ jobs:
       - name: Download frozen artifacts
         uses: actions/download-artifact@v4
         with:
-          name: frozen-release-${VERSION}
-          path: deployment/bundles/${VERSION}/
+          name: frozen-release-${{ env.VERSION }}
+          path: deployment/bundles/${{ env.VERSION }}/
 
       - name: Ensure frozen artifacts exist
         run: |
@@ -265,11 +265,11 @@ jobs:
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
         with:
-          name: cms-pipeline-${VERSION}-bundle
-          path: deployment/bundles/${VERSION}/cms-pipeline-${VERSION}.tar.gz
+          name: cms-pipeline-${{ env.VERSION }}-bundle
+          path: deployment/bundles/${{ env.VERSION }}/cms-pipeline-${{ env.VERSION }}.tar.gz
 
       - name: Upload bundle digest
         uses: actions/upload-artifact@v4
         with:
-          name: cms-pipeline-${VERSION}-bundle-digest
-          path: deployment/bundles/${VERSION}/cms-pipeline-${VERSION}.tar.gz.sha256
+          name: cms-pipeline-${{ env.VERSION }}-bundle-digest
+          path: deployment/bundles/${{ env.VERSION }}/cms-pipeline-${{ env.VERSION }}.tar.gz.sha256
