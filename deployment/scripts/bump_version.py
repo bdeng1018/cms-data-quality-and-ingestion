@@ -293,6 +293,10 @@ def main():
     prov["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
     prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
+    manifest = json.loads(manifest_path.read_text())
+    manifest["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
+    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
+
     print(f"[INFO] Provenance digest finalized: sha256:{final_prov_digest}")
 
     # --- INTEGRITY BLOCK (NEUTRALIZED → FINAL) ---
