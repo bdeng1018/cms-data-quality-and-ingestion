@@ -177,7 +177,6 @@ def ingest_docker_digest(manifest_path: Path, prov_path: Path):
 def finalize_release(manifest_path: Path, sbom_path: Path, prov_path: Path):
     manifest = json.loads(manifest_path.read_text())
     sbom = json.loads(sbom_path.read_text())
-    prov = json.loads(prov_path.read_text())
 
     manifest["validation"]["status"] = "pending"
 
@@ -185,9 +184,8 @@ def finalize_release(manifest_path: Path, sbom_path: Path, prov_path: Path):
     sbom["provenance"]["path"] = f"deployment/provenance/provenance-{manifest['version']}.json"
     sbom["provenance"]["digest"] = ""
 
-    manifest_path.write_text(json.dumps(manifest, indent=4))
-    sbom_path.write_text(json.dumps(sbom, indent=4))
-    prov_path.write_text(json.dumps(prov, indent=4))
+    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
+    sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
 
     print("[INFO] Release finalized (pre-digest)")
 
