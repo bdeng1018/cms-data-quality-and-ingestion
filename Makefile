@@ -162,7 +162,7 @@ smoke: stage02 diag-cleaned stage03 diag-quality stage04 ## Smoke test (Stages 0
 
 .PHONY: diagnostics
 diagnostics: diag-pos diag-cleaned schema-diagnostics diag-quality diag-intermediate diag-stage04 diag-pipelieI ## Run all diagnostics
-	@echo "All diagnostics (Stages 01–05) complete."
+	@echo "All diagnostics (Stages 01–05) cete."
 
 # ==============================================================================
 # Testing

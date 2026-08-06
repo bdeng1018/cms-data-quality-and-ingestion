@@ -35,17 +35,13 @@ def test_stage04_validation_missing(tmp_path):
     stage04.mkdir(parents=True)
     (stage04 / "report_index.json").write_text("{}")
 
-    with patch("src.stage05_pipeline_runner.validation.STAGE04_DIR", stage04):
-        with patch("os.path.exists") as mock_exists:
+    # Import the real validator
+    from src.stage05_pipeline_runner.run_pipeline import validate_stage04_outputs
 
-            def fake_exists(path):
-                return Path(path).exists()
+    # Call validator with tmp_path as root
+    missing = validate_stage04_outputs(root=tmp_path)
 
-            mock_exists.side_effect = fake_exists
-
-            missing = validate_stage04_outputs()
-
-            assert missing == []
+    assert missing == []
 
 
 # ==============================================================================
