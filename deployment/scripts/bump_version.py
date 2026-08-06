@@ -9,7 +9,7 @@ This script performs a fully deterministic freeze of:
 
 Key invariants:
   • All digests are computed over FINAL file content.
-  • SBOM digest is computed over SBOM *with* its internal hash inserted.
+  • SBOM digest is computed over SBOM with its internal hash inserted.
   • Provenance digest is computed after integrity block insertion.
   • No digest is computed over intermediate or partially written files.
   • No sanity_check() runs inside main() — validation happens in CI.
@@ -237,15 +237,15 @@ def main():
 
     manifest = json.loads(manifest_path.read_text())
     manifest["version"] = version
-    manifest_path.write_text(json.dumps(manifest, indent=4))
+    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
 
     sbom = json.loads(sbom_path.read_text())
     sbom["metadata"]["version"] = version
-    sbom_path.write_text(json.dumps(sbom, indent=4))
+    sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
 
     prov = json.loads(prov_path.read_text())
     prov["version"] = version
-    prov_path.write_text(json.dumps(prov, indent=4))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
     print(f"[INFO] Inserted version metadata {version}")
 
@@ -262,7 +262,7 @@ def main():
     final_manifest_digest = sha256_file(manifest_path)
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["manifest"]["digest"] = f"sha256:{final_manifest_digest}"
-    prov_path.write_text(json.dumps(prov, indent=4))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
     print(f"[INFO] Manifest digest inserted: sha256:{final_manifest_digest}")
 
     # --- SBOM DIGEST (NEUTRALIZED → FINAL) ---
@@ -270,14 +270,14 @@ def main():
 
     # Neutralize hash
     sbom["hash"] = ""
-    sbom_path.write_text(json.dumps(sbom, indent=4))
+    sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
 
     # Compute digest over neutralized SBOM
     neutral_sbom_digest = sha256_file(sbom_path)
 
     # Insert hash
     sbom["hash"] = f"sha256:{neutral_sbom_digest}"
-    sbom_path.write_text(json.dumps(sbom, indent=4))
+    sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
 
     # Compute digest over FINAL SBOM (with hash inserted)
     final_sbom_digest = sha256_file(sbom_path)
@@ -285,7 +285,7 @@ def main():
     # Write provenance digest using FINAL digest
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["sbom"]["digest"] = f"sha256:{final_sbom_digest}"
-    prov_path.write_text(json.dumps(prov, indent=4))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
     print(f"[INFO] SBOM digest finalized: sha256:{final_sbom_digest}")
 
@@ -293,7 +293,7 @@ def main():
     final_prov_digest = sha256_file(prov_path)
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
-    prov_path.write_text(json.dumps(prov, indent=4))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
     print(f"[INFO] Provenance digest finalized: sha256:{final_prov_digest}")
 
@@ -301,6 +301,7 @@ def main():
     finalize_integrity(prov_path)
 
     print("[OK] Deterministic freeze completed successfully")
+
 
 if __name__ == "__main__":
     main()
