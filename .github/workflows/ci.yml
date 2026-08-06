@@ -1,0 +1,279 @@
+name: CMS Pipeline CI/CD
+
+on:
+  push:
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
+  id-token: write
+  checks: read
+  pull-requests: read
+
+jobs:
+  # ============================================================================
+  # 1. BUILD + TEST + LINT + DOCKER BUILD/PUSH + DIGEST EXTRACTION
+  # ============================================================================
+  build-test-validate:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r deployment/requirements.txt
+          pip install pytest flake8
+
+      - name: Add project root to PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest -q
+
+      - name: Lint code (non-blocking)
+        run: |
+          set +e
+          PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts flake8 src/
+          echo "Ignoring flake8 failures"
+          exit 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: bdeng1018
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t cms-pipeline:${VERSION} -f deployment/Dockerfile .
+
+      - name: Tag Docker image for GHCR
+        run: docker tag cms-pipeline:${VERSION} ghcr.io/bdeng1018/cms-pipeline:${VERSION}
+
+      - name: Push Docker image to GHCR
+        run: docker push ghcr.io/bdeng1018/cms-pipeline:${VERSION}
+
+      - name: Compute GHCR digest
+        id: digest
+        run: |
+          DIGEST=$(docker inspect ghcr.io/bdeng1018/cms-pipeline:${VERSION} --format='{{index .RepoDigests 0}}' | cut -d'@' -f2)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Write docker digest file
+        run: |
+          mkdir -p deployment
+          echo "${{ steps.digest.outputs.digest }}" > deployment/docker-digest.txt
+
+      - name: Upload Docker digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-digest
+          path: deployment/docker-digest.txt
+
+      - name: Print CI/CD metadata
+        run: |
+          echo "RUN_ID=$GITHUB_RUN_ID"
+          echo "COMMIT_SHA=$GITHUB_SHA"
+
+  # ============================================================================
+  # 2. FREEZE RELEASE — bump_version.py + freeze_runner.py + upload artifacts
+  # ============================================================================
+  freeze-release:
+    runs-on: ubuntu-22.04
+    needs: build-test-validate
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: Download docker digest
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-digest
+          path: deployment/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r deployment/requirements.txt
+
+      - name: Set workflow metadata
+        run: |
+          echo "WORKFLOW_FILE=.github/workflows/ci.yml" >> $GITHUB_ENV
+          echo "EXECUTION_ENVIRONMENT=github-actions" >> $GITHUB_ENV
+          echo "CONTAINER_RUNTIME=docker" >> $GITHUB_ENV
+
+      - name: Set provenance metadata
+        run: |
+          echo "DOCKER_VERSION=$(docker --version)" >> $GITHUB_ENV
+          echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
+          echo "REPOSITORY_URL=https://github.com/bdeng1018/cms-data-quality-and-ingestion" >> $GITHUB_ENV
+          echo "GHCR_NAMESPACE=bdeng1018" >> $GITHUB_ENV
+          echo "GIT_REF=${GITHUB_REF}" >> $GITHUB_ENV
+
+      - name: Set GitHub metadata
+        run: |
+          echo "GITHUB_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "GITHUB_RUN_ID=${GITHUB_RUN_ID}" >> $GITHUB_ENV
+          echo "ISO8601_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          echo "RELEASE_DATE=$(date -u +"%Y-%m-%d")" >> $GITHUB_ENV
+
+      - name: Validate required metadata
+        run: |
+          for key in VERSION REPOSITORY_URL GHCR_NAMESPACE GITHUB_SHA GITHUB_RUN_ID GIT_REF WORKFLOW_FILE EXECUTION_ENVIRONMENT CONTAINER_RUNTIME DOCKER_VERSION PYTHON_VERSION ISO8601_TIMESTAMP RELEASE_DATE; do
+            if [ -z "${!key}" ]; then
+              echo "[ERROR] Missing required environment variable: $key"
+              exit 1
+            fi
+          done
+
+      - name: Generate release artifacts
+        run: python deployment/scripts/bump_version.py ${VERSION}
+
+      - name: Run freeze pipeline
+        run: python deployment/scripts/freeze_runner.py ${VERSION}
+
+      - name: Upload frozen release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-release-${{ env.VERSION }}
+          path: |
+            deployment/releases/${{ env.VERSION }}.manifest.json
+            deployment/sbom/sbom-${{ env.VERSION }}.json
+            deployment/provenance/provenance-${{ env.VERSION }}.json
+            deployment/provenance/provenance-${{ env.VERSION }}.sig
+            deployment/docker-digest.txt
+
+  # ============================================================================
+  # 3. DRIFT CHECK — ensure deterministic freeze pipeline
+  # ============================================================================
+  drift-check:
+    runs-on: ubuntu-22.04
+    needs: freeze-release
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: Download frozen artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frozen-release-${{ env.VERSION }}
+          path: deployment/
+
+      - name: Ensure frozen artifacts exist
+        run: |
+          test -f deployment/releases/${VERSION}.manifest.json
+          test -f deployment/sbom/sbom-${VERSION}.json
+          test -f deployment/provenance/provenance-${VERSION}.json
+          test -f deployment/provenance/provenance-${VERSION}.sig
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r deployment/requirements.txt
+
+      - name: Validate manifest
+        run: python deployment/scripts/validate_manifest.py ${VERSION}
+
+      - name: Validate SBOM
+        run: python deployment/scripts/validate_sbom.py ${VERSION}
+
+      - name: Validate provenance
+        run: python deployment/scripts/validate_provenance.py ${VERSION}
+
+      - name: Validate signature
+        run: python deployment/scripts/validate_signature.py ${VERSION}
+
+  # ============================================================================
+  # 4. BUNDLE RELEASE — tar.gz packaging of freeze artifacts
+  # ============================================================================
+  bundle-release:
+    runs-on: ubuntu-22.04
+    needs: freeze-release
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+      - name: Prepare bundle directory structure
+        run: mkdir -p deployment/bundles/${VERSION}/deployment
+
+      - name: Download frozen artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frozen-release-${{ env.VERSION }}
+          path: deployment/bundles/${{ env.VERSION }}/deployment
+
+      - name: Ensure frozen artifacts exist
+        run: |
+          test -f deployment/bundles/${VERSION}/deployment/releases/${VERSION}.manifest.json
+          test -f deployment/bundles/${VERSION}/deployment/sbom/sbom-${VERSION}.json
+          test -f deployment/bundles/${VERSION}/deployment/provenance/provenance-${VERSION}.json
+          test -f deployment/bundles/${VERSION}/deployment/provenance/provenance-${VERSION}.sig
+
+      - name: Create release bundle
+        run: |
+          cd deployment/bundles/${VERSION}
+          tar -czf cms-pipeline-${VERSION}.tar.gz \
+            deployment/releases/${VERSION}.manifest.json \
+            deployment/sbom/sbom-${VERSION}.json \
+            deployment/provenance/provenance-${VERSION}.json \
+            deployment/provenance/provenance-${VERSION}.sig \
+            deployment/docker-digest.txt
+
+      - name: Compute bundle digest
+        run: |
+          cd deployment/bundles/${VERSION}
+          sha256sum cms-pipeline-${VERSION}.tar.gz > cms-pipeline-${VERSION}.tar.gz.sha256
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: cms-pipeline-${{ env.VERSION }}-bundle
+          path: deployment/bundles/${{ env.VERSION }}/cms-pipeline-${{ env.VERSION }}.tar.gz
+
+      - name: Upload bundle digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: cms-pipeline-${{ env.VERSION }}-bundle-digest
+          path: deployment/bundles/${{ env.VERSION }}/cms-pipeline-${{ env.VERSION }}.tar.gz.sha256
