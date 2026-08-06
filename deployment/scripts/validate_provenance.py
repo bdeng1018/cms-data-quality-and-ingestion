@@ -182,8 +182,15 @@ def validate_integrity_block(prov: dict, prov_path: Path) -> bool:
         logging.error("Integrity self_hash must start with sha256:")
         return False
 
-    actual = sha256_file(prov_path)
+    # Expected self-hash from integrity block
     expected = integrity["self_hash"].replace("sha256:", "")
+
+    # Compute digest over provenance with integrity.self_hash neutralized
+    prov_copy = json.loads(json.dumps(prov))
+    prov_copy["integrity"]["self_hash"] = ""
+
+    neutral_text = json.dumps(prov_copy, indent=4, sort_keys=True)
+    actual = hashlib.sha256(neutral_text.encode("utf-8")).hexdigest()
 
     if actual != expected:
         logging.error(

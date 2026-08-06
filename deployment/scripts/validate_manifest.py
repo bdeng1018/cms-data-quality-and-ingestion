@@ -149,13 +149,19 @@ def validate_sbom_alignment(provenance: dict, sbom_path: Path) -> bool:
 def validate_sbom_internal_hash(sbom: dict, sbom_path: Path) -> bool:
     logging.info("Validating SBOM internal hash...")
 
-    actual = sha256_file(sbom_path)
-
+    # Expected hash from SBOM field
     try:
         expected = sbom["hash"].replace("sha256:", "")
     except KeyError:
         logging.error("SBOM missing internal hash field")
         return False
+
+    # Compute digest over SBOM with hash neutralized
+    sbom_copy = json.loads(json.dumps(sbom))
+    sbom_copy["hash"] = ""
+
+    neutral_text = json.dumps(sbom_copy, indent=4, sort_keys=True)
+    actual = hashlib.sha256(neutral_text.encode("utf-8")).hexdigest()
 
     if actual != expected:
         logging.error(

@@ -268,14 +268,14 @@ def main():
     # --- SBOM DIGEST (NEUTRALIZED → FINAL) ---
     sbom = json.loads(sbom_path.read_text())
 
-    # Neutralize hash
-    sbom["hash"] = ""
-    sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
+    # Compute digest over neutralized SBOM (hash = "")
+    sbom_copy = json.loads(json.dumps(sbom))
+    sbom_copy["hash"] = ""
 
-    # Compute digest over neutralized SBOM
-    neutral_sbom_digest = sha256_file(sbom_path)
+    neutral_text = json.dumps(sbom_copy, indent=4, sort_keys=True)
+    neutral_sbom_digest = hashlib.sha256(neutral_text.encode("utf-8")).hexdigest()
 
-    # Insert hash
+    # Insert internal hash (neutral digest)
     sbom["hash"] = f"sha256:{neutral_sbom_digest}"
     sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
 
@@ -297,10 +297,21 @@ def main():
 
     print(f"[INFO] Provenance digest finalized: sha256:{final_prov_digest}")
 
-    # --- INTEGRITY BLOCK ---
-    finalize_integrity(prov_path)
+    # --- INTEGRITY BLOCK (NEUTRALIZED → FINAL) ---
+    prov = json.loads(prov_path.read_text())
 
-    print("[OK] Deterministic freeze completed successfully")
+    # Compute digest over neutralized provenance (self_hash = "")
+    prov_copy = json.loads(json.dumps(prov))
+    prov_copy["integrity"]["self_hash"] = ""
+
+    neutral_text = json.dumps(prov_copy, indent=4, sort_keys=True)
+    neutral_prov_digest = hashlib.sha256(neutral_text.encode("utf-8")).hexdigest()
+
+    # Insert self-hash (neutral digest)
+    prov["integrity"]["self_hash"] = f"sha256:{neutral_prov_digest}"
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
+
+    print(f"[INFO] Provenance self-hash finalized: sha256:{neutral_prov_digest}")
 
 
 if __name__ == "__main__":
