@@ -3,18 +3,23 @@
 Deterministic Version Freeze Script for CMS Pipeline
 
 This script performs a fully deterministic freeze of:
-  - manifest
-  - SBOM
-  - provenance
+  • manifest
+  • SBOM
+  • provenance
 
-Key invariants:
-  • All digests are computed over FINAL file content.
+Determinism guarantees:
+  • All digests are computed over FINAL, canonicalized (sort_keys=True) JSON.
+  • Manifest digest is computed after all placeholders and metadata are inserted.
   • SBOM digest is computed over SBOM with its internal hash inserted.
-  • Provenance digest is computed after integrity block insertion.
+  • Provenance digest is computed after all artifact digests are inserted.
+  • Integrity self-hash is computed last, over a neutralized copy of provenance.
+  • No provenance file is rewritten after digest insertion.
   • No digest is computed over intermediate or partially written files.
-  • No sanity_check() runs inside main() — validation happens in CI.
+  • All template digest fields start empty ("") and are populated deterministically.
+  • All JSON writes use canonical ordering to ensure reproducibility.
+  • Validation occurs in CI; no sanity_check() runs inside main().
 
-Digest computation happens last, ensuring determinism.
+Digest computation happens last, ensuring reproducible, drift-free releases.
 """
 
 import hashlib
@@ -98,7 +103,6 @@ def replace_placeholders(path: Path, version: str):
     text = text.replace("<DEPLOYMENT_VERSION>", version)
     text = text.replace("<YYYY-MM-DD>", "")
 
-    # CI metadata fields
     text = text.replace("<WORKFLOW_FILE>", "")
     text = text.replace("<EXECUTION_ENVIRONMENT>", "")
     text = text.replace("<CONTAINER_RUNTIME>", "")
@@ -121,7 +125,7 @@ def update_sbom_counts(sbom_path: Path):
     dependencies = sbom.get("dependencies", [])
     sbom["metadata"]["component_count"] = len(components)
     sbom["metadata"]["dependencies_count"] = len(dependencies)
-    sbom_path.write_text(json.dumps(sbom, indent=4))
+    sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
     print(f"[INFO] SBOM counts updated: {len(components)} components, {len(dependencies)} dependencies")
 
 # ==============================================================================
@@ -135,8 +139,8 @@ def initialize_docker_digest(manifest_path: Path, prov_path: Path):
     manifest["artifacts"]["docker_image"]["digest"] = ""
     prov["artifacts"]["docker_image"]["digest"] = ""
 
-    manifest_path.write_text(json.dumps(manifest, indent=4))
-    prov_path.write_text(json.dumps(prov, indent=4))
+    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
     print("[INFO] Initialized docker digest placeholder")
 
@@ -144,7 +148,7 @@ def initialize_integrity_block(prov_path: Path):
     prov = json.loads(prov_path.read_text())
     prov["integrity"]["self_hash"] = "pending"
     prov["integrity"]["validated_at"] = None
-    prov_path.write_text(json.dumps(prov, indent=4))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
     print("[INFO] Initialized integrity block")
 
 # ==============================================================================
@@ -164,8 +168,8 @@ def ingest_docker_digest(manifest_path: Path, prov_path: Path):
     manifest["artifacts"]["docker_image"]["digest"] = docker_digest
     prov["artifacts"]["docker_image"]["digest"] = docker_digest
 
-    manifest_path.write_text(json.dumps(manifest, indent=4))
-    prov_path.write_text(json.dumps(prov, indent=4))
+    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
     print(f"[INFO] Ingested docker digest: {docker_digest}")
     return docker_digest
@@ -266,21 +270,17 @@ def main():
     # --- SBOM DIGEST (NEUTRALIZED → FINAL) ---
     sbom = json.loads(sbom_path.read_text())
 
-    # Compute digest over neutralized SBOM (hash = "")
     sbom_copy = json.loads(json.dumps(sbom))
     sbom_copy["hash"] = ""
 
     neutral_text = json.dumps(sbom_copy, indent=4, sort_keys=True)
     neutral_sbom_digest = hashlib.sha256(neutral_text.encode("utf-8")).hexdigest()
 
-    # Insert internal hash (neutral digest)
     sbom["hash"] = f"sha256:{neutral_sbom_digest}"
     sbom_path.write_text(json.dumps(sbom, indent=4, sort_keys=True))
 
-    # Compute digest over FINAL SBOM (with hash inserted)
     final_sbom_digest = sha256_file(sbom_path)
 
-    # Write provenance digest using FINAL digest
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["sbom"]["digest"] = f"sha256:{final_sbom_digest}"
     prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
@@ -298,14 +298,12 @@ def main():
     # --- INTEGRITY BLOCK (NEUTRALIZED → FINAL) ---
     prov = json.loads(prov_path.read_text())
 
-    # Compute digest over neutralized provenance (self_hash = "")
     prov_copy = json.loads(json.dumps(prov))
     prov_copy["integrity"]["self_hash"] = ""
 
     neutral_text = json.dumps(prov_copy, indent=4, sort_keys=True)
     neutral_prov_digest = hashlib.sha256(neutral_text.encode("utf-8")).hexdigest()
 
-    # Insert self-hash (neutral digest)
     prov["integrity"]["self_hash"] = f"sha256:{neutral_prov_digest}"
     prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 

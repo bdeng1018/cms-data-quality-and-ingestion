@@ -5,19 +5,19 @@
     "artifacts": {
         "manifest": {
             "path": "deployment/releases/<VERSION>.manifest.json",
-            "digest": "sha256:{{ manifest_digest }}"
+            "digest": ""
         },
         "docker_image": {
             "name": "ghcr.io/<GHCR_NAMESPACE>/cms-pipeline:<VERSION>",
-            "digest": "sha256:{{ docker_digest }}"
+            "digest": ""
         },
         "sbom": {
             "path": "deployment/sbom/sbom-<VERSION>.json",
-            "digest": "sha256:{{ sbom_digest }}"
+            "digest": ""
         },
         "provenance": {
             "path": "deployment/provenance/provenance-<VERSION>.json",
-            "digest": "sha256:{{ provenance_digest }}"
+            "digest": ""
         }
     },
     "metadata": {
