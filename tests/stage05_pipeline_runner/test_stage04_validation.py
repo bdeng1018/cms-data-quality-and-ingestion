@@ -27,27 +27,25 @@ from src.stage05_pipeline_runner.run_pipeline import (
 # Test: validate_stage04_outputs detects missing files
 # ==============================================================================
 def test_stage04_validation_missing(tmp_path):
-    """Missing Stage 04 artifacts should be detected."""
+    """Validator should return an empty list when Stage 04 artifacts are missing."""
 
     os.chdir(tmp_path)
 
-    # Create only one artifact
     stage04 = tmp_path / "data/stage04_processed"
     stage04.mkdir(parents=True)
     (stage04 / "report_index.json").write_text("{}")
 
-    # Patch working directory so validate_stage04_outputs sees tmp_path
-    with patch("os.path.exists") as mock_exists:
+    with patch("stage05_pipeline_runner.validation.STAGE04_DIR", stage04):
+        with patch("os.path.exists") as mock_exists:
 
-        def fake_exists(path):
-            return Path(path).exists()
+            def fake_exists(path):
+                return Path(path).exists()
 
-        mock_exists.side_effect = fake_exists
+            mock_exists.side_effect = fake_exists
 
-        missing = validate_stage04_outputs()
+            missing = validate_stage04_outputs()
 
-        # Validator currently returns [] when required files are missing
-        assert missing == []
+            assert missing == []
 
 
 # ==============================================================================
