@@ -234,11 +234,14 @@ jobs:
       - name: Set version from tag
         run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
 
+      - name: Prepare bundle directory structure
+        run: mkdir -p deployment/bundles/${VERSION}/deployment
+
       - name: Download frozen artifacts
         uses: actions/download-artifact@v4
         with:
           name: frozen-release-${{ env.VERSION }}
-          path: deployment/bundles/${{ env.VERSION }}/
+          path: deployment/bundles/${{ env.VERSION }}/deployment
 
       - name: Ensure frozen artifacts exist
         run: |
