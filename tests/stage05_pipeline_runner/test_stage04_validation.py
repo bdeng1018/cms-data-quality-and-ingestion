@@ -27,7 +27,7 @@ from src.stage05_pipeline_runner.run_pipeline import (
 # Test: validate_stage04_outputs detects missing files
 # ==============================================================================
 def test_stage04_validation_missing(tmp_path):
-    """Validator should return an empty list when Stage 04 artifacts are missing."""
+    """Validator should detect missing Stage 04 artifacts."""
 
     os.chdir(tmp_path)
 
@@ -35,13 +35,18 @@ def test_stage04_validation_missing(tmp_path):
     stage04.mkdir(parents=True)
     (stage04 / "report_index.json").write_text("{}")
 
-    # Import the real validator
     from src.stage05_pipeline_runner.run_pipeline import validate_stage04_outputs
 
-    # Call validator with tmp_path as root
     missing = validate_stage04_outputs(root=tmp_path)
 
-    assert missing == []
+    # Expect the two missing files
+    assert len(missing) == 2
+    assert (
+        tmp_path / "data/stage04_processed/facility_health.csv"
+    ).as_posix() in missing
+    assert (
+        tmp_path / "data/stage04_processed/dataset_summary.json"
+    ).as_posix() in missing
 
 
 # ==============================================================================
