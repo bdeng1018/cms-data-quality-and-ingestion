@@ -35,7 +35,7 @@ def test_stage04_validation_missing(tmp_path):
     stage04.mkdir(parents=True)
     (stage04 / "report_index.json").write_text("{}")
 
-    with patch("stage05_pipeline_runner.validation.STAGE04_DIR", stage04):
+    with patch("src.stage05_pipeline_runner.validation.STAGE04_DIR", stage04):
         with patch("os.path.exists") as mock_exists:
 
             def fake_exists(path):
