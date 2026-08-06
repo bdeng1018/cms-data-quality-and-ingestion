@@ -2,7 +2,9 @@
 # CMS Data Quality & Ingestion Pipeline — Makefile
 # ==============================================================================
 
+VERSION ?= dev
 PYTHON := python
+PYTHONPATH := "$(PWD):$(PWD)/src:$(PWD)/scripts"
 
 # ==============================================================================
 # Help — Self‑Documenting Makefile
@@ -29,15 +31,16 @@ stage01: regen-schema schema-diagnostics ## Regenerate schema + run Stage 01 dia
 	@echo "Stage 01 complete."
 
 regen-schema: ## Regenerate schema.json from cleaned_data.csv
+	@mkdir -p data/stage01_schema
 	@echo "Regenerating schema.json from cleaned_data.csv..."
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage01/generate_schema.py \
 		--cleaned data/stage02_cleaned/cleaned_data.csv \
 		--out data/stage01_schema/schema.json
 	@echo "Schema regenerated."
 
 schema-diagnostics: ## Run Stage 01 schema diagnostics
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage01/check_schema.py
 
 # ==============================================================================
@@ -50,31 +53,32 @@ stage02: fetch-pos ingest-pos clean-pos diag-cleaned ## Stage 02 — ingestion +
 	@echo "Stage 02 complete."
 
 fetch-pos: ## Download POS Q2 2026
+	@mkdir -p data/stage02_raw
 	$(PYTHON) src/stage02_raw_ingestion/fetch_pos_api.py \
 		--out-parquet data/stage02_raw/pos_q2_2026.parquet \
 		--out-csv data/stage02_raw/pos_q2_2026.csv
 
 ingest-pos: ## Ingest POS parquet
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m stage02_raw_ingestion.run_ingestion \
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m stage02_raw_ingestion.run_ingestion \
 		pos data/stage02_raw/pos_q2_2026.parquet
 
 ingest-qies: ## Ingest QIES file (FILE=...)
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m stage02_raw_ingestion.run_ingestion \
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m stage02_raw_ingestion.run_ingestion \
 		qies $(FILE)
 
 clean-pos: ## Clean POS data
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m stage02_raw_ingestion.run_cleaning
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m stage02_raw_ingestion.run_cleaning
 
 diag-pos: ## Diagnostics for POS ingestion
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
 		pos data/stage02_raw/pos_q2_2026.parquet
 
 diag-qies: ## Diagnostics for QIES ingestion (FILE=...)
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
 		qies $(FILE)
 
 diag-cleaned: ## Diagnostics for cleaned Stage 02 data
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
 		cleaned data/stage02_cleaned/cleaned_data.csv
 
 # ==============================================================================
@@ -87,15 +91,16 @@ stage03: run-stage03 diag-quality diag-intermediate ## Stage 03 — quality prof
 	@echo "Stage 03 complete."
 
 run-stage03: ## Run Stage 03 quality engine
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) -m stage03_data_quality.run_quality
+	@mkdir -p data/stage03_intermediate
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m stage03_data_quality.run_quality
 
 diag-quality: ## Stage 03 quality diagnostics
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage03/check_quality.py \
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage03/check_quality.py \
 		--file data/stage02_cleaned/cleaned_data.csv \
 		--type pos
 
 diag-intermediate: ## Diagnostics for Stage 03 intermediate artifacts
-	PYTHONPATH="$(PWD)/src:$(PWD)" $(PYTHON) scripts/diagnostics/stage03/check_intermediate_artifacts.py
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage03/check_intermediate_artifacts.py
 
 # ==============================================================================
 # Stage 04 — Reporting
@@ -107,11 +112,12 @@ stage04: run-stage04 diag-stage04 ## Stage 04 — reporting
 	@echo "Stage 04 complete."
 
 run-stage04: ## Run Stage 04 reporting
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	@mkdir -p data/stage04_processed
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) -m stage04_reporting.run_reporting
 
 diag-stage04: ## Stage 04 reporting diagnostics
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage04/check_reports.py
 
 # ==============================================================================
@@ -124,13 +130,14 @@ stage05: run-stage05 diag-pipeline ## Stage 05 — pipeline runner
 	@echo "Stage 05 complete."
 
 run-stage05: ## Run Stage 05 pipeline orchestrator
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	@mkdir -p data/stage05_reports
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) -m stage05_pipeline_runner.run_pipeline \
 		--config configs/pipeline.yml \
 		--output data/stage05_reports/pipeline_summary.json
 
 diag-pipeline: ## Stage 05 pipeline diagnostics
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage05/check_pipeline.py
 
 # ==============================================================================
@@ -138,8 +145,7 @@ diag-pipeline: ## Stage 05 pipeline diagnostics
 # ==============================================================================
 
 .PHONY: run
-
-run: stage01 stage02 stage03 stage04 stage05 ## Run full pipeline (Stages 01–05)
+run: stage02 stage01 stage03 stage04 stage05 ## Run full pipeline (Stages 01–05)
 	@echo "Full pipeline (Stages 01–05) complete."
 
 # ==============================================================================
@@ -147,7 +153,6 @@ run: stage01 stage02 stage03 stage04 stage05 ## Run full pipeline (Stages 01–0
 # ==============================================================================
 
 .PHONY: smoke
-
 smoke: stage02 diag-cleaned stage03 diag-quality stage04 ## Smoke test (Stages 02–04)
 	@echo "Smoke test (Stages 02–04) complete."
 
@@ -156,9 +161,7 @@ smoke: stage02 diag-cleaned stage03 diag-quality stage04 ## Smoke test (Stages 0
 # ==============================================================================
 
 .PHONY: diagnostics
-
-# Left diag-qies out, but can include (between diag-pos and diag-cleaned)
-diagnostics: schema-diagnostics diag-pos diag-cleaned diag-quality diag-intermediate diag-stage04 diag-pipeline ## Run all diagnostics
+diagnostics: diag-pos diag-cleaned schema-diagnostics diag-quality diag-intermediate diag-stage04 diag-pipelieI ## Run all diagnostics
 	@echo "All diagnostics (Stages 01–05) complete."
 
 # ==============================================================================
@@ -166,16 +169,14 @@ diagnostics: schema-diagnostics diag-pos diag-cleaned diag-quality diag-intermed
 # ==============================================================================
 
 .PHONY: test
-
 test: ## Run pytest suite
-	PYTHONPATH="$(PWD)/src:$(PWD)" pytest tests
+	PYTHONPATH=$(PYTHONPATH) pytest tests
 
 # ==============================================================================
 # Linting
 # ==============================================================================
 
 .PHONY: lint
-
 lint: ## Run ruff + black checks
 	ruff check .
 	black --check .
@@ -185,7 +186,6 @@ lint: ## Run ruff + black checks
 # ==============================================================================
 
 .PHONY: clean-cache
-
 clean-cache: ## Remove Python caches
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	rm -rf .pytest_cache/
@@ -200,7 +200,6 @@ clean-cache: ## Remove Python caches
 # ==============================================================================
 
 .PHONY: reset
-
 reset: clean-cache ## Remove pipeline artifacts (keeps cleaned data)
 	@read -p "This will delete ALL pipeline artifacts except cleaned data. Continue? (y/n) " ans; \
 	if [ "$$ans" = "y" ]; then \
@@ -209,9 +208,9 @@ reset: clean-cache ## Remove pipeline artifacts (keeps cleaned data)
 		rm -f data/stage04_processed/*; \
 		rm -f data/stage05_reports/*; \
 		rm -f logs/*.log; \
-		echo "Pipeline artifacts (Stages 02–05) removed. Cleaned data preserved."; \
+		@echo "Pipeline artifacts (Stages 02–05) removed. Cleaned data preserved."; \
 	else \
-		echo "Reset aborted."; \
+		@echo "Reset aborted."; \
 	fi
 
 # ==============================================================================
@@ -219,7 +218,6 @@ reset: clean-cache ## Remove pipeline artifacts (keeps cleaned data)
 # ==============================================================================
 
 .PHONY: env
-
 env: ## Create conda environment
 	@echo "Creating conda environment from environment.yml..."
 	conda env create -f environment.yml || echo "Environment already exists."
@@ -230,7 +228,6 @@ env: ## Create conda environment
 # ==============================================================================
 
 .PHONY: deploy
-
 deploy: ## Run deployment orchestrator (delegates to deployment/Makefile.deploy)
 	@echo "Running deployment orchestrator..."
 	$(MAKE) -f deployment/Makefile.deploy deploy
@@ -241,35 +238,33 @@ deploy: ## Run deployment orchestrator (delegates to deployment/Makefile.deploy)
 # ==============================================================================
 
 .PHONY: provenance
-
-provenance: ## Validate manifest.provenance against MANIFEST_SPEC.md
-	@echo "Validating provenance..."
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
-		$(PYTHON) deployment/scripts/validate_provenance.py \
-		--manifest manifest.provenance \
-		--spec deployment/MANIFEST_SPEC.md
-	@echo "Provenance validation complete."
+provenance: ## Validate provenance for a version (VERSION=...)
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) deployment/scripts/validate_provenance.py $(VERSION)
 
 # ==============================================================================
 # SBOM Validation
 # ==============================================================================
 
 .PHONY: sbom
+sbom: ## Validate SBOM for a version (VERSION=...)
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) deployment/scripts/validate_sbom.py $(VERSION)
 
-sbom: ## Validate SBOM against SBOM.md contract
-	@echo "Validating SBOM..."
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
-		$(PYTHON) deployment/scripts/validate_sbom.py \
-		--sbom deployment/sbom.json \
-		--spec deployment/SBOM.mdm
-	@echo "SBOM validation complete."
+# ==============================================================================
+# Freeze
+# ==============================================================================
+
+.PHONY: freeze
+freeze: ## Freeze pipeline version (VERSION=...)
+	$(PYTHON) deployment/scripts/bump_version.py $(VERSION)
+	$(PYTHON) deployment/scripts/freeze_runner.py $(VERSION)
 
 # ==============================================================================
 # Drift Detection — Terraform + Helm
 # ==============================================================================
 
 .PHONY: drift
-
 drift: ## Detect deployment drift (Terraform + Helm diff)
 	@echo "Checking Terraform drift..."
 	cd deployment/terraform && terraform plan -detailed-exitcode || true
@@ -282,12 +277,10 @@ drift: ## Detect deployment drift (Terraform + Helm diff)
 # ==============================================================================
 
 .PHONY: audit
-
 audit: ## Generate audit logs for deployment + pipeline
-	@echo "Generating audit logs..."
-	PYTHONPATH="$(PWD)/src:$(PWD)" \
+	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) deployment/scripts/generate_audit_logs.py \
-		--manifest manifest.provenance \
-		--sbom deployment/sbom.json \
+		--manifest deployment/provenance/provenance-$(VERSION).json \
+		--sbom deployment/sbom/sbom-$(VERSION).json \
 		--out logs/audit.log
 	@echo "Audit log generated."

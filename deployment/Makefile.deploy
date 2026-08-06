@@ -3,19 +3,16 @@
 # ==============================================================================
 # Intent:
 #   Deterministic deployment orchestration for Docker + Compose execution.
-#   This Makefile is invoked from the repository root via:
+#   Invoked from repository root via:
 #
 #       make deploy
 #
-#   All paths resolve relative to the repository root.
-#
 # Determinism Guarantees:
-#   - Dockerfile pinned in deployment/
-#   - Compose file pinned at repo root
+#   - Pinned Dockerfile (deployment/Dockerfile)
+#   - Pinned Compose file (compose.yml)
 #   - Read‑only mounts for code/configs
 #   - Stable artifact + log directories
 # ==============================================================================
-
 
 # ==============================================================================
 # Variables
@@ -26,6 +23,7 @@ COMPOSE := compose.yml
 IMAGE_NAME := cms_ingestion
 IMAGE_TAG := latest
 
+VERSION ?= dev
 
 # ==============================================================================
 # Docker Build — Deterministic
@@ -33,7 +31,6 @@ IMAGE_TAG := latest
 docker-build: ## Build deterministic Docker image
     @echo "=== Building deterministic Docker image ==="
     docker build -f $(DOCKERFILE) -t $(IMAGE_NAME):$(IMAGE_TAG) $(PROJECT_ROOT)
-
 
 # ==============================================================================
 # Docker Run — Deterministic (No Compose)
@@ -50,14 +47,12 @@ docker-run: ## Run pipeline inside Docker image (no Compose)
         -v $(PROJECT_ROOT)/logs:/app/logs \
         $(IMAGE_NAME):$(IMAGE_TAG)
 
-
 # ==============================================================================
 # Compose Up — Full Deployment
 # ==============================================================================
 compose-up: ## Start full deployment environment using Compose
     @echo "=== Starting deterministic deployment environment ==="
     docker compose -f $(COMPOSE) up --build
-
 
 # ==============================================================================
 # Compose Down — Cleanup
@@ -66,22 +61,37 @@ compose-down: ## Shut down deployment environment
     @echo "=== Shutting down deployment environment ==="
     docker compose -f $(COMPOSE) down
 
+# ==============================================================================
+# Manifest Validation (Release Artifacts)
+# ==============================================================================
+validate-manifest: ## Validate manifest for VERSION
+    @echo "=== Validating manifest.json for version $(VERSION) ==="
+    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
+        python deployment/scripts/validate_manifest.py $(VERSION)
 
 # ==============================================================================
-# Manifest Validation
+# SBOM Validation (Release Artifacts)
 # ==============================================================================
-validate-manifest: ## Validate manifest.json against MANIFEST_SPEC.md
-    @echo "=== Validating manifest.json ==="
-    python scripts/diagnostics/stage05/check_pipeline.py
-
+validate-sbom: ## Validate SBOM for VERSION
+    @echo "=== Validating SBOM for version $(VERSION) ==="
+    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
+        python deployment/scripts/validate_sbom.py $(VERSION)
 
 # ==============================================================================
-# Artifact Registry Validation
+# Provenance Validation (Release Artifacts)
 # ==============================================================================
-validate-artifacts: ## Validate artifact_registry.json
-    @echo "=== Validating artifact registry ==="
-    python scripts/diagnostics/stage04/check_reports.py
+validate-provenance: ## Validate provenance for VERSION
+    @echo "=== Validating provenance for version $(VERSION) ==="
+    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
+        python deployment/scripts/validate_provenance.py $(VERSION)
 
+# ==============================================================================
+# Signature Validation (Release Artifacts)
+# ==============================================================================
+validate-signature: ## Validate detached signature for VERSION
+    @echo "=== Validating signature for version $(VERSION) ==="
+    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
+        python deployment/scripts/validate_signature.py $(VERSION)
 
 # ==============================================================================
 # Clean Deployment Artifacts
@@ -91,12 +101,13 @@ clean: ## Remove data + logs (safe)
     rm -rf $(PROJECT_ROOT)/data/*
     rm -rf $(PROJECT_ROOT)/logs/*
 
-
 # ==============================================================================
 # Full Deterministic Deployment (Build → Up → Validate)
 # ==============================================================================
 deploy: ## Full deterministic deployment run
     $(MAKE) docker-build
     $(MAKE) compose-up
-    $(MAKE) validate-manifest
-    $(MAKE) validate-artifacts
+    $(MAKE) validate-manifest VERSION=$(VERSION)
+    $(MAKE) validate-sbom VERSION=$(VERSION)
+    $(MAKE) validate-provenance VERSION=$(VERSION)
+    $(MAKE) validate-signature VERSION=$(VERSION)

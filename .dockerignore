@@ -1,0 +1,15 @@
+.git
+.github
+.vscode
+deployment/releases
+deployment/sbom
+deployment/provenance
+deployment/releases/archive/
+deployment/sbom/archive/
+deployment/provenance/archive/
+deployment/docker-digest.txt
+logs
+tests
+diagrams
+docs
+*.md

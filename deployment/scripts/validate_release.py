@@ -137,7 +137,9 @@ def validate_docker_digest_file():
     print("[OK] Docker digest file validated")
 
 
-def validate_version_alignment(manifest: dict, sbom: dict, provenance: dict, version: str):
+def validate_version_alignment(
+    manifest: dict, sbom: dict, provenance: dict, version: str
+):
     expected = version
 
     if manifest.get("version") != expected:

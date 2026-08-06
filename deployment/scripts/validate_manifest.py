@@ -25,12 +25,14 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 # Utility Functions
 # ==============================================================================
 
+
 def sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return h.hexdigest()
+
 
 def load_json(path: Path):
     try:
@@ -40,9 +42,11 @@ def load_json(path: Path):
         logging.error(f"Failed to load {path}: {e}")
         sys.exit(1)
 
+
 # ==============================================================================
 # Validation Steps
 # ==============================================================================
+
 
 def validate_manifest_structure(manifest: dict) -> bool:
     logging.info("Checking manifest structure...")
@@ -75,7 +79,9 @@ def validate_manifest_structure(manifest: dict) -> bool:
     return True
 
 
-def validate_version_alignment(manifest: dict, sbom: dict, provenance: dict, version: str) -> bool:
+def validate_version_alignment(
+    manifest: dict, sbom: dict, provenance: dict, version: str
+) -> bool:
     logging.info("Validating version alignment...")
 
     mv = manifest.get("version")
@@ -100,7 +106,9 @@ def validate_version_alignment(manifest: dict, sbom: dict, provenance: dict, ver
     return True
 
 
-def validate_manifest_hash(manifest: dict, provenance: dict, manifest_path: Path) -> bool:
+def validate_manifest_hash(
+    manifest: dict, provenance: dict, manifest_path: Path
+) -> bool:
     logging.info("Validating manifest digest alignment...")
 
     actual = sha256_file(manifest_path)
@@ -197,54 +205,10 @@ def validate_docker_alignment(manifest: dict, provenance: dict) -> bool:
     return True
 
 
-def validate_provenance_alignment(manifest: dict, provenance: dict, provenance_path: Path) -> bool:
-    logging.info("Validating provenance digest alignment...")
-
-    actual = sha256_file(provenance_path)
-
-    try:
-        expected = manifest["artifacts"]["provenance"]["digest"].replace("sha256:", "")
-    except KeyError:
-        logging.error("Manifest missing artifacts.provenance.digest")
-        return False
-
-    if actual != expected:
-        logging.error(
-            "Provenance digest mismatch:\n"
-            f"  expected: sha256:{expected}\n"
-            f"  actual:   sha256:{actual}"
-        )
-        return False
-
-    logging.info("Provenance digest validated")
-    return True
-
-
-def validate_provenance_self_hash(provenance: dict, provenance_path: Path) -> bool:
-    logging.info("Validating provenance self-hash...")
-
-    actual = sha256_file(provenance_path)
-
-    try:
-        expected = provenance["integrity"]["self_hash"].replace("sha256:", "")
-    except KeyError:
-        logging.error("Provenance missing integrity.self_hash")
-        return False
-
-    if actual != expected:
-        logging.error(
-            "Provenance self-hash mismatch:\n"
-            f"  expected: sha256:{expected}\n"
-            f"  actual:   sha256:{actual}"
-        )
-        return False
-
-    logging.info("Provenance self-hash validated")
-    return True
-
 # ==============================================================================
 # Main
 # ==============================================================================
+
 
 def main():
     logging.info("Starting manifest validation...")
@@ -279,12 +243,6 @@ def main():
         sys.exit(1)
 
     if not validate_docker_alignment(manifest, provenance):
-        sys.exit(1)
-
-    if not validate_provenance_alignment(manifest, provenance, provenance_path):
-        sys.exit(1)
-
-    if not validate_provenance_self_hash(provenance, provenance_path):
         sys.exit(1)
 
     logging.info("Manifest validation completed successfully")
