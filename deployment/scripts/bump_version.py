@@ -200,7 +200,7 @@ def finalize_integrity(prov_path: Path):
     prov = json.loads(prov_path.read_text())
     prov["integrity"]["self_hash"] = f"sha256:{digest}"
     prov["integrity"]["validated_at"] = ""
-    prov_path.write_text(json.dumps(prov, indent=4))
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
     print(f"[INFO] Finalized integrity block with self-hash sha256:{digest}")
 
 # ==============================================================================
