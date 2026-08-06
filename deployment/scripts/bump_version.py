@@ -260,11 +260,27 @@ def main():
 
     finalize_release(manifest_path, sbom_path, prov_path)
 
-    # --- MANIFEST DIGEST ---
+    # --- PROVENANCE DIGEST (FINAL) ---
+    final_prov_digest = sha256_file(prov_path)
+
+    # Insert provenance digest into provenance.json
+    prov = json.loads(prov_path.read_text())
+    prov["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
+    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
+
+    # Insert provenance digest into manifest.json BEFORE computing manifest digest
+    manifest = json.loads(manifest_path.read_text())
+    manifest["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
+    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
+
+    print(f"[INFO] Provenance digest finalized: sha256:{final_prov_digest}")
+
+    # --- MANIFEST DIGEST (FINAL) ---
     final_manifest_digest = sha256_file(manifest_path)
     prov = json.loads(prov_path.read_text())
     prov["artifacts"]["manifest"]["digest"] = f"sha256:{final_manifest_digest}"
     prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
+
     print(f"[INFO] Manifest digest inserted: sha256:{final_manifest_digest}")
 
     # --- SBOM DIGEST (NEUTRALIZED → FINAL) ---
@@ -286,18 +302,6 @@ def main():
     prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
 
     print(f"[INFO] SBOM digest finalized: sha256:{final_sbom_digest}")
-
-    # --- PROVENANCE DIGEST (FINAL) ---
-    final_prov_digest = sha256_file(prov_path)
-    prov = json.loads(prov_path.read_text())
-    prov["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
-    prov_path.write_text(json.dumps(prov, indent=4, sort_keys=True))
-
-    manifest = json.loads(manifest_path.read_text())
-    manifest["artifacts"]["provenance"]["digest"] = f"sha256:{final_prov_digest}"
-    manifest_path.write_text(json.dumps(manifest, indent=4, sort_keys=True))
-
-    print(f"[INFO] Provenance digest finalized: sha256:{final_prov_digest}")
 
     # --- INTEGRITY BLOCK (NEUTRALIZED → FINAL) ---
     prov = json.loads(prov_path.read_text())
