@@ -17,7 +17,7 @@
 # ==============================================================================
 # Variables
 # ==============================================================================
-# Note: C++ mechanization binaries live in utils_cpp/ and are built inside Docker.
+# Note: C++ mechanization binaries are built in CI (make cpp-all) and included via src/.
 # ==============================================================================
 
 PROJECT_ROOT := .
@@ -70,7 +70,6 @@ docker-run: ## Run pipeline inside Docker image (no Compose)
         -v $(PROJECT_ROOT)/configs:/app/configs:ro \
         -v $(PROJECT_ROOT)/src:/app/src:ro \
         -v $(PROJECT_ROOT)/utils:/app/utils:ro \
-        -v $(PROJECT_ROOT)/utils_cpp:/app/utils_cpp:ro \
         -v $(PROJECT_ROOT)/scripts:/app/scripts:ro \
         -v $(PROJECT_ROOT)/deployment:/app/deployment:ro \
         -v $(PROJECT_ROOT)/data:/app/data \

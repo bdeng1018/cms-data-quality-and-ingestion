@@ -81,7 +81,6 @@ RUN pip install --upgrade pip && \
 # ==============================================================================
 COPY src/ /app/src/
 COPY utils/ /app/utils/
-COPY utils_cpp/ /app/utils_cpp/
 COPY configs/ /app/configs/
 COPY scripts/ /app/scripts/
 COPY deployment/ /app/deployment/
