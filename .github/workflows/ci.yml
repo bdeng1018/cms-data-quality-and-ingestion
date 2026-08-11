@@ -41,8 +41,8 @@ jobs:
           pip install -r deployment/requirements.txt
           pip install pytest flake8
 
-      - name: Build C++ utilities
-        run: make cpp-utils
+      - name: Build ALL C++ binaries (schema validator + ingestion utils + row counter)
+        run: make cpp-all
 
       - name: Add project root to PYTHONPATH
         run: |
