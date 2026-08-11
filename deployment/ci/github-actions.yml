@@ -3,18 +3,19 @@
 # ==============================================================================
 # Intent:
 #   Provide a deterministic CI/CD pipeline for the CMS ingestion repo. This
-#   workflow enforces reproducible builds, tests, manifest validation, and
-#   optional Docker image publishing.
+#   workflow enforces reproducible builds, tests, mechanization validation,
+#   manifest validation, and optional Docker image publishing.
 #
 # Determinism Guarantees:
 #   - Pinned Python version.
 #   - Pinned dependency installation via uv.
+#   - Deterministic C++ toolchain installation.
 #   - Stable job names and steps.
 #
 # Side Effects:
-#   - Runs tests.
+#   - Runs Python + C++ tests.
 #   - Validates manifests + artifacts.
-#   - Builds Docker image.
+#   - Builds Docker image (with C++ mechanization).
 #   - Optionally pushes image to registry.
 # ==============================================================================
 
@@ -30,10 +31,10 @@ jobs:
   build-test-validate:
     runs-on: ubuntu-latest
 
-    # ==========================================================================
-    # Checkout + Python Setup
-    # ==========================================================================
     steps:
+      # ==========================================================================
+      # Checkout + Python Setup
+      # ==========================================================================
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -42,39 +43,55 @@ jobs:
         with:
           python-version: "3.11"
 
-      # ========================================================================
+      # ==========================================================================
       # Install Dependencies (Deterministic)
-      # ========================================================================
+      # ==========================================================================
       - name: Install uv and sync dependencies
         run: |
           pip install --upgrade pip
           pip install uv
           uv sync --frozen
 
-      # ========================================================================
-      # Run Tests
-      # ========================================================================
+      # ==========================================================================
+      # Install Deterministic C++ Toolchain
+      # ==========================================================================
+      - name: Install C++ toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ make cmake ninja-build
+
+      # ==========================================================================
+      # Build C++ Mechanization Layer
+      # ==========================================================================
+      - name: Build C++ mechanization binaries
+        run: |
+          make cpp-all
+
+      # ==========================================================================
+      # Run Python + C++ Tests
+      # ==========================================================================
       - name: Run tests
         run: |
           make test
+          pytest -m cpp_all
 
-      # ========================================================================
+      # ==========================================================================
       # Validate Manifest
-      # ========================================================================
+      # ==========================================================================
       - name: Validate manifest
         run: |
           python scripts/diagnostics/stage05/check_pipeline.py
 
-      # ========================================================================
+      # ==========================================================================
       # Validate Artifact Registry
-      # ========================================================================
+      # ==========================================================================
       - name: Validate artifact registry
         run: |
           python scripts/diagnostics/stage04/check_reports.py
 
-      # ========================================================================
-      # Build Docker Image
-      # ========================================================================
+      # ==========================================================================
+      # Build Docker Image (with C++ mechanization)
+      # ==========================================================================
       - name: Build Docker image
         run: |
           docker build -f deployment/Dockerfile -t cms_ingestion:ci .
@@ -92,7 +109,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker registry credentials
-        # Configure with secrets.DOCKER_USERNAME / secrets.DOCKER_PASSWORD
         run: echo "Configure registry login here"
 
       - name: Build and push image

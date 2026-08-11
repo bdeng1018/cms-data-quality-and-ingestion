@@ -173,3 +173,127 @@ def test_write_reports(tmp_path):
     assert "facility_health" in index
 
     logger.info("✓ Stage 04 writer validated successfully.")
+
+
+# --- Deterministic behavior tests for Stage 04 Report Writer ---
+
+
+def test_write_reports_is_deterministic(tmp_path):
+    """Repeated writes must produce identical artifacts."""
+    formatted = _synthetic_formatted_reports()
+
+    output_dir = tmp_path / "stage04_test_output"
+    output_dir.mkdir()
+
+    # First write
+    write_reports(formatted, base_dir=output_dir)
+    ds1 = (output_dir / "dataset_summary.json").read_text()
+    ch1 = (output_dir / "column_health.json").read_text()
+    sc1 = (output_dir / "sparse_columns.json").read_text()
+    fh1 = pd.read_csv(output_dir / "facility_health.csv")
+    tf1 = pd.read_csv(output_dir / "top_facilities.csv")
+    bf1 = pd.read_csv(output_dir / "bottom_facilities.csv")
+    idx1 = (output_dir / "report_index.json").read_text()
+
+    # Second write
+    write_reports(formatted, base_dir=output_dir)
+    ds2 = (output_dir / "dataset_summary.json").read_text()
+    ch2 = (output_dir / "column_health.json").read_text()
+    sc2 = (output_dir / "sparse_columns.json").read_text()
+    fh2 = pd.read_csv(output_dir / "facility_health.csv")
+    tf2 = pd.read_csv(output_dir / "top_facilities.csv")
+    bf2 = pd.read_csv(output_dir / "bottom_facilities.csv")
+    idx2 = (output_dir / "report_index.json").read_text()
+
+    # Deterministic JSON
+    assert ds1 == ds2, "dataset_summary.json must be deterministic"
+    assert ch1 == ch2, "column_health.json must be deterministic"
+    assert sc1 == sc2, "sparse_columns.json must be deterministic"
+    assert idx1 == idx2, "report_index.json must be deterministic"
+
+    # Deterministic CSV
+    assert fh1.equals(fh2), "facility_health.csv must be deterministic"
+    assert tf1.equals(tf2), "top_facilities.csv must be deterministic"
+    assert bf1.equals(bf2), "bottom_facilities.csv must be deterministic"
+
+
+def test_dataset_summary_key_order_is_deterministic(tmp_path):
+    """dataset_summary.json keys must be sorted deterministically."""
+    formatted = _synthetic_formatted_reports()
+
+    output_dir = tmp_path / "stage04_test_output"
+    output_dir.mkdir()
+
+    write_reports(formatted, base_dir=output_dir)
+
+    ds = json.loads((output_dir / "dataset_summary.json").read_text())
+    keys = list(ds.keys())
+
+    assert keys == sorted(
+        keys
+    ), "dataset_summary.json keys must be sorted deterministically"
+
+
+def test_column_health_key_order_is_deterministic(tmp_path):
+    """column_health.json keys must be sorted deterministically."""
+    formatted = _synthetic_formatted_reports()
+
+    output_dir = tmp_path / "stage04_test_output"
+    output_dir.mkdir()
+
+    write_reports(formatted, base_dir=output_dir)
+
+    ch = json.loads((output_dir / "column_health.json").read_text())
+    for col, prof in ch.items():
+        assert list(prof.keys()) == sorted(
+            prof.keys()
+        ), f"Column-health keys for {col} must be sorted deterministically"
+
+
+def test_sparse_columns_are_sorted_deterministically(tmp_path):
+    """sparse_columns.json must contain sorted sparse column lists."""
+    formatted = _synthetic_formatted_reports()
+
+    output_dir = tmp_path / "stage04_test_output"
+    output_dir.mkdir()
+
+    write_reports(formatted, base_dir=output_dir)
+
+    sc = json.loads((output_dir / "sparse_columns.json").read_text())
+    sparse = sc["sparse_columns"]
+
+    assert sparse == sorted(sparse), "Sparse columns must be sorted deterministically"
+
+
+def test_facility_health_column_order_is_deterministic(tmp_path):
+    """facility_health.csv must have deterministic column ordering."""
+    formatted = _synthetic_formatted_reports()
+
+    output_dir = tmp_path / "stage04_test_output"
+    output_dir.mkdir()
+
+    write_reports(formatted, base_dir=output_dir)
+
+    df = pd.read_csv(output_dir / "facility_health.csv")
+    expected_order = ["facility_id", "completeness_score", "health"]
+
+    assert (
+        list(df.columns) == expected_order
+    ), "facility_health.csv must have deterministic column ordering"
+
+
+def test_report_index_key_order_is_deterministic(tmp_path):
+    """report_index.json keys must be sorted deterministically."""
+    formatted = _synthetic_formatted_reports()
+
+    output_dir = tmp_path / "stage04_test_output"
+    output_dir.mkdir()
+
+    write_reports(formatted, base_dir=output_dir)
+
+    idx = json.loads((output_dir / "report_index.json").read_text())
+    keys = list(idx.keys())
+
+    assert keys == sorted(
+        keys
+    ), "report_index.json keys must be sorted deterministically"

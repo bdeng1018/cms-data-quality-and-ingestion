@@ -88,7 +88,6 @@ def compute_facility_metrics(df: pd.DataFrame) -> pd.DataFrame:
         - facility_id
         - row_count
         - missingness_rate
-        - completeness_score
         - quality_score
     """
     logger.info("Computing facility-level metrics...")
@@ -103,15 +102,13 @@ def compute_facility_metrics(df: pd.DataFrame) -> pd.DataFrame:
         row_count = len(group)
         missingness_rate = group.isna().sum().sum() / (row_count * len(group.columns))
 
-        completeness_score = 1.0 - missingness_rate
-        quality_score = completeness_score
+        quality_score = 1.0 - missingness_rate
 
         records.append(
             {
                 "facility_id": facility_id,
                 "row_count": row_count,
                 "missingness_rate": missingness_rate,
-                "completeness_score": completeness_score,
                 "quality_score": quality_score,
             }
         )
@@ -134,7 +131,6 @@ def compute_column_profiles(df: pd.DataFrame) -> Dict[str, Dict[str, Any]]:
         - min_value
         - max_value
         - inferred_dtype
-        - completeness_score
         - quality_score
     """
     logger.info("Computing column-level profiles...")
@@ -144,26 +140,28 @@ def compute_column_profiles(df: pd.DataFrame) -> Dict[str, Dict[str, Any]]:
     for col in df.columns:
         series = df[col]
 
-        null_count = series.isna().sum()
-        distinct_count = series.nunique(dropna=True)
+        null_count = int(series.isna().sum())
+        distinct_count = int(series.nunique(dropna=True))
         inferred_dtype = str(series.dtype)
 
-        completeness_score = 1.0 - (null_count / len(series))
-        quality_score = completeness_score
+        min_value = series.min() if pd.api.types.is_numeric_dtype(series) else None
+        max_value = series.max() if pd.api.types.is_numeric_dtype(series) else None
 
-        profiles[col] = {
+        # Stage 03 contract: quality_score only
+        quality_score = float(1.0 - (null_count / len(series)))
+
+        # Build unsorted profile
+        profile = {
             "null_count": null_count,
             "distinct_count": distinct_count,
-            "min_value": (
-                series.min() if pd.api.types.is_numeric_dtype(series) else None
-            ),
-            "max_value": (
-                series.max() if pd.api.types.is_numeric_dtype(series) else None
-            ),
+            "min_value": min_value,
+            "max_value": max_value,
             "inferred_dtype": inferred_dtype,
-            "completeness_score": completeness_score,
             "quality_score": quality_score,
         }
+
+        # Sort keys deterministically
+        profiles[col] = {k: profile[k] for k in sorted(profile.keys())}
 
     logger.info("Column-level profiles computed.")
     return profiles

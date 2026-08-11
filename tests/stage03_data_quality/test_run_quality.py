@@ -1,5 +1,5 @@
 """
-Tests for Stage 03 Runner (run_stage03.py)
+Tests for Stage 03 Runner (run_quality.py)
 
 Validates:
     - schema loading
@@ -11,6 +11,7 @@ Validates:
 """
 
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
@@ -18,8 +19,10 @@ import pytest
 
 import src.stage03_data_quality.run_quality as runner
 
-# import src.stage03_data_quality.quality_writer as writer
-# from pathlib import Path
+SCHEMA_PATH = Path("data/schema.json")
+CLEANED_DATA_PATH = Path("data/stage02_cleaned/cleaned.csv")
+OUTPUT_DIR = Path("data/stage03_intermediate")
+LOG_PATH = OUTPUT_DIR / "quality.log"
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +41,7 @@ def patch_paths(tmp_path, monkeypatch):
         fake_intermediate,
     )
 
-    # ⭐ Patch runner output directory (critical)
+    # Patch runner output directory (critical)
     monkeypatch.setattr(
         "src.stage03_data_quality.run_quality.OUTPUT_DIR",
         fake_intermediate,
@@ -158,3 +161,146 @@ def test_run_stage03_missing_cleaned_data_raises(tmp_path, monkeypatch):
 
     with pytest.raises(FileNotFoundError):
         runner.main()
+
+
+# --- Deterministic behavior tests for Stage 03 Runner ---
+
+
+def test_run_stage03_is_deterministic(tmp_path, monkeypatch):
+    """Running Stage 03 twice must produce identical artifacts."""
+    # Prepare schema + cleaned data
+    schema_path = tmp_path / "schema.json"
+    schema_path.write_text(json.dumps({"fields": ["facility_id", "city", "state"]}))
+
+    cleaned_path = tmp_path / "cleaned.csv"
+    cleaned_path.write_text("facility_id,city,state\n1,TestCity,CA\n")
+
+    monkeypatch.setattr(runner, "SCHEMA_PATH", schema_path)
+    monkeypatch.setattr(runner, "CLEANED_DATA_PATH", cleaned_path)
+
+    output_dir = tmp_path / "stage03_intermediate"
+    monkeypatch.setattr(runner, "OUTPUT_DIR", output_dir)
+
+    # Run twice
+    runner.main()
+    s1 = (output_dir / "quality_summary.json").read_text()
+    f1 = pd.read_csv(output_dir / "facility_metrics.csv")
+    p1 = (output_dir / "column_profiles.json").read_text()
+
+    runner.main()
+    s2 = (output_dir / "quality_summary.json").read_text()
+    f2 = pd.read_csv(output_dir / "facility_metrics.csv")
+    p2 = (output_dir / "column_profiles.json").read_text()
+
+    # Deterministic JSON
+    assert s1 == s2, "quality_summary.json must be deterministic"
+
+    # Deterministic CSV
+    assert f1.equals(f2), "facility_metrics.csv must be deterministic"
+
+    # Deterministic column profiles JSON
+    assert p1 == p2, "column_profiles.json must be deterministic"
+
+
+def test_run_stage03_summary_key_order_is_deterministic(tmp_path, monkeypatch):
+    """Summary JSON keys must be sorted deterministically."""
+    schema_path = tmp_path / "schema.json"
+    schema_path.write_text(json.dumps({"fields": ["facility_id"]}))
+
+    cleaned_path = tmp_path / "cleaned.csv"
+    cleaned_path.write_text("facility_id\n1\n")
+
+    monkeypatch.setattr(runner, "SCHEMA_PATH", schema_path)
+    monkeypatch.setattr(runner, "CLEANED_DATA_PATH", cleaned_path)
+
+    output_dir = tmp_path / "stage03_intermediate"
+    monkeypatch.setattr(runner, "OUTPUT_DIR", output_dir)
+
+    runner.main()
+
+    summary = json.loads((output_dir / "quality_summary.json").read_text())
+    keys = list(summary.keys())
+
+    assert keys == sorted(keys), "Summary JSON keys must be sorted deterministically"
+
+
+def test_run_stage03_facility_metrics_column_order_is_deterministic(
+    tmp_path, monkeypatch
+):
+    """Facility metrics CSV must have deterministic column ordering."""
+    schema_path = tmp_path / "schema.json"
+    schema_path.write_text(json.dumps({"fields": ["facility_id"]}))
+
+    cleaned_path = tmp_path / "cleaned.csv"
+    cleaned_path.write_text("facility_id\n1\n")
+
+    monkeypatch.setattr(runner, "SCHEMA_PATH", schema_path)
+    monkeypatch.setattr(runner, "CLEANED_DATA_PATH", cleaned_path)
+
+    output_dir = tmp_path / "stage03_intermediate"
+    monkeypatch.setattr(runner, "OUTPUT_DIR", output_dir)
+
+    runner.main()
+
+    df_loaded = pd.read_csv(output_dir / "facility_metrics.csv")
+
+    expected_order = [
+        "facility_id",
+        "row_count",
+        "missingness_rate",
+        "quality_score",
+    ]
+
+    assert (
+        list(df_loaded.columns) == expected_order
+    ), "facility_metrics.csv must have deterministic column ordering"
+
+
+def test_run_stage03_profiles_key_order_is_deterministic(tmp_path, monkeypatch):
+    """Column profile keys must be sorted deterministically."""
+    schema_path = tmp_path / "schema.json"
+    schema_path.write_text(json.dumps({"fields": ["facility_id"]}))
+
+    cleaned_path = tmp_path / "cleaned.csv"
+    cleaned_path.write_text("facility_id\n1\n")
+
+    monkeypatch.setattr(runner, "SCHEMA_PATH", schema_path)
+    monkeypatch.setattr(runner, "CLEANED_DATA_PATH", cleaned_path)
+
+    output_dir = tmp_path / "stage03_intermediate"
+    monkeypatch.setattr(runner, "OUTPUT_DIR", output_dir)
+
+    runner.main()
+
+    profiles = json.loads((output_dir / "column_profiles.json").read_text())
+
+    for col, prof in profiles.items():
+        assert list(prof.keys()) == sorted(
+            prof.keys()
+        ), f"Column profile keys for {col} must be sorted deterministically"
+
+
+def test_run_stage03_logging_is_deterministic(tmp_path, monkeypatch):
+    """Runner logging must be deterministic across repeated runs."""
+    schema_path = tmp_path / "schema.json"
+    schema_path.write_text(json.dumps({"fields": ["facility_id"]}))
+
+    cleaned_path = tmp_path / "cleaned.csv"
+    cleaned_path.write_text("facility_id\n1\n")
+
+    monkeypatch.setattr(runner, "SCHEMA_PATH", schema_path)
+    monkeypatch.setattr(runner, "CLEANED_DATA_PATH", cleaned_path)
+
+    output_dir = tmp_path / "stage03_intermediate"
+    monkeypatch.setattr(runner, "OUTPUT_DIR", output_dir)
+
+    log_path = output_dir / "quality.log"
+    monkeypatch.setattr(runner, "LOG_PATH", log_path)
+
+    runner.main()
+    log1 = log_path.read_text()
+
+    runner.main()
+    log2 = log_path.read_text()
+
+    assert log1 == log2, "Stage 03 log must be deterministic across repeated runs"

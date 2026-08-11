@@ -80,12 +80,11 @@ def write_quality_summary(summary: dict, base_dir: Path = DEFAULT_INTERMEDIATE_D
     ensure_dir(base_dir)
     out_path = base_dir / "quality_summary.json"
 
-    logger.info(f"Writing dataset-level quality summary → {out_path}")
-
-    clean_summary = {k: to_python_scalar(v) for k, v in summary.items()}
+    # Enforce deterministic key ordering
+    sorted_summary = {k: summary[k] for k in sorted(summary.keys())}
 
     with out_path.open("w") as f:
-        json.dump(clean_summary, f, indent=2)
+        json.dump(sorted_summary, f, indent=2)
 
     logger.info("Dataset-level quality summary written successfully.")
 
@@ -121,13 +120,19 @@ def write_column_profiles(profiles: dict, base_dir: Path = DEFAULT_INTERMEDIATE_
 
     logger.info(f"Writing column-level profiles → {out_path}")
 
+    # Sort metrics inside each column
     clean_profiles = {
-        col: {k: to_python_scalar(v) for k, v in stats.items()}
+        col: {k: to_python_scalar(stats[k]) for k in sorted(stats.keys())}
         for col, stats in profiles.items()
     }
 
+    # Sort columns themselves
+    clean_profiles_sorted = {
+        col: clean_profiles[col] for col in sorted(clean_profiles.keys())
+    }
+
     with out_path.open("w") as f:
-        json.dump(clean_profiles, f, indent=2)
+        json.dump(clean_profiles_sorted, f, indent=2)
 
     logger.info("Column-level profiles written successfully.")
 

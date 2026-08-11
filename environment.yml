@@ -23,14 +23,13 @@ dependencies:
 
   # ============================================================================
   # Data Handling + File Formats
-  # Stage 02 ingestion, Stage 03 profiling, Stage 04 reporting
   # ============================================================================
   - pandas=2.*
   - pyarrow=16.*
   - requests=2.*
 
   # ============================================================================
-  # YAML + Configuration Parsing (Stage 05 runner)
+  # YAML + Configuration Parsing
   # ============================================================================
   - pyyaml=6.*
 
@@ -41,7 +40,14 @@ dependencies:
   - pip
 
   # ============================================================================
-  # Pip-only dependencies (freeze pipeline + validators)
+  # C++ Mechanization (NEW)
+  # ============================================================================
+  - gxx_linux-64=13.* # deterministic C++ compiler
+  - cmake=3.* # optional, future-proofing
+  - ninja=1.* # optional, fast builds
+
+  # ============================================================================
+  # Pip-only dependencies
   # ============================================================================
   - pip:
       - jsonschema==4.*

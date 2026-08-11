@@ -89,7 +89,7 @@ def run_validator(cmd: list[str]) -> None:
     cmd : list[str]
         Command list to execute, e.g. ["python", "validate_manifest.py", "1.0.0"].
     """
-    print(f"[INFO] Running validator:", " ".join(cmd))
+    print("[INFO] Running validator:", " ".join(cmd))
     subprocess.run(cmd, check=True)
 
 
@@ -115,7 +115,7 @@ def freeze(version: str) -> None:
     FileNotFoundError
         If the provenance JSON file does not exist.
     """
-    print(f"[INFO] Starting immutable freeze for version", version)
+    print("[INFO] Starting immutable freeze for version", version)
 
     # Load provenance
     prov_path = Path(f"deployment/provenance/provenance-{version}.json")

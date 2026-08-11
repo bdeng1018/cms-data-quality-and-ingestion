@@ -16,6 +16,14 @@
 #   - This file is for *container execution only*.
 #   - Local development continues to use environment.yml (conda).
 #   - Future migration: pyproject.toml + uv.lock for frozen dependency graphs.
+#
+# ==============================================================================
+# C++ Mechanization (Stage 01)
+# ==============================================================================
+# No Python dependencies are required for C++ mechanization.
+# Deterministic C++ binaries (utils_cpp/) are compiled inside the Docker image
+# using system packages installed in deployment/Dockerfile (g++, make, cmake,
+# ninja-build). This file intentionally contains *only* Python dependencies.
 # ==============================================================================
 
 

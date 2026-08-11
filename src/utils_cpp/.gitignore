@@ -1,0 +1,9 @@
+# Ignore compiled C++ binaries
+csv_row_counter
+*.o
+*.out
+*.exe
+
+# Ignore temporary build artifacts
+*.tmp
+*.log

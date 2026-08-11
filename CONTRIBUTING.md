@@ -1,7 +1,7 @@
 # CONTRIBUTING.md
 
-Thank you for your interest in contributing to **cms-data-quality-and-ingestion**.  
-This project implements a reproducible, multi‑stage CMS ingestion and data‑quality pipeline.  
+Thank you for your interest in contributing to **cms-data-quality-and-ingestion**.
+This project implements a reproducible, multi‑stage CMS ingestion and data‑quality pipeline.
 Branch 1 covers Stages 01–05 (schema → ingestion → quality → reporting → pipeline runner) and is fully deterministic.
 
 This document describes how to contribute code, documentation, tests, diagnostics, and deployment‑related changes.
@@ -23,11 +23,11 @@ src/
 
 Each stage includes:
 
-- a dedicated README  
-- diagnostics scripts  
-- tests  
-- logging  
-- Makefile targets  
+- a dedicated README
+- diagnostics scripts
+- tests
+- logging
+- Makefile targets
 
 Data artifacts live under:
 
@@ -70,11 +70,11 @@ This project uses a single `environment.yml` for runtime + development dependenc
 
 Inside the environment, contributors should ensure the following tools are available:
 
-- pytest  
-- black  
-- isort  
-- ruff  
-- flake8  
+- pytest
+- black
+- isort
+- ruff
+- flake8
 - mypy (optional)
 
 If any are missing:
@@ -93,10 +93,10 @@ All diagrams are maintained in Mermaid (`.md`) and exported to PNG.
 
 Both files are committed:
 
-- `diagrams/*.md` → source of truth  
-- `diagrams/*.png` → rendered artifact  
+- `diagrams/*.md` → source of truth
+- `diagrams/*.png` → rendered artifact
 
-Use VS Code Mermaid preview or Mermaid CLI for PNG export.  
+Use VS Code Mermaid preview or Mermaid CLI for PNG export.
 Do not commit SVG or draw.io files unless explicitly required.
 
 ---
@@ -151,12 +151,12 @@ pytest tests/stage03_data_quality
 
 Testing guidelines:
 
-- use `tmp_path` for filesystem isolation  
-- avoid writing to real pipeline directories  
-- prefer synthetic POS/QIES fixtures  
-- ensure deterministic outputs  
-- test both engine logic and writer behavior  
-- ensure diagnostics scripts behave consistently  
+- use `tmp_path` for filesystem isolation
+- avoid writing to real pipeline directories
+- prefer synthetic POS/QIES fixtures
+- ensure deterministic outputs
+- test both engine logic and writer behavior
+- ensure diagnostics scripts behave consistently
 
 ---
 
@@ -164,10 +164,10 @@ Testing guidelines:
 
 This project follows:
 
-- **Black** for formatting  
-- **isort** for import ordering  
-- **ruff** and **flake8** for linting  
-- **mypy** for optional type checking  
+- **Black** for formatting
+- **isort** for import ordering
+- **ruff** and **flake8** for linting
+- **mypy** for optional type checking
 
 Recommended workflow:
 
@@ -184,9 +184,9 @@ flake8 src tests
 
 Each stage must include:
 
-- a `README.md` describing inputs, outputs, architecture, and runner behavior  
-- module‑level docstrings  
-- function‑level docstrings using NumPy‑style format  
+- a `README.md` describing inputs, outputs, architecture, and runner behavior
+- module‑level docstrings
+- function‑level docstrings using NumPy‑style format
 
 Example:
 
@@ -227,9 +227,9 @@ logs/runner.log
 
 Contributor guidelines:
 
-- use `logging.getLogger(__name__)`  
-- avoid printing to stdout  
-- ensure logs are structured and meaningful  
+- use `logging.getLogger(__name__)`
+- avoid printing to stdout
+- ensure logs are structured and meaningful
 
 ---
 
@@ -237,19 +237,19 @@ Contributor guidelines:
 
 To add or modify a pipeline stage:
 
-1. Create a new directory under `src/`  
-2. Add a `README.md`  
-3. Add `__init__.py`  
-4. Add engine, formatter, writer, and runner modules (if applicable)  
-5. Add diagnostics scripts under `scripts/diagnostics/stageXX/`  
-6. Add tests under `tests/stageXX_*/`  
-7. Update the Makefile  
-8. Update the root README  
-9. Update `CHANGELOG.md` under `[Unreleased]`  
+1. Create a new directory under `src/`
+2. Add a `README.md`
+3. Add `__init__.py`
+4. Add engine, formatter, writer, and runner modules (if applicable)
+5. Add diagnostics scripts under `scripts/diagnostics/stageXX/`
+6. Add tests under `tests/stageXX_*/`
+7. Update the Makefile
+8. Update the root README
+9. Update `CHANGELOG.md` under `[Unreleased]`
 
 ### Branch 1 Note
 
-Branch 1 is **fully deterministic** (Stages 01–05 + Stage 06 infrastructure only).  
+Branch 1 is **fully deterministic** (Stages 01–05 + Stage 06 infrastructure only).
 AI/RAG/agentic inference arrives in **Branch 2** and should not be added to Branch 1.
 
 ---
@@ -258,12 +258,12 @@ AI/RAG/agentic inference arrives in **Branch 2** and should not be added to Br
 
 The Makefile defines:
 
-- stage execution  
-- diagnostics  
-- environment creation  
-- testing  
-- reset/cleanup  
-- deployment validation (provenance, SBOM, drift, audit)  
+- stage execution
+- diagnostics
+- environment creation
+- testing
+- reset/cleanup
+- deployment validation (provenance, SBOM, drift, audit)
 
 Annotate new targets using:
 
@@ -304,9 +304,10 @@ All deployment changes require:
 
 This project uses semantic versioning:
 
-- `0.1.x` — Branch 1 (Stages 01–05)  
-- `0.2.x` — Transformation + enrichment  
-- `0.3.x` — Dashboard + reporting layer  
+- `0.1.x` — Branch 1 (Stages 01–04)
+- `0.2.x` — Branch 1 MVP (Stage 05)
+- `1.0.x` — Deterministic freeze pipeline + deployment layer
+- `1.1.x` — Stage 06 (AI/RAG/Agentic infrastructure)
 
 All changes must be recorded in `CHANGELOG.md` under:
 
@@ -322,14 +323,14 @@ Tags are created only when a milestone is complete.
 
 Pull requests should:
 
-- be atomic  
-- include tests  
-- update documentation  
-- update `CHANGELOG.md`  
-- pass linting and formatting  
-- avoid multi‑stage changes in a single PR  
-- avoid modifying deployment contracts without justification  
-- preserve deterministic behavior  
+- be atomic
+- include tests
+- update documentation
+- update `CHANGELOG.md`
+- pass linting and formatting
+- avoid multi‑stage changes in a single PR
+- avoid modifying deployment contracts without justification
+- preserve deterministic behavior
 
 ---
 
@@ -341,8 +342,8 @@ See `CODE_OF_CONDUCT.md` for community guidelines.
 
 ## 📬 Contact
 
-Maintainer: **Brian Deng**  
-Location: Los Angeles, CA  
-Email: **<bdeng.data.pipelines@gmail.com>**  
+Maintainer: **Brian Deng**
+Location: Los Angeles, CA
+Email: **<bdeng.data.pipelines@gmail.com>**
 
 Focus: healthcare data engineering, analytics systems design, scientific computing, data quality & governance, technical writing

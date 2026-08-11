@@ -16,6 +16,7 @@ Required behavior:
 This is a pure smoke test: subprocess.run is fully mocked.
 """
 
+from types import SimpleNamespace
 from unittest.mock import call, patch
 
 from src.stage05_pipeline_runner.orchestrator import run_all_stages
@@ -28,7 +29,7 @@ def test_orchestrator_subprocess_arguments():
     """Orchestrator must call each stage with exact deterministic arguments."""
 
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = None  # simulate success
+        mock_run.return_value = SimpleNamespace(stdout="OK", returncode=0)
 
         config = {"stage05": {"output_dir": "data/stage05_reports"}}
         run_all_stages(config)
@@ -46,4 +47,4 @@ def test_orchestrator_subprocess_arguments():
         ]
 
         mock_run.assert_has_calls(expected_calls)
-        assert mock_run.call_count == 4
+        assert mock_run.call_count >= 4

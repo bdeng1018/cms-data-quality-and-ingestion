@@ -4,11 +4,13 @@
 # Intent:
 #   Provide a reproducible Docker image for executing the CMS ingestion pipeline
 #   (Stages 01–05). The image ensures stable behavior, pinned Python version,
-#   and a consistent filesystem layout for artifact + manifest generation.
+#   deterministic C++ mechanization, and a consistent filesystem layout for
+#   artifact + manifest generation.
 #
 # Determinism Guarantees:
 #   - Identical outputs given identical inputs.
 #   - Pinned Python version (3.11).
+#   - Pinned C++ compiler (g++ 13.x) for deterministic mechanization.
 #   - Stable directory structure under /app for artifacts, logs, and manifests.
 #
 # Side Effects:
@@ -45,6 +47,24 @@ ENV PYTHONPATH="/app"
 WORKDIR /app
 
 # ==============================================================================
+# System Dependencies (Deterministic C++ Mechanization)
+# ==============================================================================
+# Intent:
+#   Install deterministic C++ toolchain for Stage 01 mechanization utilities.
+#
+# Determinism:
+#   - g++ version pinned to Debian stable release.
+#   - No dynamic apt dependency resolution beyond required packages.
+# ==============================================================================
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    g++ \
+    make \
+    cmake \
+    ninja-build && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==============================================================================
 # Dependency Contracts
 # ==============================================================================
 COPY environment.yml ./
@@ -53,14 +73,15 @@ COPY deployment/requirements.txt ./
 # ==============================================================================
 # Deterministic Dependency Installation (pip)
 # ==============================================================================
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 # ==============================================================================
 # Pipeline Source Code
 # ==============================================================================
 COPY src/ /app/src/
 COPY utils/ /app/utils/
+COPY utils_cpp/ /app/utils_cpp/
 COPY configs/ /app/configs/
 COPY scripts/ /app/scripts/
 COPY deployment/ /app/deployment/

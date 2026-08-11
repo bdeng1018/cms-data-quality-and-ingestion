@@ -53,15 +53,6 @@ spec:
         - name: cms-pipeline
           image: cms_ingestion:latest
 
-          # ====================================================================
-          # Environment Variables
-          # ====================================================================
-          # Intent:
-          #   Provide deterministic runtime configuration and provenance fields.
-          #
-          # Determinism:
-          #   - Matches docker-compose + CI/CD environment.
-          # ====================================================================
           env:
             - name: CMS_ENV
               value: "k8s"
@@ -72,17 +63,6 @@ spec:
             - name: CMS_PROVENANCE_TAG
               value: "k8s-deployment"
 
-          # ====================================================================
-          # Volume Mounts (Isolation Contract)
-          # ====================================================================
-          # Intent:
-          #   Enforce strict isolation between pipeline code (read-only) and artifacts/logs
-          #   (read-write). Mirrors docker-compose reproducibility guarantees.
-          #
-          # Determinism:
-          #   - Code/configs/scripts/deployment mounted read-only → no mutation.
-          #   - Data/logs mounted read-write → artifact isolation.
-          # ====================================================================
           volumeMounts:
             - name: configs
               mountPath: /app/configs
@@ -93,6 +73,14 @@ spec:
             - name: utils
               mountPath: /app/utils
               readOnly: true
+
+            # ==============================================================
+            # Deterministic C++ Mechanization Layer (Stage 01)
+            # ==============================================================
+            - name: utils-cpp
+              mountPath: /app/utils_cpp
+              readOnly: true
+
             - name: scripts
               mountPath: /app/scripts
               readOnly: true
@@ -105,42 +93,13 @@ spec:
             - name: logs
               mountPath: /app/logs
 
-          # ====================================================================
-          # Resource Limits
-          # ====================================================================
-          # Intent:
-          #   Provide reproducible performance characteristics and prevent nondeterministic
-          #   behavior due to node-level resource variability.
-          #
-          # Determinism:
-          #   - CPU + memory limits stabilize runtime duration and ordering.
-          # ====================================================================
           resources:
             limits:
               cpu: "2"
               memory: "4Gi"
 
-          # ====================================================================
-          # Entrypoint
-          # ====================================================================
-          # Intent:
-          #   Provide deterministic pipeline execution via Stage 05 runner.
-          #
-          # Future Extension:
-          #   Replace with `cms run` after CLI implementation.
-          # ====================================================================
           command: ["python", "-m", "src.stage05_pipeline_runner.run_pipeline"]
 
-      # ========================================================================
-      # Volumes
-      # ========================================================================
-      # Intent:
-      #   Define PVC-backed volumes for artifacts/logs and ConfigMap-backed volumes for
-      #   code/configs. This ensures deterministic isolation and reproducibility.
-      #
-      # Future Extension:
-      #   - Replace hostPath with PVCs for cloud storage.
-      # ========================================================================
       volumes:
         - name: configs
           hostPath:
@@ -151,6 +110,14 @@ spec:
         - name: utils
           hostPath:
             path: ../utils
+
+        # ==================================================================
+        # Deterministic C++ Mechanization Layer (Stage 01)
+        # ==================================================================
+        - name: utils-cpp
+          hostPath:
+            path: ../utils_cpp
+
         - name: scripts
           hostPath:
             path: ../scripts

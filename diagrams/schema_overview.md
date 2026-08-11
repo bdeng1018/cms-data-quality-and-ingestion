@@ -1,4 +1,12 @@
-# Schema Overview
+# Schema Overview — POS + QIES → Canonical Unified Schema
+
+The schema layer defines how raw POS and QIES structures map into a unified canonical representation used throughout the deterministic pipeline (Stages 01–05).
+
+This document explains the structural expectations of each source schema, the canonical schema contract, and how Stage 01 enforces schema consistency.
+
+---
+
+## 1. Schema Architecture Diagram
 
 ```mermaid
 flowchart TD
@@ -115,54 +123,74 @@ flowchart TD
 
 ---
 
-## Responsibilities & Outputs — Schema Overview (POS + QIES → Canonical)
+## 2. Purpose of the Schema Layer
 
-### 🧩 Overview
+The schema layer provides the structural foundation for the deterministic pipeline.
 
-The schema layer defines how POS and QIES raw structures map into a unified canonical representation.  
-This ensures deterministic ingestion, consistent downstream quality checks, and stable reporting artifacts.
+It ensures:
+
+- consistent ingestion
+- predictable downstream transformations
+- stable reporting artifacts
+- reproducible quality checks
+- deterministic schema validation (Stage 01)
+
+The canonical schema is the **single source of truth** for all downstream stages.
 
 ---
 
-### 📘 POS Schema — Responsibilities
+## 3. POS Schema Responsibilities
 
-- Define structural expectations for POS claims
-- Validate facility, claim, service, and billing fields
-- Normalize HCPCS, modifiers, POS codes
-- Ensure financial fields meet minimal type guarantees
+POS (Professional Outpatient Services) provides claim‑level financial and operational data.
 
-**Outputs**
+### Responsibilities
 
-- POS schema definition (internal)
+- Validate facilitiy, claim, and service identifiers
+- Normalize HCPCS and modifier fields
+- Enforce minimal type guarantees for financial fields
+- Provide structural consistency for ingestion
+
+### Outputs
+
+- POS schema definition
 - POS → Canonical mapping rules
 - POS validation diagnostics
 
 ---
 
-### 📙 QIES Schema — Responsibilities
+## 4. QIES Schema Responsibilities
 
-- Define structural expectations for resident assessments
-- Validate facility, resident, assessment identifiers
+QIES provides resident‑level clinical assessment data.
+
+### Responsibilities
+
+- Validate facility, resident, and assessment identifiers
 - Normalize mobility, cognitive, ADL, and section scores
-- Ensure clinical fields meet minimal type guarantees
+- Ensure minimal type guarantees for clinical fields
+- Provide structural consistency for ingestion
 
-**Outputs**
+### Outputs
 
-- QIES schema definition (internal)
+- QIES schema definition
 - QIES → Canonical mapping rules
 - QIES validation diagnostics
 
 ---
 
-### 📗 Canonical Unified Schema — Responsibilities
+## 5. Canonical Unified Schema Responsibilities
 
-- Merge POS + QIES into a single event‑level structure
+The canonical schema merges POS + QIES into a unified event‑level structure.
+
+### Responsibilities
+
 - Standardize identifiers (`facility_id`, `entity_id`, `record_type`)
 - Normalize dates into `event_date`
 - Partition fields into clinical, financial, operational groups
-- Generate sparsity + quality indicators
+- Generate sparsity indicators
+- Generate quality flags
+- Provide the schema contract for Stage 01 validation
 
-**Outputs**
+### Outputs
 
 - Canonical schema specification
 - Unified field dictionary
@@ -171,9 +199,33 @@ This ensures deterministic ingestion, consistent downstream quality checks, and 
 
 ---
 
-### Legend
+## 6. Relationship to Stage 01
 
-- **📘 POS Schema** — Claim‑level structure  
-- **📙 QIES Schema** — Assessment‑level structure  
-- **📗 Canonical Schema** — Unified event‑level structure  
-- **🧩** — Schema overview title  
+Stage 01:
+
+- regenerates `schema.json` from cleaned Stage 02 data
+- validates column count, order, and naming
+- enforces canonical schema boundaries
+- uses C++ mechanization for deterministic validation
+
+This document is the conceptual overview; Stage 01 design doc is the implementation contract.
+
+---
+
+## 7. Relationship to Downstream Stages
+
+- **Stage 02** uses POS/QIES schemas for ingestion
+- **Stage 03** uses canonical schema for profiling
+- **Stage 04** uses canonical schema for reporting
+- **Stage 05** uses canonical schema for orchestration + manifest generation
+
+The canonical schema is the backbone of the entire pipeline.
+
+---
+
+## 8. Legend
+
+- **📘 POS Schema** — Claim‑level structure
+- **📙 QIES Schema** — Assessment‑level structure
+- **📗 Canonical Schema** — Unified event‑level structure
+- **🧩** — Schema overview title

@@ -10,6 +10,7 @@
 #   - Stable environment variables.
 #   - Pinned image tag.
 #   - Reproducible resource limits.
+#   - Deterministic C++ mechanization layer (Stage 01).
 #
 # Side Effects:
 #   - Controls logging verbosity.
@@ -46,6 +47,13 @@ volumeMounts:
       mountPath: /app/src
     - name: utils
       mountPath: /app/utils
+
+    # ======================================================================
+    # Deterministic C++ Mechanization Layer (Stage 01)
+    # ======================================================================
+    - name: utils-cpp
+      mountPath: /app/utils_cpp
+
     - name: scripts
       mountPath: /app/scripts
     - name: deployment
@@ -64,6 +72,13 @@ volumes:
     hostPath: ../src
   utils:
     hostPath: ../utils
+
+  # ========================================================================
+  # Deterministic C++ Mechanization Layer (Stage 01)
+  # ========================================================================
+  utils-cpp:
+    hostPath: ../utils_cpp
+
   scripts:
     hostPath: ../scripts
   deployment:

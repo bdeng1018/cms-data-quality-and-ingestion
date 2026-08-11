@@ -44,6 +44,29 @@ class QualityReport:
     drift_indicators: Dict[str, List[str]]
     warnings: List[str] = field(default_factory=list)
 
+    def to_dict(self) -> dict:
+        """
+        Deterministic JSON‑serializable representation of the quality report.
+        Keys are sorted alphabetically to satisfy Stage 03 test requirements.
+        """
+        missing_cols = self.drift_indicators.get("missing_columns", []) or []
+        unexpected_cols = self.drift_indicators.get("unexpected_columns", []) or []
+
+        # Build the unsorted dict first
+        raw = {
+            "row_count": int(self.row_count),
+            "null_counts": dict(sorted(self.null_counts.items())),
+            "duplicate_counts": dict(sorted(self.duplicate_counts.items())),
+            "drift_indicators": {
+                "missing_columns": sorted(missing_cols),
+                "unexpected_columns": sorted(unexpected_cols),
+            },
+            "warnings": sorted(self.warnings),
+        }
+
+        # Return a new dict with sorted keys
+        return {key: raw[key] for key in sorted(raw.keys())}
+
 
 def compute_null_counts(df: pd.DataFrame) -> Dict[str, int]:
     """

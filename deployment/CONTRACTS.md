@@ -11,13 +11,14 @@ local, Docker, docker‑compose, and CI/CD environments.
 
 Contracts are binding for:
 
-- schema validation  
-- ingestion behavior  
-- artifact production  
-- manifest structure  
-- logging format  
-- diagnostics output  
-- reproducibility guarantees  
+- schema validation
+- ingestion behavior
+- artifact production
+- manifest structure
+- logging format
+- diagnostics output
+- reproducibility guarantees
+- C++ mechanization behavior (Stage 01 validators + ingestion utilities)
 
 All deployment code, CLI tools, Docker images, and CI/CD workflows must comply
 with these contracts.
@@ -30,48 +31,55 @@ The schema contract defines the rules for validating POS/QIES input data.
 
 ### 2.1 Requirements
 
-- Input schema must match `data/stage01_schema/schema.json`.  
-- All required columns must be present.  
-- Column types must match the schema definition.  
-- No additional columns may be introduced without versioning the schema.  
-- Schema changes require a MINOR or MAJOR version bump.  
+- Input schema must match `data/stage01_schema/schema.json`.
+- All required columns must be present.
+- Column types must match the schema definition.
+- No additional columns may be introduced without versioning the schema.
+- Schema changes require a MINOR or MAJOR version bump.
+- C++ schema validator must produce deterministic output given identical inputs.
+- Python and C++ schema validation must agree bit‑for‑bit.
 
 ### 2.2 Enforcement
 
-- `src/stage01_schema_definition/schema_validator.py`  
-- diagnostics: `scripts/diagnostics/stage01/check_schema.py`  
+- `src/stage01_schema_definition/schema_validator.py`
+- diagnostics: `scripts/diagnostics/stage01/check_schema.py`
+- C++ mechanization validator: `utils_cpp/schema_validator`
+  (invoked via Python subprocess)
 
 ### 2.3 Output
 
-- `column_profiles.json`  
-- `schema.json` (frozen copy)  
-- schema version recorded in manifest  
+- `column_profiles.json`
+- `schema.json` (frozen copy)
+- schema version recorded in manifest
+- C++ validator logs + exit codes recorded in diagnostics
 
 ---
 
 ## 3. Ingestion Contract
 
-The ingestion contract defines how raw POS/QIES data is fetched, cleaned, and
-written.
+The ingestion contract defines how raw POS/QIES data is fetched, cleaned, and written.
 
 ### 3.1 Requirements
 
-- Raw data must be written to `data/stage02_raw/`.  
-- Cleaned data must be written to `data/stage02_cleaned/`.  
-- No mutation of raw data is allowed.  
-- Cleaning rules must be deterministic.  
-- Ingestion errors must be logged and surfaced in diagnostics.  
+- Raw data must be written to `data/stage02_raw/`.
+- Cleaned data must be written to `data/stage02_cleaned/`.
+- No mutation of raw data is allowed.
+- Cleaning rules must be deterministic.
+- Ingestion errors must be logged and surfaced in diagnostics.
+- C++ row counter must produce deterministic row counts for raw + cleaned data.
 
 ### 3.2 Enforcement
 
-- `src/stage02_raw_ingestion/run_ingestion.py`  
-- diagnostics: `scripts/diagnostics/stage02/check_ingestion.py`  
+- `src/stage02_raw_ingestion/run_ingestion.py`
+- diagnostics: `scripts/diagnostics/stage02/check_ingestion.py`
+- C++ mechanization utilities: `utils_cpp/row_counter`
 
 ### 3.3 Output
 
-- `pos_q2_2026.parquet`  
-- `cleaned_data.csv`  
-- ingestion metadata in manifest  
+- `pos_q2_2026.parquet`
+- `cleaned_data.csv`
+- ingestion metadata in manifest
+- C++ row counter output recorded in diagnostics
 
 ---
 
@@ -84,30 +92,34 @@ pipeline outputs.
 
 Artifacts must:
 
-- be written only inside `data/stageXX_*` directories  
-- include deterministic filenames  
-- include deterministic content  
-- include hashes recorded in the artifact registry  
-- never overwrite previous artifacts unless explicitly versioned  
+- be written only inside `data/stageXX_*` directories
+- include deterministic filenames
+- include deterministic content
+- include hashes recorded in the artifact registry
+- never overwrite previous artifacts unless explicitly versioned
+- include C++ mechanization outputs when applicable
+  (schema validator logs, row counter outputs)
 
 ### 4.2 Artifact Types
 
-- schema artifacts (stage01)  
-- cleaned ingestion artifacts (stage02)  
-- intermediate quality artifacts (stage03)  
-- processed reporting artifacts (stage04)  
-- pipeline summary artifacts (stage05)  
+- schema artifacts (stage01)
+- cleaned ingestion artifacts (stage02)
+- intermediate quality artifacts (stage03)
+- processed reporting artifacts (stage04)
+- pipeline summary artifacts (stage05)
+- C++ mechanization artifacts (validator logs, row counter outputs)
 
 ### 4.3 Artifact Registry
 
 The artifact registry must include:
 
-- artifact path  
-- artifact type  
-- hash  
-- schema version  
-- timestamp  
-- diagnostics status  
+- artifact path
+- artifact type
+- hash
+- schema version
+- timestamp
+- diagnostics status
+- mechanization mode (python-only vs python+cpp)
 
 Registry schema is defined in `MANIFEST_SPEC.md`.
 
@@ -119,27 +131,30 @@ The manifest contract defines the JSON schema for run manifests.
 
 ### 5.1 Required Fields
 
-- `run_id`  
-- `timestamp_start`  
-- `timestamp_end`  
-- `duration_seconds`  
-- `config_path`  
-- `config_hash`  
-- `environment_hash`  
-- `schema_version`  
-- `artifact_registry_path`  
-- `diagnostics_summary`  
+- `run_id`
+- `timestamp_start`
+- `timestamp_end`
+- `duration_seconds`
+- `config_path`
+- `config_hash`
+- `environment_hash`
+- `schema_version`
+- `artifact_registry_path`
+- `diagnostics_summary`
+- `mechanization_mode` (python-only or python+cpp)
 
 ### 5.2 Optional Fields
 
-- `warnings`  
-- `notes`  
-- `cli_arguments`  
+- `warnings`
+- `notes`
+- `cli_arguments`
+- C++ mechanization stderr/stdout logs
 
 ### 5.3 Enforcement
 
-- manifest writer in `src/stage05_pipeline_runner`  
-- CI/CD manifest validation  
+- manifest writer in `src/stage05_pipeline_runner`
+- CI/CD manifest validation
+- C++ mechanization logs included when mechanization is enabled
 
 ---
 
@@ -151,21 +166,24 @@ The logging contract defines the required format for all logs.
 
 Logs must include:
 
-- timestamp  
-- stage name  
-- log level  
-- message  
-- duration (for stage boundaries)  
+- timestamp
+- stage name
+- log level
+- message
+- duration (for stage boundaries)
+- C++ mechanization subprocess logs (stdout + stderr)
 
 ### 6.2 Log Files
 
-- `logs/ingestion.log`  
-- `logs/quality.log`  
-- `logs/runner.log`  
+- `logs/ingestion.log`
+- `logs/quality.log`
+- `logs/runner.log`
+- `logs/mechanization.log` (C++ validator + row counter)
 
 ### 6.3 Enforcement
 
-- `utils/logging_utils.py`  
+- `utils/logging_utils.py`
+- C++ mechanization logging wrapper
 
 ---
 
@@ -178,11 +196,13 @@ pipeline summary.
 
 Diagnostics must:
 
-- run deterministically  
-- produce JSON output  
-- include pass/fail status  
-- include remediation hints  
-- include artifact references  
+- run deterministically
+- produce JSON output
+- include pass/fail status
+- include remediation hints
+- include artifact references
+- include C++ mechanization results (validator + row counter)
+- fail if C++ mechanization exit codes indicate error
 
 ### 7.2 Diagnostic Scripts
 
@@ -196,6 +216,7 @@ scripts/diagnostics/stageXX/
 
 - diagnostic JSON files
 - diagnostic summary in manifest
+- C++ mechanization diagnostic block
 
 ---
 
@@ -212,6 +233,8 @@ The pipeline must produce identical outputs given identical inputs.
 - stable manifest schema
 - stable artifact registry schema
 - stable logging format
+- deterministic C++ binary behavior across environments
+- bit-for-bit identical C++ mechanization outputs
 
 ### 8.2 Enforcement
 
@@ -221,6 +244,7 @@ The pipeline must produce identical outputs given identical inputs.
 - CLI execution
 - manifest validation
 - artifact registry validation
+- C++ mechanization reproducibility tests
 
 ---
 
@@ -237,6 +261,7 @@ Version fields must appear in:
 - manifest
 - artifact registry
 - schema files
+- C++ mechanization version (compiler + binary hash)
 
 ---
 
@@ -248,6 +273,7 @@ Contract violations must:
 - produce diagnostic output
 - include remediation hints
 - never produce partial artifacts
+- surface C++ mechanization errors and exit codes
 
 ---
 
@@ -260,3 +286,4 @@ Future contract extensions include:
 - Helm deployment contract
 - Terraform provisioning contract
 - Branch 3 AI/RAG contract hooks
+- Stage 06 high-performance C++ validation contract

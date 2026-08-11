@@ -159,3 +159,27 @@ coverage.xml
 *.asc~
 *.sig~
 .gnupg/
+
+# ==============================================================================
+# C++ Mechanization Build Artifacts (NEW)
+# ==============================================================================
+
+# Generic C++ outputs
+*.o
+*.out
+*.exe
+
+# Mechanization binaries in src/
+src/utils_cpp/csv_row_counter
+src/utils_cpp/schema_validator
+src/utils_cpp/ingestion_utils
+
+# Stage 01 validator binary
+src/stage01_schema_definition/cpp_schema_validator
+
+# Test binary (pytest runs from here)
+tests/utils_cpp/csv_row_counter
+
+# Optional local build dirs
+src/utils_cpp/build/
+tests/utils_cpp/build/

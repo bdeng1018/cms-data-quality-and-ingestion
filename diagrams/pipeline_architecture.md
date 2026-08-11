@@ -1,4 +1,14 @@
-# Pipeline Architecture
+# Pipeline Architecture — CMS Data Quality & Ingestion Pipeline
+
+The CMS Data Quality & Ingestion Pipeline is a deterministic, five‑stage system that processes POS/QIES data from raw ingestion to final reporting.
+
+This document provides a visual and structural overview of how the pipeline executes, how artifacts flow between stages, and how diagnostics, logging, and Makefile orchestration integrate into the architecture.
+
+This is the **Branch 1 architecture** (Stages 01–05).
+
+---
+
+## 1. Pipeline Architecture Diagram
 
 ```mermaid
 flowchart TD
@@ -113,101 +123,175 @@ flowchart TD
 
 ---
 
-## Responsibilities & Outputs (CMS Branch 1)
+## 2. Deterministic Stage Responsibilities
 
 ### 📘 Stage 01 — Schema Definition
 
-**Responsibilities**
-
-- Load and validate `schema.json`
-- Check column types and required fields
-- Validate sample rows
+- Regenerate `schema.json` from cleaned Stage 02 data
+- Validate column names, order, and types
 - Run schema diagnostics
+- Enforce deterministic schema boundaries
 
 **Outputs**
 
 - `data/stage01_schema/schema.json`
-- Stage 01 schema diagnostics report
+- Stage 01 diagnostics
 
----
-
-### 📥 Stage 02 — Raw Ingestion (POS/QIES)
-
-**Responsibilities**
+### 📥 Stage 02 — Raw Ingestion
 
 - Fetch POS/QIES raw files
-- Ingest parquet/CSV into canonical format
+- Ingest parquet/CSV
 - Apply minimal column guarantees
-- Clean POS data into unified dataset
+- Produce canonical cleaned dataset
 - Run ingestion diagnostics
 
 **Outputs**
 
-- `data/stage02_raw/*.parquet`
-- `data/stage02_raw/*.csv`
+- `data/stage02_raw/*`
 - `data/stage02_cleaned/cleaned_data.csv`
-- POS/QIES ingestion diagnostics
-
----
 
 ### 🔍 Stage 03 — Data Quality Profiling
-
-**Responsibilities**
 
 - Null profiling
 - Duplicate detection
 - Drift indicators
-- Generate intermediate artifacts
-- Run quality diagnostics
+- Intermediate artifacts
+- Quality diagnostics
 
 **Outputs**
 
 - `data/stage03_intermediate/*`
-- Quality profiling diagnostics
-- Drift / null / duplicate summaries
-
----
 
 ### 📊 Stage 04 — Reporting
 
-**Responsibilities**
-
-- Generate dataset summary
-- Score column health
-- Detect sparse columns
-- Produce facility ranking reports
-- Build dataset manifest
+- Dataset summary
+- Column health scoring
+- Sparse column detection
+- Facility ranking reports
+- Manifest generation
 
 **Outputs**
 
 - `data/stage04_processed/*`
-- Facility ranking reports
-- Column health reports
-- Dataset manifest
-
----
 
 ### ⚙️ Stage 05 — Pipeline Runner
 
-**Responsibilities**
-
 - Orchestrate Stages 01–04
 - Load config + logging
-- Produce pipeline‑level summary
+- Produce pipeline summary
 - Run pipeline diagnostics
 
 **Outputs**
 
 - `data/stage05_reports/pipeline_summary.json`
-- Pipeline diagnostics
-- Runner logs
 
 ---
 
-### Legend
+## 3. Artifact Flow
 
-- **📘 Blue** — Pipeline Stages  
-- **🗂️ Green** — Data Artifacts  
-- **🧪 Yellow** — Diagnostics Scripts  
-- **📝 Gray** — Logging Outputs  
+Artifacts move deterministically:
+
+| Stage | Writes |
+| ------- | -------- |
+| Stage 01 | `data/stage01_schema/` |
+| Stage 02 | `data/stage02_raw/`, `data/stage02_cleaned/` |
+| Stage 03 | `data/stage03_intermediate/` |
+| Stage 04 | `data/stage04_processed/` |
+| Stage 05 | `data/stage05_reports/` |
+
+Each artifact directory is isolated and reproducible.
+
+---
+
+## 4. Diagnostics Architecture
+
+Diagnostics run in parallel with pipeline execution:
+
+```code
+scripts/diagnostics/stage01
+scripts/diagnostics/stage02
+scripts/diagnostics/stage03
+scripts/diagnostics/stage04
+scripts/diagnostics/stage05
+```
+
+Run all diagnostics:
+
+```bash
+make diagnostics
+```
+
+Diagnostics validate:
+
+- input availability
+- output correctness
+- schema consistency
+- artifact completeness
+- logical invariants
+
+---
+
+## 5. Logging Architecture
+
+Stage-specific logs:
+
+```code
+logs/ingestion.log        # Stage 02
+logs/quality.log          # Stage 03
+logs/runner.log           # Stage 04
+```
+
+Logging is deterministic and scoped per stage.
+
+---
+
+## 6. Makefile Orchestration
+
+Primary developer interface:
+
+```code
+make stage01
+make stage02
+make stage03
+make stage04
+make stage05
+make run
+make smoke
+make diagnostics
+```
+
+Makefile ensures reproducible execution across environments.
+
+---
+
+## 7. C++ Mechanization Integration
+
+The pipeline uses compiled C++ utilities for:
+
+- deterministic schema validation
+- deterministic row counting
+- ingestion boundary enforcement
+
+These integrate via Python wrappers and Makefile targets.
+
+See:
+`docs/MECHANIZATION_CPP.md`
+
+---
+
+## 8. Relationship to ARCHITECTURE.md
+
+- `ARCHITECTURE.md` = full system architecture (pipeline + deployment)
+- `PIPELINE_ARCHITECTURE.md` = pipeline‑only architecture (Stages 01–05)
+
+This document is the visual + structural companion to the full architecture spec.
+
+---
+
+## 9. Legend
+
+- **📘 Blue** — Pipeline Stages
+- **🗂️ Green** — Data Artifacts
+- **🧪 Yellow** — Diagnostics Scripts
+- **📝 Gray** — Logging Outputs
 - **🛠️ Purple** — Makefile Targets

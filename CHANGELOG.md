@@ -1,25 +1,157 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format follows Keep a Changelog and semantic versioning.
+All notable changes to this project are documented here.
+This project follows **Keep a Changelog** and **semantic versioning**.
 
 ---
 
 ## [Unreleased](ca://s?q=Show_Unreleased_changes)
 
-### In Progress — Stage 06 (AI Infrastructure Only)
+### Planned — Stage 06 (High‑Performance Validation Layer)
 
-- deterministic embeddings builder
-- vector store integration (FAISS)
-- retrieval scaffolding
-- RAG pipeline built on Stage 03/Stage 04 artifacts
-- LLM summarization + anomaly narratives
-- agent loop foundation (multi‑step reasoning + tool calling)
-- AI‑augmented quality checks
-- AI insights artifacts
-- Makefile integration (`make stage06`, `make ai`)
-- test scaffolding for retrieval + agent behaviors
+- expanded C++ mechanization for large‑file validation
+- parallel row‑count + schema‑check utilities
+- deterministic multi‑file ingestion validator
+- hybrid Python/C++ execution path for Stage 01–03
+- Makefile integration (`make stage06`)
+- extended diagnostics for high‑performance validation
+- documentation updates for Stage 06 design
+
+### Planned — AI Infrastructure & Harness (Foundational Only)
+
+- deterministic AI harness for future RAG/agent workflows
+- unified interface for embeddings, retrieval, and summarization
+- reproducible embedding pipeline (CPU‑safe deterministic mode)
+- retrieval scaffolding built on Stage 03/Stage 04 artifacts
+- agent harness foundation (tool routing, structured reasoning)
+- AI‑ready artifact structure (`ai/` directory)
+- Makefile integration (`make ai-harness`)
+- pytest scaffolding for AI harness behaviors
+
+### Notes
+
+- No AI inference, RAG logic, or agent loops will be implemented in this cycle
+- Stage 06 will focus on **high‑performance validation** and **AI infrastructure only**
+- Full AI/RAG/agentic inference arrives in **Branch 2**
+
+---
+
+## [1.1.0](ca://s?q=Show_version_1_1_0) — Deterministic C++ Mechanization Layer
+
+### Added — C++ Mechanization (Stage 01 Utilities)
+
+- C++ schema validator (`cpp_schema_validator.cpp`)
+- C++ row‑counter utility (`csv_row_counter.cpp`)
+- Python runners for C++ tools (`run_cpp_schema_validator.py`, `run_csv_row_counter.py`)
+- new `utils_cpp/` module for compiled deterministic utilities
+- Makefile targets for C++ builds (`make cpp-utils`, `make cpp-schema`)
+- deterministic C++ output guarantees (stable ordering + stable error codes)
+
+### Added — Diagnostics & Testing
+
+- Stage 01 C++ diagnostics under `scripts/diagnostics/stage01`
+- pytest coverage for:
+  - C++ schema validator
+  - C++ row counter
+  - Python/C++ integration layer
+- deterministic test fixtures for POS/QIES schema validation
+
+### Changed — Pipeline Integration
+
+- Stage 01 now supports hybrid Python/C++ validation paths
+- updated Stage 01 README with mechanization workflow
+- improved Makefile orchestration for C++ execution
+- standardized artifact naming for C++ outputs
+
+### Fixed — Deterministic Behavior
+
+- resolved nondeterministic ordering in Python schema validator
+- fixed row‑count drift for large POS/QIES files
+- stabilized subprocess invocation for C++ runners
+- corrected error‑code propagation from C++ → Python
+
+### Notes
+
+- v1.1.0 introduces **deterministic C++ mechanization only**
+- Stage 06 (high‑performance validation) is planned but not started
+
+---
+
+## [1.0.3](ca://s?q=Show_version_1_0_3) — First Fully Deterministic + CI‑Stable Release
+
+### Added — Deterministic Release Artifacts
+
+- frozen release manifest (`frozen-release-v1.0.3`)
+- deterministic SBOM
+- deterministic provenance
+- bundle packaging (`cms-pipeline-v1.0.3-bundle`)
+- SHA256 digests for all artifacts
+- Docker image digest for GHCR image
+- reproducible validation scripts (clean‑clone reproducibility)
+
+### Changed — CI/CD Stability + Determinism
+
+- repaired workflow triggers (v1.0.1 and v1.0.2 skipped)
+- stabilized freeze pipeline execution
+- standardized artifact naming + digest extraction
+- improved reproducibility guarantees across all validators
+
+### Fixed — Deterministic Drift + Validation
+
+- resolved nondeterministic ordering in freeze outputs
+- fixed digest mismatch conditions in CI
+- corrected provenance + SBOM canonicalization edge cases
+- eliminated drift‑check false positives
+
+### Notes
+
+- v1.0.3 is the **first fully validated, deterministic, CI‑stable release**
+- all artifacts are reproducible from a clean clone
+- establishes the modern deterministic release model used for future versions
+
+---
+
+## [1.0.2](ca://s?q=Show_version_1_0_2) — Skipped (Invalid Freeze Output)
+
+### Summary
+
+Version **1.0.2** was generated during CI/CD repair work but was **not published** because
+the freeze pipeline produced **non‑deterministic artifacts** and failed reproducibility checks.
+
+### Issues
+
+- nondeterministic ordering in freeze outputs
+- inconsistent SBOM component hashing
+- provenance integrity block drift
+- missing Docker digest extraction
+- CI workflow instability during freeze stage
+
+### Notes
+
+- superseded by **v1.0.3**, the first fully deterministic + CI‑stable release
+- artifacts from v1.0.2 were intentionally discarded
+
+---
+
+## [1.0.1](ca://s?q=Show_version_1_0_1) — Skipped (CI/CD Workflow Failure)
+
+### Summary
+
+Version **1.0.1** was created automatically by the version bump script but was **never published**
+because the CI/CD workflow failed before freeze artifacts could be generated.
+
+### Issues
+
+- broken workflow triggers
+- missing environment variables in freeze stage
+- digest extraction step failing
+- incomplete SBOM + provenance generation
+- drift‑check not executed
+
+### Notes
+
+- v1.0.1 produced **no valid deterministic artifacts**
+- superseded by v1.0.2 (also skipped) and ultimately **v1.0.3**
 
 ---
 
@@ -31,7 +163,7 @@ The format follows Keep a Changelog and semantic versioning.
 - `freeze_runner.py` (canonicalization + detached signature)
 - deterministic formatting across manifest, SBOM, provenance
 - neutralized hashing for SBOM + provenance integrity block
-- docker digest ingestion + artifact wiring
+- Docker digest ingestion + artifact wiring
 - signature validation (`validate_signature.py`)
 - full CI/CD freeze workflow (build → freeze → drift‑check → bundle)
 - reproducible release bundles (`cms-pipeline-<VERSION>.tar.gz`)
@@ -88,7 +220,7 @@ The format follows Keep a Changelog and semantic versioning.
 
 ---
 
-## [0.2.0](ca://s?q=Show_version_0_2_0) — Branch 1 MVP — Stage 05 Complete
+## [0.2.0](ca://s?q=Show_version_0_2_0) — Branch 1 MVP (Stage 05 Complete)
 
 ### Added
 
@@ -122,7 +254,7 @@ The format follows Keep a Changelog and semantic versioning.
 
 ---
 
-## [0.1.0](ca://s?q=Show_version_0_1_0) — Branch 1 MVP — Stages 01–04 Complete
+## [0.1.0](ca://s?q=Show_version_0_1_0) — Branch 1 MVP (Stages 01–04 Complete)
 
 ### Added
 

@@ -57,11 +57,18 @@ class PosIngestionSource:
         else:
             raise ValueError(f"Unsupported POS file format: {self.raw_path}")
 
-        # Add facility_id for Stage 03 + Stage 04 compatibility
-        if "PRVDR_NUM" in df.columns:
-            df["facility_id"] = df["PRVDR_NUM"]
-        else:
-            raise ValueError("POS dataset missing PRVDR_NUM; cannot derive facility_id")
+        # Attach ingestion metadata AFTER facility_id is added
+        metadata = {
+            "source_path": self.raw_path,
+            "row_count": len(df),
+            "columns": list(df.columns),
+        }
+
+        # pandas-approved metadata container
+        df.attrs["ingestion_metadata"] = metadata
+
+        # test-required attribute (type-safe via object.__setattr__)
+        object.__setattr__(df, "ingestion_metadata", metadata)
 
         self.logger.info(f"Loaded POS file with shape: {df.shape}")
         return df
@@ -82,6 +89,9 @@ class PosIngestionSource:
         if df.shape[0] == 0:
             self.logger.error("POS dataset has zero rows.")
             raise InvalidRawShapeError(["<no rows>"])
+
+        # Add facility_id only after validation
+        df["facility_id"] = df["PRVDR_NUM"]
 
         self.logger.info("POS minimal column validation passed.")
 

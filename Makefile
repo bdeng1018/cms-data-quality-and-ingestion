@@ -25,9 +25,9 @@ help:
 # Stage 01 — Schema Definition + Diagnostics
 # ==============================================================================
 
-.PHONY: stage01 regen-schema schema-diagnostics
+.PHONY: stage01 regen-schema schema-diagnostics diag-cpp-schema-validator diag-cpp-schema-wrapper
 
-stage01: regen-schema schema-diagnostics ## Regenerate schema + run Stage 01 diagnostics
+stage01: regen-schema schema-diagnostics diag-cpp-schema-validator diag-cpp-schema-wrapper ## Regenerate schema + run Stage 01 diagnostics
 	@echo "Stage 01 complete."
 
 regen-schema: ## Regenerate schema.json from cleaned_data.csv
@@ -39,17 +39,27 @@ regen-schema: ## Regenerate schema.json from cleaned_data.csv
 		--out data/stage01_schema/schema.json
 	@echo "Schema regenerated."
 
-schema-diagnostics: ## Run Stage 01 schema diagnostics
+schema-diagnostics: ## Run Stage 01 schema diagnostics (Python)
 	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage01/check_schema.py
+
+diag-cpp-schema-validator: ## Run Stage 01 C++ schema validator diagnostics
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage01/check_cpp_schema_validator.py
+
+diag-cpp-schema-wrapper: ## Run Stage 01 C++ schema wrapper diagnostics
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage01/check_cpp_schema_wrapper.py
 
 # ==============================================================================
 # Stage 02 — Raw Ingestion + Cleaning (POS/QIES)
 # ==============================================================================
 
-.PHONY: stage02 fetch-pos ingest-pos ingest-qies clean-pos diag-pos diag-qies diag-cleaned
+.PHONY: stage02 fetch-pos ingest-pos ingest-qies clean-pos \
+		diag-pos diag-qies diag-cleaned \
+		diag-cpp-row-counter diag-cpp-row-counter-wrapper diag-ingestion-metadata
 
-stage02: fetch-pos ingest-pos clean-pos diag-cleaned ## Stage 02 — ingestion + cleaning
+stage02: fetch-pos ingest-pos clean-pos diag-pos diag-cleaned diag-cpp-row-counter diag-cpp-row-counter-wrapper diag-ingestion-metadata ## Stage 02 — ingestion + cleaning + diagnostics
 	@echo "Stage 02 complete."
 
 fetch-pos: ## Download POS Q2 2026
@@ -81,13 +91,26 @@ diag-cleaned: ## Diagnostics for cleaned Stage 02 data
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage02/check_ingestion.py \
 		cleaned data/stage02_cleaned/cleaned_data.csv
 
+diag-cpp-row-counter: ## Diagnostics for C++ row counter
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage02/check_cpp_row_counter.py
+
+diag-cpp-row-counter-wrapper: ## Diagnostics for C++ row counter wrapper
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage02/check_cpp_row_counter_wrapper.py
+
+diag-ingestion-metadata: ## Diagnostics for ingestion metadata
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage02/check_ingestion_metadata.py
+
 # ==============================================================================
 # Stage 03 — Data Quality Profiling
 # ==============================================================================
 
-.PHONY: stage03 run-stage03 diag-quality diag-intermediate
+.PHONY: stage03 run-stage03 \
+        diag-quality diag-intermediate diag-quality-contract
 
-stage03: run-stage03 diag-quality diag-intermediate ## Stage 03 — quality profiling
+stage03: run-stage03 diag-quality diag-intermediate diag-quality-contract ## Stage 03 — quality profiling + diagnostics
 	@echo "Stage 03 complete."
 
 run-stage03: ## Run Stage 03 quality engine
@@ -102,13 +125,16 @@ diag-quality: ## Stage 03 quality diagnostics
 diag-intermediate: ## Diagnostics for Stage 03 intermediate artifacts
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage03/check_intermediate_artifacts.py
 
+diag-quality-contract: ## Stage 03 quality contract diagnostics
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/diagnostics/stage03/check_quality_contract.py
+
 # ==============================================================================
 # Stage 04 — Reporting
 # ==============================================================================
 
-.PHONY: stage04 run-stage04 diag-stage04
+.PHONY: stage04 run-stage04 diag-stage04 diag-report-contract
 
-stage04: run-stage04 diag-stage04 ## Stage 04 — reporting
+stage04: run-stage04 diag-stage04 diag-report-contract ## Stage 04 — reporting + diagnostics
 	@echo "Stage 04 complete."
 
 run-stage04: ## Run Stage 04 reporting
@@ -120,13 +146,19 @@ diag-stage04: ## Stage 04 reporting diagnostics
 	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage04/check_reports.py
 
+diag-report-contract: ## Stage 04 report contract diagnostics
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage04/check_report_contract.py
+
 # ==============================================================================
 # Stage 05 — Pipeline Runner (Orchestrator)
 # ==============================================================================
 
-.PHONY: stage05 run-stage05 diag-pipeline
+.PHONY: stage05 run-stage05 \
+		diag-pipeline diag-pipeline-contract \
+		diag-mechanization-logs diag-mechanization-provenance
 
-stage05: run-stage05 diag-pipeline ## Stage 05 — pipeline runner
+stage05: run-stage05 diag-pipeline diag-pipeline-contract diag-mechanization-logs diag-mechanization-provenance ## Stage 05 — pipeline runner + diagnostics
 	@echo "Stage 05 complete."
 
 run-stage05: ## Run Stage 05 pipeline orchestrator
@@ -140,20 +172,75 @@ diag-pipeline: ## Stage 05 pipeline diagnostics
 	PYTHONPATH=$(PYTHONPATH) \
 		$(PYTHON) scripts/diagnostics/stage05/check_pipeline.py
 
+diag-pipeline-contract: ## Stage 05 pipeline contract diagnostics
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage05/check_pipeline_contract.py
+
+diag-mechanization-logs: ## Stage 05 mechanization log diagnostics
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage05/check_mechanization_logs.py
+
+diag-mechanization-provenance: ## Stage 05 mechanization provenance diagnostics
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/stage05/check_mechanization_provenance.py
+
+# ==============================================================================
+# Utils Diagnostics — File I/O + Logging
+# ==============================================================================
+
+.PHONY: diag-file-io diag-logging-utils
+
+diag-file-io: ## Diagnostics for file I/O determinism
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/utils/check_file_io.py
+
+diag-logging-utils: ## Diagnostics for logging determinism
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/utils/check_logging_utils.py
+
+# ==============================================================================
+# Utils C++ Diagnostics — Mechanization Contract
+# ==============================================================================
+
+.PHONY: diag-utils-cpp
+
+diag-utils-cpp: ## Diagnostics for C++ mechanization utilities contract
+	PYTHONPATH=$(PYTHONPATH) \
+		$(PYTHON) scripts/diagnostics/utils_cpp/check_utils_cpp_contract.py
+
 # ==============================================================================
 # Full Pipeline — Stages 01–05
 # ==============================================================================
 
 .PHONY: run
-run: stage02 stage01 stage03 stage04 stage05 ## Run full pipeline (Stages 01–05)
+run: cpp-all stage02 stage01 stage03 stage04 stage05 ## Run full pipeline (Stages 01–05)
 	@echo "Full pipeline (Stages 01–05) complete."
 
 # ==============================================================================
-# Smoke Testing — Stages 02-04
+# Smoke Testing — Stages 02–04
 # ==============================================================================
 
 .PHONY: smoke
-smoke: stage02 diag-cleaned stage03 diag-quality stage04 ## Smoke test (Stages 02–04)
+smoke: ## Smoke test (Stages 02–04)
+	## Stage 02
+	$(MAKE) stage02
+	$(MAKE) diag-pos
+	$(MAKE) diag-cleaned
+	$(MAKE) diag-cpp-row-counter
+	$(MAKE) diag-cpp-row-counter-wrapper
+	$(MAKE) diag-ingestion-metadata
+
+	## Stage 03
+	$(MAKE) stage03
+	$(MAKE) diag-quality
+	$(MAKE) diag-intermediate
+	$(MAKE) diag-quality-contract
+
+	## Stage 04
+	$(MAKE) stage04
+	$(MAKE) diag-stage04
+	$(MAKE) diag-report-contract
+
 	@echo "Smoke test (Stages 02–04) complete."
 
 # ==============================================================================
@@ -161,15 +248,53 @@ smoke: stage02 diag-cleaned stage03 diag-quality stage04 ## Smoke test (Stages 0
 # ==============================================================================
 
 .PHONY: diagnostics
-diagnostics: diag-pos diag-cleaned schema-diagnostics diag-quality diag-intermediate diag-stage04 diag-pipelieI ## Run all diagnostics
-	@echo "All diagnostics (Stages 01–05) cete."
+diagnostics: ## Run all diagnostics
+	## Stage 01
+	$(MAKE) schema-diagnostics
+	$(MAKE) diag-cpp-schema-validator
+	$(MAKE) diag-cpp-schema-wrapper
+
+	## Stage 02
+	$(MAKE) diag-pos
+	$(MAKE) diag-cleaned
+	$(MAKE) diag-cpp-row-counter
+	$(MAKE) diag-cpp-row-counter-wrapper
+	$(MAKE) diag-ingestion-metadata
+
+	## Stage 03
+	$(MAKE) diag-quality
+	$(MAKE) diag-intermediate
+	$(MAKE) diag-quality-contract
+
+	## Stage 04
+	$(MAKE) diag-stage04
+	$(MAKE) diag-report-contract
+
+	## Stage 05
+	$(MAKE) diag-pipeline
+	$(MAKE) diag-pipeline-contract
+	$(MAKE) diag-mechanization-logs
+	$(MAKE) diag-mechanization-provenance
+
+	## Utils
+	$(MAKE) diag-file-io
+	$(MAKE) diag-logging-utils
+
+	## Utils C++
+	$(MAKE) diag-utils-cpp
+
+	@echo "All diagnostics (Stages 01–05 + utils + utils_cpp) complete."
 
 # ==============================================================================
 # Testing
 # ==============================================================================
 
-.PHONY: test
+.PHONY: test python-tests
+
 test: ## Run pytest suite
+	PYTHONPATH=$(PYTHONPATH) pytest tests
+
+python-tests: cpp-all ## Build C++ binaries then run pytest
 	PYTHONPATH=$(PYTHONPATH) pytest tests
 
 # ==============================================================================
@@ -180,6 +305,66 @@ test: ## Run pytest suite
 lint: ## Run ruff + black checks
 	ruff check .
 	black --check .
+
+# ==============================================================================
+# Formatting
+# ==============================================================================
+
+.PHONY: format
+format: ## Auto-format Python code
+	black src/ scripts/ tests/
+
+# ==============================================================================
+# C++ Mechanization Utilities
+# ==============================================================================
+
+.PHONY: cpp-utils cpp-schema cpp-all
+
+UTILS_CPP_DIR = src/utils_cpp
+STAGE01_CPP_DIR = src/stage01_schema_definition
+
+tests/utils_cpp: ## Create utils_cpp/ directory under tests/ (if applicable)
+	mkdir -p tests/utils_cpp
+
+cpp-utils: tests/utils_cpp ## Build deterministic C++ mechanization utilities for ingestion diagnostics
+	@echo "[cpp-utils] Building C++ mechanization utilities..."
+
+	# Build csv_row_counter for pytest
+	g++ -O2 -std=c++17 $(UTILS_CPP_DIR)/csv_row_counter.cpp -o tests/utils_cpp/csv_row_counter
+
+	# Build csv_row_counter for pipeline diagnostics
+	g++ -O2 -std=c++17 $(UTILS_CPP_DIR)/csv_row_counter.cpp -o $(UTILS_CPP_DIR)/csv_row_counter
+
+	# Build internal utilities
+	g++ -O2 -std=c++17 $(UTILS_CPP_DIR)/schema_validator.cpp -o $(UTILS_CPP_DIR)/schema_validator
+	g++ -O2 -std=c++17 $(UTILS_CPP_DIR)/ingestion_utils.cpp -o $(UTILS_CPP_DIR)/ingestion_utils
+
+	@echo "[cpp-utils] Build complete: csv_row_counter (tests + pipeline), schema_validator, ingestion_utils"
+
+cpp-schema: ## Build Stage 01 C++ schema validator
+	@echo "[cpp-schema] Building Stage 01 C++ schema validator..."
+	g++ -O2 -std=c++17 $(STAGE01_CPP_DIR)/cpp_schema_validator.cpp \
+		-o $(STAGE01_CPP_DIR)/cpp_schema_validator
+	@echo "[cpp-schema] Build complete."
+
+cpp-all: cpp-schema cpp-utils ## Build all C++ binaries
+	@echo "[cpp-all] All C++ binaries built."
+
+# ==============================================================================
+# Unified Build Target
+# ==============================================================================
+
+.PHONY: build
+build: cpp-all lint ## Build C++ + lint Python
+	@echo "[build] Build + lint complete."
+
+# ==============================================================================
+# Local CI — Mirrors GitHub Actions
+# ==============================================================================
+
+.PHONY: ci
+ci: cpp-all python-tests lint ## Local CI pipeline
+	@echo "[ci] Local CI pipeline complete."
 
 # ==============================================================================
 # Cache Cleanup

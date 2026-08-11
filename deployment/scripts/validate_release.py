@@ -55,7 +55,7 @@ def validate_no_placeholders(text: str, path: Path):
 
 
 def validate_manifest(manifest_path: Path, provenance: dict):
-    manifest = json.loads(manifest_path.read_text())
+    json.loads(manifest_path.read_text())
 
     expected = provenance["artifacts"]["manifest"]["digest"].replace("sha256:", "")
     actual = sha256_file(manifest_path)

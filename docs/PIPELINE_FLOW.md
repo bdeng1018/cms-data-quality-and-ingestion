@@ -1,19 +1,31 @@
 # Pipeline Flow — CMS Data Quality & Ingestion Pipeline
 
-This document explains how data moves through the CMS Data Quality & Ingestion Pipeline.  
-It provides a stage‑by‑stage walkthrough of the execution flow, the artifacts produced, and how each stage depends on the previous one.
+The CMS Data Quality & Ingestion Pipeline processes POS/QIES data through a
+deterministic, contract‑driven, five‑stage architecture. Each stage produces
+well‑defined artifacts, exposes diagnostics, and feeds the next stage in a
+reproducible manner.
 
 ---
 
 ## 1. Overview
 
-The pipeline processes CMS POS/QIES data through five stages:
+The pipeline executes in the following order:
 
 ```text
-Stage 01 → Stage 02 → Stage 03 → Stage 04 → Stage 05
+Stage 02 → Stage 01 → Stage 03 → Stage 04 → Stage 05
 ```
 
-Each stage is deterministic, diagnosable, and produces well‑defined artifacts.
+This ordering ensures:
+
+- Stage 01 defines the canonical schema
+- Stage 02 ingests raw data using that schema
+- Stage 03 computes quality metrics
+- Stage 04 generates reports
+- Stage 05 orchestrates and summarizes
+
+Mechanization (C++ schema validator + C++ row counter) runs in Stages 01 and 02.
+
+More details: [mechanization layer](ca://s?q=Explain_C%2B%2B_mechanization_layer).
 
 ---
 
@@ -30,6 +42,8 @@ Each stage is deterministic, diagnosable, and produces well‑defined artifacts.
         │  - Fetch POS                                   │
         │  - Ingest POS/QIES                             │
         │  - Clean POS                                   │
+        │  - Deterministic C++ row counting              │
+        │  - Produce cleaned_data.csv                    │
         └───────────────┬────────────────────────────────┘
                         │
                         ▼
@@ -42,7 +56,7 @@ Each stage is deterministic, diagnosable, and produces well‑defined artifacts.
         ┌────────────────────────────────────────────────┐
         │         Stage 01 — Schema Definition           │
         │  - Regenerate schema.json                      │
-        │  - Validate schema                             │
+        │  - Validate schema (Python + C++)              │
         └───────────────┬────────────────────────────────┘
                         │
                         ▼
@@ -63,6 +77,7 @@ Each stage is deterministic, diagnosable, and produces well‑defined artifacts.
         ┌────────────────────────────────────────────────┐
         │      Stage 05 — Pipeline Orchestrator          │
         │  - Execute Stages 01–04                        │
+        │  - Collect mechanization metadata              │
         │  - Produce pipeline summary                    │
         └────────────────────────────────────────────────┘
 ```
@@ -73,30 +88,35 @@ Each stage is deterministic, diagnosable, and produces well‑defined artifacts.
 
 ### Stage 02 → Stage 01
 
-Although Stage 01 appears first numerically, it depends on Stage 02:
+Stage 02 produces the canonical cleaned dataset:
 
-- Stage 02 produces the canonical cleaned dataset.
-- Stage 01 regenerates `schema.json` from that cleaned dataset.
+```code
+data/stage02_cleaned/cleaned_data.csv
+```
 
-This ensures the schema always reflects real data.
+Stage 01 uses this dataset to:
+
+- regenerate `schema.json`
+- validate schema deterministically (Python + C++)
+
+This ensures the schema reflects real data rather than assumptions.
 
 ### Stage 01 → Stage 03
 
-Stage 03 uses:
+Stage 03 consumes:
 
-- the cleaned data from Stage 02
-- the schema from Stage 01
+- Stage 02 cleaned data
+- Stage 01 schema
 
-Quality checks rely on schema consistency.
+Quality profiling depends on schema correctness and column determinism.
 
 ### Stage 03 → Stage 04
 
 Stage 04 consumes Stage 03’s intermediate artifacts:
 
-- metrics
-- distributions
-- quality flags
-- summaries
+- facility metrics
+- column profiles
+- quality summary
 
 These artifacts drive the reporting engine.
 
@@ -104,36 +124,60 @@ These artifacts drive the reporting engine.
 
 Stage 05 orchestrates:
 
-- Stage 01
-- Stage 02
-- Stage 03
-- Stage 04
+- Stage 02 ingestion
+- Stage 01 schema definition + validation
+- Stage 03 quality profiling
+- Stage 04 reporting
 
-Then writes:
+Then writes the final pipeline summary:
 
 ```code
 data/stage05_reports/pipeline_summary.json
 ```
 
-This summary is the final output of the entire pipeline.
+This is the authoritative record of the pipeline run.
 
 ---
 
 ## 4. Artifact Flow Summary
 
 | Stage | Input | Output |
-|-------|-------|--------|
+| ------- | ------- | -------- |
 | Stage 02 | Raw POS/QIES | `stage02_raw/`, `stage02_cleaned/cleaned_data.csv` |
 | Stage 01 | Cleaned data | `stage01_schema/schema.json` |
 | Stage 03 | Cleaned data + schema | `stage03_intermediate/` |
 | Stage 04 | Intermediate artifacts | `stage04_processed/` |
 | Stage 05 | All previous outputs | `stage05_reports/pipeline_summary.json` |
 
+All artifacts are deterministic and reproducible across environments.
+
 ---
 
-## 5. Diagnostics Flow
+## 5. Mechanization Flow (v1.1.0)
 
-Diagnostics run in parallel with the pipeline:
+Mechanization runs in:
+
+- Stage 01 → C++ schema validator
+- Stage 02 → C++ row counter
+
+Mechanization metadata is included in the final summary:
+
+```json
+"mechanization": {
+  "mode": "python+cpp",
+  "schema_validator_exit_code": 0,
+  "row_counter_exit_code": 0,
+  "cpp_compiler_version": "g++-13"
+}
+```
+
+More details: [mechanization provenance](ca://s?q=Explain_mechanization_provenance).
+
+---
+
+## 6. Diagnostics Flow
+
+Diagnostics run in parallel:
 
 ```code
 Stage 01 → schema-diagnostics
@@ -149,11 +193,11 @@ Running:
 make diagnostics
 ```
 
-executes all of them in order.
+executes all diagnostics in order.
 
 ---
 
-## 6. Logging Flow
+## 7. Logging Flow
 
 Logs are stage‑specific:
 
@@ -161,6 +205,7 @@ Logs are stage‑specific:
 logs/ingestion.log        # Stage 02
 logs/quality.log          # Stage 03
 logs/runner.log           # Stage 04
+logs/mechanization.log    # Stages 01–02 (v1.1.0)
 ```
 
 Stage 05 does not create a new log file.
@@ -168,7 +213,7 @@ Instead, it produces a final summary artifact.
 
 ---
 
-## 7. Final Output
+## 8. Final Output
 
 The final deliverable of the pipeline is:
 
@@ -182,6 +227,8 @@ This file contains:
 - success/failure status
 - timestamps
 - total pipeline duration
+- deterministic artifact index
+- mechanization metadata
 
 It is the authoritative record of the pipeline run.
 

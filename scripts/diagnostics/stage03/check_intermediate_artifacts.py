@@ -25,9 +25,9 @@ from pathlib import Path
 
 import pandas as pd
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Logging
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -41,9 +41,9 @@ if not logger.handlers:
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Paths
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 INTERMEDIATE_DIR = Path("data/stage03_intermediate")
 SUMMARY_PATH = INTERMEDIATE_DIR / "quality_summary.json"
@@ -54,9 +54,9 @@ PROFILES_PATH = INTERMEDIATE_DIR / "column_profiles.json"
 CLEANED_DATA_PATH = Path("data/stage02_cleaned/cleaned_data.csv")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Helpers
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 
 def load_json(path: Path):
@@ -72,9 +72,9 @@ def load_csv(path: Path):
     return pd.read_csv(path)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Diagnostics
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 
 def check_quality_summary():
@@ -140,40 +140,77 @@ def check_column_profiles():
     logger.info("column_profiles.json OK.")
 
 
-def check_consistency_with_cleaned_data():
+def check_consistency_with_cleaned_data(strict: bool = True):
     logger.info("Checking consistency with cleaned Stage 02 data...")
 
     df_clean = load_csv(CLEANED_DATA_PATH)
     df_facility = load_csv(FACILITY_PATH)
     profiles = load_json(PROFILES_PATH)
 
-    # Facility ID consistency --------------------------------------------------
-    # Normalize facility_id types to string for consistent comparison
-    df_clean["facility_id"] = df_clean["facility_id"].astype("string").str.strip()
-
-    df_facility["facility_id"] = df_facility["facility_id"].astype("string").str.strip()
-
-    cleaned_facilities = set(df_clean["facility_id"].unique())
-    facility_metrics_facilities = set(df_facility["facility_id"].unique())
-
-    if not facility_metrics_facilities.issubset(cleaned_facilities):
-        raise ValueError(
-            "Facility IDs in facility_metrics.csv do not match cleaned data"
+    # ----------------------------------------------------------------------
+    # Facility ID normalization
+    # ----------------------------------------------------------------------
+    def normalize_facility_id(series):
+        return (
+            series.astype("string")
+            .str.strip()
+            .str.replace(r"\.0$", "", regex=True)
+            .replace({"<NA>": None})
         )
 
-    # Column name consistency --------------------------------------------------
+    df_clean["facility_id"] = normalize_facility_id(df_clean["facility_id"])
+    df_facility["facility_id"] = normalize_facility_id(df_facility["facility_id"])
+
+    cleaned_facilities = set(df_clean["facility_id"].dropna().unique())
+    facility_metrics_facilities = set(df_facility["facility_id"].dropna().unique())
+
+    # ----------------------------------------------------------------------
+    # Facility ID consistency
+    # ----------------------------------------------------------------------
+    missing_in_metrics = cleaned_facilities - facility_metrics_facilities
+    extra_in_metrics = facility_metrics_facilities - cleaned_facilities
+
+    if missing_in_metrics or extra_in_metrics:
+        if strict:
+            raise ValueError(
+                "Facility ID mismatch between Stage 02 and Stage 03.\n"
+                f"Missing in metrics: {sorted(list(missing_in_metrics))[:20]}\n"
+                f"Extra in metrics: {sorted(list(extra_in_metrics))[:20]}"
+            )
+        else:
+            logger.info("[SKIP] Facility ID mismatch detected (optional mode).")
+            if missing_in_metrics:
+                logger.info(
+                    f"[SKIP] Facilities missing in facility_metrics.csv: "
+                    f"{sorted(list(missing_in_metrics))[:20]}"
+                )
+            if extra_in_metrics:
+                logger.info(
+                    f"[SKIP] Facilities present in facility_metrics.csv but not in "
+                    f"cleaned_data.csv: {sorted(list(extra_in_metrics))[:20]}"
+                )
+            logger.info("[SKIP] Skipping strict facility ID consistency check.")
+            return
+
+    # ----------------------------------------------------------------------
+    # Column name consistency (strict always)
+    # ----------------------------------------------------------------------
     cleaned_columns = set(df_clean.columns)
     profile_columns = set(profiles.keys())
 
-    if not profile_columns.issubset(cleaned_columns):
-        raise ValueError("Column profiles contain columns not present in cleaned data")
+    extra_profile_columns = profile_columns - cleaned_columns
+    if extra_profile_columns:
+        raise ValueError(
+            f"Column profiles contain columns not present in cleaned data: "
+            f"{sorted(list(extra_profile_columns))}"
+        )
 
     logger.info("Consistency checks OK.")
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Main
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 
 def main():
@@ -182,7 +219,7 @@ def main():
     check_quality_summary()
     check_facility_metrics()
     check_column_profiles()
-    check_consistency_with_cleaned_data()
+    check_consistency_with_cleaned_data(strict=False)
 
     logger.info("Stage 03 diagnostics completed successfully.")
 

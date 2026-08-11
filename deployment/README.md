@@ -9,27 +9,52 @@ This README serves as a navigation index for the deployment subsystem.
 
 ---
 
-## 1. Deployment Contracts
+## 1. Quick Start
+
+Common deployment workflows:
+
+```bash
+# Build deterministic Docker image
+make docker-build
+
+# Run pipeline inside container
+make docker-run
+
+# Start full local deployment environment
+make compose-up
+
+# Shut down environment
+make compose-down
+
+# Full deterministic deployment (build → up → validate)
+make deploy VERSION=v1.0.3
+```
+
+For all deployment commands, see **Makefile.deploy**.
+
+---
+
+## 2. Deployment Contracts
 
 Core deployment contracts live at the root of this directory:
 
-- `DEPLOYMENT.md` — runtime architecture and deployment model  
-- `OPERATIONS.md` — operational rules and runtime behavior  
-- `CONTRACTS.md` — deterministic deployment contracts  
-- `MANIFEST_SPEC.md` — manifest + provenance specification  
-- `SBOM.md` — software bill of materials  
-- `VERSIONING.md` — versioning rules  
-- `GOVERNANCE.md` — governance rules  
-- `COMPLIANCE.md` — compliance requirements  
-- `RISK_MODEL.md` — risk classification  
-- `AUDIT_LOGS.md` — audit log structure  
-- `ACCESS_CONTROL.md` — RBAC and permission boundaries  
+- `DEPLOYMENT.md` — runtime architecture and deployment model
+- `OPERATIONS.md` — operational rules and runtime behavior
+- `CONTRACTS.md` — deterministic deployment contracts
+- `MANIFEST_SPEC.md` — manifest + provenance specification
+- `SBOM.md` — software bill of materials
+- `VERSIONING.md` — versioning rules
+- `GOVERNANCE.md` — governance rules
+- `COMPLIANCE.md` — compliance requirements
+- `RISK_MODEL.md` — risk classification
+- `AUDIT_LOGS.md` — audit log structure
+- `ACCESS_CONTROL.md` — RBAC and permission boundaries
 
 These documents define how deployment behaves across all environments.
 
 ---
 
-## 2. Subsystem Map
+## 3. Subsystem Map
 
 The deployment layer is organized into subsystem directories:
 
@@ -49,125 +74,142 @@ Each subsystem maps to a specific part of the runtime architecture.
 
 ---
 
-## 3. CI/CD
+## 4. CI/CD
 
 `ci/` contains GitHub Actions workflows and validation rules.
 
 Key responsibilities:
 
-- pipeline execution  
-- SBOM validation  
-- provenance validation  
-- release notes validation  
-- audit log generation  
+- pipeline execution
+- SBOM validation
+- provenance validation
+- release notes validation
+- audit log generation
 
 ---
 
-## 4. Environment Configuration
+## 5. Environment Configuration
 
 `env/` defines deterministic environment variable sets:
 
-- `dev.env`  
-- `prod.env`  
+- `dev.env`
+- `prod.env`
 
 These files provide reproducible environment boundaries.
 
 ---
 
-## 5. Containerization & Orchestration
+## 6. Containerization & Orchestration
 
 ### Dockerfile
 
 The deterministic build recipe lives in:
 
-```code
+```text
 deployment/Dockerfile
 ```
 
-It is invoked from the repository root using:
+Build via:
 
-```code
+```bash
 docker build -f deployment/Dockerfile .
 ```
 
-### docker-compose  
+### docker-compose
 
 Local development uses the root‑level Compose file:
 
-```code
+```text
 compose.yml
 ```
 
 Run the pipeline via:
 
-```code
+```bash
 docker compose up --build
 ```
 
 or through the deployment orchestrator:
 
-```code
+```bash
 make deploy
 ```
 
-### Kubernetes  
+### Kubernetes
 
 Raw manifests live in `k8s/`:
 
-- `deployment.yml`  
-- `service.yml`  
+- `deployment.yml`
+- `service.yml`
 
-### Helm  
+### Helm
 
 Packaged deployment lives in `helm/`:
 
-- `Chart.yml`  
-- `values.yml`  
+- `Chart.yml`
+- `values.yml`
 
 ---
 
-## 6. Infrastructure Provisioning
+## 7. Infrastructure Provisioning
 
 `terraform/` defines infrastructure provisioning and drift detection:
 
-- `main.tf`  
-- `variables.tf`  
-- `outputs.tf`  
+- `main.tf`
+- `variables.tf`
+- `outputs.tf`
 
 Terraform ensures reproducible infrastructure across environments.
 
 ---
 
-## 7. Logging & Monitoring
+## 8. Logging & Monitoring
 
-### Logging  
+### Logging
 
 `logging/` contains Fluent Bit configuration and log routing.
 
-### Monitoring  
+### Monitoring
 
 `monitoring/` includes:
 
-- Prometheus config  
-- Grafana dashboard  
-- alert rules  
-- SLO/SLI contracts  
-- observability rules  
+- Prometheus config
+- Grafana dashboard
+- alert rules
+- SLO/SLI contracts
+- observability rules
 
 ---
 
-## 8. Security
+## 9. Security
 
 `security/` contains:
 
-- `HARDENING.md` — container + runtime hardening  
-- `policies.yml` — security policies and RBAC alignment  
+- `HARDENING.md` — container + runtime hardening
+- `policies.yml` — security policies and RBAC alignment
 
 Security integrates with governance, compliance, and access control.
 
 ---
 
-## 9. How Deployment Integrates with the Pipeline
+## 10. Deterministic Deployment Boundaries
+
+Deployment guarantees determinism through:
+
+- pinned Dockerfile
+- pinned Compose file
+- read‑only mounts for code/configs
+- stable artifact directories
+- reproducible environment variables
+- SBOM + provenance validation
+- signature verification
+- CI/CD freeze pipeline
+
+These boundaries ensure reproducible behavior across all environments.
+
+---
+
+## 11. How Deployment Integrates with the Pipeline
 
 Deployment integrates with the pipeline through:
 
@@ -184,8 +226,8 @@ This ensures deterministic, reproducible behavior across all environments.
 
 ---
 
-## 10. Maintainer
+## 12. Maintainer
 
-Maintainer: Brian Deng  
-Email: <bdeng.data.pipelines@gmail.com>  
+Maintainer: Brian Deng <br>
+Email: <bdeng.data.pipelines@gmail.com> <br>
 GitHub: <https://github.com/bdeng1018>

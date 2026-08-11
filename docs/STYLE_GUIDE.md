@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from stage03_data_quality.metrics import compute_metrics
+from src.stage03_data_quality.metrics import compute_metrics
 ```
 
 ### 1.3 Type Hints
@@ -71,10 +71,12 @@ Example:
 
 ```code
 src/stage03_data_quality/
-    run_quality.py
+    __init__.py
+    quality_checks.py
+    quality_engine.py
+    quality_writer.py
     README.md
-    metrics.py
-    validators.py
+    run_quality.py
 ```
 
 ### 2.2 Data Layout
@@ -83,6 +85,7 @@ All pipeline outputs follow deterministic paths:
 
 ```code
 data/stage01_schema/
+data/stage02_cleaned/
 data/stage02_raw/
 data/stage03_intermediate/
 data/stage04_processed/
@@ -169,9 +172,16 @@ tests/
 
 ### 5.2 Test Types
 
-- unit tests → required
-- integration tests → optional
-- regression tests → optional
+The pipeline uses a layered testing strategy to ensure deterministic, reproducible behavior across ingestion, schema validation, quality scoring, reporting, and orchestration.
+
+| Test Type | Purpose | Scope | Notes |
+| ---------- | --------- | ------- | ------- |
+| **Smoke Tests** | Validate that the pipeline can start, load configs, and run basic commands without failure. | Minimal surface area | Used in CI to catch broken imports or missing files. |
+| **Unit Tests** | Validate pure functions, utilities, and isolated logic. | Single function or module | Required for all core logic; must avoid I/O. |
+| **Integration Tests** | Validate interactions between modules (e.g., Stage 02 → Stage 03). | Multiple modules | Must use deterministic sample data. |
+| **System Tests** | Validate full pipeline execution across all stages. | End‑to‑end | Must run using fixed test datasets; no external calls. |
+| **Acceptance Tests** | Validate pipeline behavior against documented contracts and user expectations. | Contract‑level | Ensures outputs match schema, invariants, and deterministic guarantees. |
+| **Regression Tests** | Ensure no changes break previously validated behavior. | Historical test suite | Required for all major refactors or schema changes. |
 
 ### 5.3 Assertions
 

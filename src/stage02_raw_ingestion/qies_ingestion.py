@@ -57,6 +57,16 @@ class QiesIngestionSource:
         else:
             raise ValueError(f"Unsupported QIES file format: {self.raw_path}")
 
+        # Attach ingestion metadata (raw shape)
+        metadata = {
+            "source_path": self.raw_path,
+            "row_count": len(df),
+            "columns": list(df.columns),
+        }
+
+        df.attrs["ingestion_metadata"] = metadata
+        object.__setattr__(df, "ingestion_metadata", metadata)
+
         self.logger.info(f"Loaded QIES file with shape: {df.shape}")
         return df
 

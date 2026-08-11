@@ -11,6 +11,9 @@ Uses module-mode execution so Python resolves imports correctly inside Docker.
 
 import subprocess
 
+from src.utils_cpp.run_ingestion_utils import run as run_ingestion_utils
+from src.utils_cpp.run_schema_validator import run as run_schema_validator
+
 
 # ==============================================================================
 # Helper: run a stage command
@@ -49,7 +52,7 @@ def run_all_stages(config):
     Returns a dict describing success/failure for each stage.
     """
 
-    results = {
+    results: dict[str, object] = {
         "stage01": "pending",
         "stage02": "pending",
         "stage03": "pending",
@@ -88,5 +91,15 @@ def run_all_stages(config):
     # --------------------------------------------------------------------------
     cmd_stage04 = ["python", "-m", "src.stage04_reporting.run_reporting"]
     results["stage04"] = _run_stage(cmd_stage04, "stage04")
+
+    # --------------------------------------------------------------------------
+    # Mechanization metadata (deterministic)
+    # --------------------------------------------------------------------------
+    results["mechanization"] = {
+        "schema_validator": run_schema_validator("schema", "schema"),
+        "ingestion_utils_normalize": run_ingestion_utils("normalize"),
+        "ingestion_utils_delimiter": run_ingestion_utils("delimiter"),
+        "ingestion_utils_bom": run_ingestion_utils("bom"),
+    }
 
     return results

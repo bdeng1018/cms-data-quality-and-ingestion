@@ -6,8 +6,8 @@ CMS Data Quality & Ingestion Pipeline — Manifest Specification
 
 This document defines the formal JSON schema for pipeline run manifests.
 Manifests capture run metadata, environment details, artifact registry references,
-diagnostics summaries, and provenance information for deterministic, reproducible
-execution.
+diagnostics summaries, mechanization metadata, and provenance information for
+deterministic, reproducible execution.
 
 All CLI tools, Docker execution, docker‑compose execution, CI/CD workflows, and
 pipeline runner code must comply with this specification.
@@ -19,32 +19,37 @@ pipeline runner code must comply with this specification.
 A manifest is a single JSON file written at the end of each pipeline run.
 It provides:
 
-- run metadata  
-- timestamps  
-- duration  
-- config + environment hashes  
-- schema version  
-- artifact registry path  
-- diagnostics summary  
-- provenance information  
+- run metadata
+- timestamps
+- duration
+- config + environment hashes
+- schema version
+- pipeline version
+- artifact registry path + hash
+- diagnostics summary
+- provenance information
+- mechanization mode (python-only vs python+cpp)
+- C++ mechanization logs + exit codes
 
-Manifests are immutable and versioned.
+Manifests are **immutable**, **deterministic**, and **versioned**.
 
 ---
 
 ## 3. Manifest File Location
 
-Manifests must be written to:
+Primary location:
 
 ```text
 data/stage05_reports/manifest.json
 ```
 
-Alternate locations (e.g., versioned manifests) must follow:
+Versioned manifests follow:
 
 ```text
 data/stage05_reports/manifests/manifest_<run_id>.json
 ```
+
+Manifests must never overwrite previous versions unless explicitly versioned.
 
 ---
 
@@ -72,23 +77,31 @@ data/stage05_reports/manifests/manifest_<run_id>.json
   "artifact_registry_hash": "string",
 
   "diagnostics_summary": {
-      "total_checks": "number",
-      "passed": "number",
-      "failed": "number",
-      "warnings": "number"
+    "total_checks": "number",
+    "passed": "number",
+    "failed": "number",
+    "warnings": "number"
   },
 
   "provenance": {
-      "executor": "string",
-      "hostname": "string",
-      "python_version": "string",
-      "os_version": "string",
-      "docker_image": "string (optional)"
-  }
+    "executor": "string",
+    "hostname": "string",
+    "python_version": "string",
+    "os_version": "string",
+    "docker_image": "string (optional)",
+    "mechanization_mode": "string",
+    "cpp_compiler_version": "string (optional)"
+  },
+
+  "mechanization": {
+    "mode": "string",
+    "schema_validator_exit_code": "number",
+    "row_counter_exit_code": "number"
+  },
+
+  "manifest_version": "string"
 }
 ```
-
----
 
 ### 4.2 Optional Fields
 
@@ -100,7 +113,8 @@ data/stage05_reports/manifests/manifest_<run_id>.json
   "tags": ["string"],
   "debug": {
       "intermediate_artifacts": ["string"],
-      "diagnostic_files": ["string"]
+      "diagnostic_files": ["string"],
+      "cpp_logs": ["string"]
   }
 }
 ```
@@ -111,7 +125,7 @@ data/stage05_reports/manifests/manifest_<run_id>.json
 
 ### 5.1 `run_id`
 
-A unique identifier for the run.  
+Unique identifier for the run.
 Format: `cms_<YYYYMMDD>_<HHMMSS>_<random_suffix>`
 
 ### 5.2 `timestamp_start` / `timestamp_end`
@@ -144,17 +158,31 @@ Location and hash of the artifact registry JSON file.
 
 ### 5.9 `diagnostics_summary`
 
-Aggregated diagnostic results across all stages.
+Aggregated diagnostic results across all stages, including mechanization checks.
 
 ### 5.10 `provenance`
 
 Execution metadata including:
 
 - executor (`local`, `docker`, `compose`, `ci`)
-- hostname  
-- Python version  
-- OS version  
+- hostname
+- Python version
+- OS version
 - Docker image (if applicable)
+- mechanization_mode (`python-only` or `python+cpp`)
+- cpp_compiler_version (docker + CI/CD)
+
+### 5.11 `mechanization`
+
+Mechanization metadata including:
+
+- `mode`: `"python-only"` or `"python+cpp"`
+- `schema_validator_exit_code`: C++ validator exit code
+- `row_counter_exit_code`: C++ row counter exit code
+
+### 5.12 `manifest_version`
+
+Semantic version of the manifest schema.
 
 ---
 
@@ -162,7 +190,7 @@ Execution metadata including:
 
 ### 6.1 Required Fields
 
-All required fields must be present.  
+All required fields must be present.
 Missing fields cause pipeline failure.
 
 ### 6.2 Type Validation
@@ -171,8 +199,8 @@ Each field must match its declared type.
 
 ### 6.3 Hash Validation
 
-- `config_hash` must match the SHA‑256 hash of the config file.  
-- `artifact_registry_hash` must match the SHA‑256 hash of the artifact registry.  
+- `config_hash` must match the SHA‑256 hash of the config file.
+- `artifact_registry_hash` must match the SHA‑256 hash of the artifact registry.
 - `environment_hash` must match dependency lockfile hash.
 
 ### 6.4 Timestamp Validation
@@ -187,6 +215,20 @@ Each field must match its declared type.
 
 `passed + failed + warnings` must equal `total_checks`.
 
+### 6.7 Mechanization Validation
+
+- mechanization mode must be valid
+- C++ exit codes must be recorded
+- mechanization logs must be included when mode = `python+cpp`
+
+### 6.8 Deterministic Ordering
+
+All JSON keys must be sorted alphabetically.
+
+### 6.9 Atomic Write
+
+Manifests must be written atomically to avoid partial writes.
+
 ---
 
 ## 7. Manifest Versioning
@@ -195,9 +237,9 @@ Each field must match its declared type.
 
 Manifests follow semantic versioning:
 
-- MAJOR — breaking changes  
-- MINOR — new fields  
-- PATCH — fixes  
+- MAJOR — breaking changes
+- MINOR — new fields
+- PATCH — fixes
 
 ### 7.2 Version Field
 
@@ -209,7 +251,7 @@ Manifests must include:
 
 ### 7.3 Backward Compatibility
 
-- MINOR and PATCH versions must remain backward compatible.  
+- MINOR and PATCH versions must remain backward compatible.
 - MAJOR versions may introduce breaking changes.
 
 ---
@@ -220,17 +262,22 @@ Manifests must include:
 
 Manifests are generated at the end of Stage 05.
 
-### 8.2 Atomic Write
+### 8.2 Deterministic Execution
 
-Manifests must be written atomically to avoid partial writes.
+Manifest generation must be deterministic across:
 
-### 8.3 Deterministic Ordering
+- local execution
+- Docker execution
+- docker‑compose execution
+- CI/CD execution
 
-JSON keys must be sorted alphabetically.
-
-### 8.4 No Mutation
+### 8.3 No Mutation
 
 Manifests must never be overwritten unless versioned.
+
+### 8.4 Reproducibility
+
+A clean clone must produce identical manifests for identical inputs, including mechanization metadata.
 
 ---
 
@@ -256,21 +303,29 @@ Manifests must never be overwritten unless versioned.
   "artifact_registry_hash": "f91c2b...",
 
   "diagnostics_summary": {
-      "total_checks": 42,
-      "passed": 42,
-      "failed": 0,
-      "warnings": 0
+    "total_checks": 42,
+    "passed": 42,
+    "failed": 0,
+    "warnings": 0
   },
 
   "provenance": {
-      "executor": "compose",
-      "hostname": "cms-runner",
-      "python_version": "3.11.4",
-      "os_version": "Ubuntu 22.04",
-      "docker_image": "cms_ingestion:0.3.1"
+    "executor": "compose",
+    "hostname": "cms-runner",
+    "python_version": "3.11.4",
+    "os_version": "Ubuntu 22.04",
+    "docker_image": "cms_ingestion:0.3.1",
+    "mechanization_mode": "python+cpp",
+    "cpp_compiler_version": "g++ 13.2.0"
   },
 
-  "manifest_version": "1.0.0"
+  "mechanization": {
+    "mode": "python+cpp",
+    "schema_validator_exit_code": 0,
+    "row_counter_exit_code": 0
+  },
+
+  "manifest_version": "1.1.0"
 }
 ```
 
@@ -280,8 +335,9 @@ Manifests must never be overwritten unless versioned.
 
 Future manifest fields may include:
 
-- cloud storage URIs  
-- pipeline lineage  
-- Branch 3 AI/RAG metadata  
-- multi‑environment provenance  
-- distributed execution metadata  
+- cloud storage URIs
+- pipeline lineage
+- Branch 3 AI/RAG metadata
+- multi‑environment provenance
+- distributed execution metadata
+- mechanization performance metrics

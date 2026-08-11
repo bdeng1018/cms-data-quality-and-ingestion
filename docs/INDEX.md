@@ -1,6 +1,6 @@
 # Documentation Index — CMS Data Quality & Ingestion Pipeline
 
-A structured entry point for all documentation in the **cms-data-quality-and-ingestion** deterministic pipeline.  
+A structured entry point for all documentation in the **cms-data-quality-and-ingestion** deterministic pipeline.
 Use this index to navigate architecture, onboarding, data contracts, stage documentation, deployment, and future roadmap.
 
 ---
@@ -10,6 +10,10 @@ Use this index to navigate architecture, onboarding, data contracts, stage docum
 ### [README.md](../README.md)
 
 Project overview, goals, quickstart, and repository structure.
+
+### [QUICKSTART.md](QUICKSTART.md)
+
+Fast setup, environment bootstrap, and first‑run instructions.
 
 ### [ONBOARDING.md](ONBOARDING.md)
 
@@ -47,31 +51,37 @@ Canonical definitions for pipeline terminology, POS/QIES concepts, and deploymen
 
 ## 3. Stage‑Specific Documentation
 
-### Stage 01 — Schema Definition  
+### Stage 01 — Schema Definition
 
-[src/stage01_schema_definition/README.md](../src/stage01_schema_definition/README.md)  
+[src/stage01_schema_definition/README.md](../src/stage01_schema_definition/README.md)
 Schema loading, validation rules, and canonical field definitions.
 
-### Stage 02 — Raw Ingestion  
+### [STAGE01_DESIGN.md](STAGE01_DESIGN.md)
 
-[src/stage02_raw_ingestion/README.md](../src/stage02_raw_ingestion/README.md)  
+Detailed design for Stage 01 schema generation, required flags, and deterministic guarantees.
+
+### Stage 02 — Raw Ingestion
+
+[src/stage02_raw_ingestion/README.md](../src/stage02_raw_ingestion/README.md)
 Raw file ingestion, structural validation, and canonical dataset creation.
 
-### Stage 03 — Data Quality  
+### Stage 03 — Data Quality
 
-[src/stage03_data_quality/README.md](../src/stage03_data_quality/README.md)  
+[src/stage03_data_quality/README.md](../src/stage03_data_quality/README.md)
 Null checks, duplicate detection, sparsity analysis, drift indicators, and quality metrics.
 
-### Stage 04 — Reporting  
+### Stage 04 — Reporting
 
-[src/stage04_reporting/README.md](../src/stage04_reporting/README.md)  
+[src/stage04_reporting/README.md](../src/stage04_reporting/README.md)
 Report generation, summary artifacts, and quality metric aggregation.
 
-### Stage 05 — Pipeline Runner  
+### Stage 05 — Pipeline Runner
 
-[STAGE05_DESIGN.md](STAGE05_DESIGN.md)  
-Execution order, configuration loading, error handling, summary generation, and cross‑stage coordination.  
 [src/stage05_pipeline_runner/README.md](../src/stage05_pipeline_runner/README.md)
+
+### [STAGE05_DESIGN.md](STAGE05_DESIGN.md)
+
+Execution order, configuration loading, error handling, summary generation, and cross‑stage coordination.
 
 ---
 
@@ -123,7 +133,15 @@ Security reporting process and vulnerability disclosure guidelines.
 
 ---
 
-## 6. Visual Diagrams
+## 6. Mechanization & C++ Deterministic Layer
+
+### [MECHANIZATION_CPP.md](MECHANIZATION_CPP.md)
+
+C++ scaffolding for Stage 06 deterministic mechanization, schema validation, and future agent‑loop integration.
+
+---
+
+## 7. Visual Diagrams
 
 ### [pipeline_architecture](../diagrams/pipeline_architecture.md)
 
@@ -135,27 +153,27 @@ Schema visualization for Stage 01 and Stage 02 outputs.
 
 ---
 
-## 7. Navigation Guidance
+## 8. Navigation Guidance
 
 ### If you're evaluating the pipeline
 
-- Start with **README.md**  
-- Then read **ARCHITECTURE.md**  
-- Follow with **PIPELINE_FLOW.md**  
-- Review **DATA_DICTIONARY.md** and **SCHEMA_REFERENCE.md**  
+- Start with **README.md**
+- Then read **ARCHITECTURE.md**
+- Follow with **PIPELINE_FLOW.md**
+- Review **DATA_DICTIONARY.md** and **SCHEMA_REFERENCE.md**
 - Finish with **STAGE05_DESIGN.md**
 
 ### If you're onboarding as a developer
 
-- Start with **ONBOARDING.md**  
-- Explore the `src/` stage folders  
-- Use diagnostics under `scripts/diagnostics/`  
+- Start with **ONBOARDING.md**
+- Explore the `src/` stage folders
+- Use diagnostics under `scripts/diagnostics/`
 - Run tests under `tests/`
 
 ---
 
 ## 8. Maintainer
 
-Maintainer: **Brian Deng**  
-Email: **<bdeng.data.pipelines@gmail.com>**  
+Maintainer: **Brian Deng**
+Email: **<bdeng.data.pipelines@gmail.com>**
 GitHub: **<https://github.com/bdeng1018>**

@@ -26,8 +26,8 @@ import os
 import pandas as pd
 
 from src.stage01_schema_definition.schema_loader import load_schema
-from stage02_raw_ingestion.pos_ingestion import PosIngestionSource
-from stage02_raw_ingestion.qies_ingestion import QiesIngestionSource
+from src.stage02_raw_ingestion.pos_ingestion import PosIngestionSource
+from src.stage02_raw_ingestion.qies_ingestion import QiesIngestionSource
 from utils.logging_utils import get_logger
 
 

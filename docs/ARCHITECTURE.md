@@ -1,9 +1,8 @@
 # Architecture Overview - CMS Data Quality & Ingestion Pipeline
 
-This document describes the high‑level architecture of the CMS Data Quality & Ingestion Pipeline.
-It explains how the system is structured, how each stage interacts, and how data flows from raw ingestion to final reporting.
+The CMS Data Quality & Ingestion Pipeline is a deterministic, contract‑driven system for ingesting, validating, profiling, and reporting on CMS POS/QIES data.
 
-This document describes both the pipeline architecture and the deployment architecture that supports runtime execution, security, observability, and infrastructure provisioning.
+This document describes the **pipeline architecture** (Stages 01–05) and the **deployment architecture** (containerization, CI/CD, Terraform, observability, security) that ensures reproducible runtime behavior across all environments.
 
 ---
 
@@ -13,37 +12,38 @@ The pipeline is designed to:
 
 - Ingest CMS POS/QIES data reliably
 - Apply deterministic cleaning and normalization
-- Enforce schema consistency across all stages
+- Enforce strict schema consistency
 - Produce validated intermediate artifacts
 - Generate reproducible quality reports
 - Provide a Stage 05 orchestrator for full end‑to‑end execution
-- Support diagnostics at every stage
+- Expose diagnostics at every stage
 - Maintain strict separation between code, configs, data, and diagnostics
+- Support deterministic deployment across local, Docker, Compoase, and CI/CD
 
-The architecture also includes a deterministic deployment layer providing containerization, orchestration, security, observability, and infrastructure provisioning.
-The architecture emphasizes **clarity**, **traceability**, and **reproducibility**.
+The architecture emphasizes **clarity**, **traceability**, **reproducibility**, and **audit-friendly behavior**.
 
 ---
 
 ## 2. High‑Level Pipeline Flow
 
 ```text
-Raw Data → Stage 02 → Cleaned Data → Stage 03 → Quality Artifacts → Stage 04 → Reports → Stage 05 → Pipeline Summary
+Raw Data → Stage 02 → Cleaned Data → Stage 01 → Schema → Stage 03 → Quality Artifacts → Stage 04 → Reports → Stage 05 → Pipeline Summary
 ```
 
-Each stage is independent, testable, and diagnosable.
+Each stage is independent, testable, diagnosable, and produces deterministics artifacts.
 
 ---
 
 ## 3. Stage Architecture
 
-### Stage 01 — Schema Definition
+### Stage 01 — Schema Definition & Validation
 
 - Regenerates `schema.json` from cleaned Stage 02 data.
-- Ensures downstream stages operate on a consistent column set.
-- Includes diagnostics verifying schema integrity.
+- Validates schema deterministrically (Python + C++).
+- Ensures column count, order, and naming.
+- Provides diagnostics verifying schema integrity.
 
-**Inputs:** `data/stage02_cleaned/cleaned_data.csv`  
+**Inputs:** `data/stage02_cleaned/cleaned_data.csv`
 **Outputs:** `data/stage01_schema/schema.json`
 
 ---
@@ -51,14 +51,14 @@ Each stage is independent, testable, and diagnosable.
 ### Stage 02 — Raw Ingestion + Cleaning
 
 - Fetches POS data from API.
-- Ingests POS/QIES into parquet/csv.
+- Ingests POS/QIES into parquet/CSV.
 - Applies deterministic cleaning rules.
 - Produces canonical cleaned dataset.
 
-**Inputs:** Raw POS/QIES files  
-**Outputs:**  
+**Inputs:** Raw POS/QIES files
+**Outputs:**
 
-- `data/stage02_raw/`  
+- `data/stage02_raw/`
 - `data/stage02_cleaned/cleaned_data.csv`
 
 ---
@@ -69,7 +69,7 @@ Each stage is independent, testable, and diagnosable.
 - Generates intermediate artifacts (metrics, flags, distributions).
 - Includes diagnostics validating quality outputs.
 
-**Inputs:** Cleaned data  
+**Inputs:** Cleaned data + schema
 **Outputs:** `data/stage03_intermediate/`
 
 ---
@@ -80,22 +80,22 @@ Each stage is independent, testable, and diagnosable.
 - Generates formatted reports (CSV/JSON/Markdown).
 - Includes diagnostics verifying report completeness.
 
-**Inputs:** Intermediate artifacts  
+**Inputs:** Intermediate artifacts
 **Outputs:** `data/stage04_processed/`
 
 ---
 
 ### Stage 05 — Pipeline Runner (Orchestrator)
 
-- Executes Stages 01–04 in order.
+- Executes Stages 01–04 deterministically.
 - Loads configuration from `configs/pipeline.yml`.
-- Writes a final pipeline summary artifact.
+- Writes final pipeline summary.
 - Includes diagnostics validating the full pipeline run.
 
-**Inputs:** All previous stage outputs  
-**Outputs:**  
+**Inputs:** All previous stage outputs
+**Outputs:**
 
-- `data/stage05_reports/`  
+- `data/stage05_reports/`
 - `data/stage05_reports/pipeline_summary.json`
 
 ---
@@ -109,6 +109,7 @@ src/
   stage03_data_quality/
   stage04_reporting/
   stage05_pipeline_runner/
+  utils_cpp/
 
 scripts/
   diagnostics/
@@ -134,12 +135,10 @@ This structure enforces strict separation of:
 - **Diagnostics** (`scripts/diagnostics/`)
 - **Configuration** (`configs/`)
 - **Artifacts** (`data/`)
-- **Developer documentation** (`docs/`)
+- **Documentation** (`docs/`)
 - **Deployment** (`deployment/`)
 - **Tooling** (`.vscode/`)
 - **Build orchestration** (`Makefile`)
-
-The `deployment/` directory defines the runtime architecture, including CI/CD, environment configuration, containerization, Kubernetes manifests, Helm packaging, Terraform infrastructure, logging, monitoring, and security.
 
 ---
 
@@ -158,7 +157,7 @@ Key responsibilities:
 - Provide stage‑specific parameters
 - Support Stage 05 orchestration
 
-Configuration is intentionally minimal and declarative.
+Configuration is minimal, declarative, and deterministic.
 
 ---
 
@@ -178,36 +177,37 @@ Diagnostics validate:
 - Artifact completeness
 - Logical invariants
 
-Diagnostics are runnable independently or via:
+Run all diagnostics:
 
 ```bash
 make diagnostics
 ```
 
-This ensures the pipeline is always in a valid state.
+Diagnostics never mutate source data.
 
 ---
 
 ## 7. Makefile Architecture
 
-The Makefile provides:
+The Makefile provides deterministic orchestration:
 
 - Stage runners (`make stage01` → `make stage05`)
-- Individual ingestion utilities
+- Ingestion utilities
 - Full diagnostics (`make diagnostics`)
 - Testing (`make test`)
 - Linting (`make lint`)
 - Safe cleanup (`make clean-cache`)
 - Artifact reset (`make reset`)
 - Environment setup (`make env`)
+- C++ builds (`make cpp-all`)
 
-It is the primary developer interface for running the pipeline.
+The Makefile is the primary developer interface.
 
 ---
 
 ## 8. Logging Architecture
 
-The pipeline uses stage‑specific log files:
+Stage-specific logs:
 
 ```text
 logs/ingestion.log        # Stage 02
@@ -229,7 +229,7 @@ This summary captures:
 - timestamps
 - total pipeline duration
 
-Logging remains stage‑scoped, while Stage 05 focuses on orchestration and summarization.
+Logging remains stage‑scoped, while Stage 05 focuses on orchestration.
 
 ---
 
@@ -248,8 +248,9 @@ Tests cover:
 - Schema consistency
 - Reporting correctness
 - Pipeline runner orchestration
+- C++ mechanization utilities
 
-Run via:
+Run tests:
 
 ```bash
 make test
@@ -265,8 +266,8 @@ The architecture supports:
 - Adding new diagnostics
 - Adding new ingestion sources
 - Adding new reporting formats
-- Adding new pipeline configurations
-- Extending deployment subsystems (Helm, k8s, Terraform, monitoring, security)
+- Extending deployment subsystems
+- Adding AI/RAG stages (future Stage 06-08)
 
 Each stage is isolated, making extension straightforward.
 
@@ -274,23 +275,20 @@ Each stage is isolated, making extension straightforward.
 
 ## 11. Deployment Architecture
 
-The CMS Data Quality & Ingestion Pipeline includes a full deployment layer
-responsible for runtime execution, containerization, orchestration, security,
-observability, and infrastructure provisioning.
-
-Deployment supports multiple environments:
+The deployment layer provides deterministic runtime behavior across:
 
 - local development
+- Docker
 - docker-compose
-- Kubernetes (k8s)
-- Helm-based packaging
-- Terraform-managed infrastructure
+- Kubernetes
+- Helm
+- Terraform
 
 Deployment behavior is defined in:
 
-- `deployment/DEPLOYMENT.md` — runtime architecture
-- `deployment/OPERATIONS.md` — operational rules
-- `deployment/CONTRACTS.md` — deterministic deployment contracts
+- [`deployment/DEPLOYMENT.md`](../deployment/DEPLOYMENT.md) — runtime architecture
+- [`deployment/OPERATIONS.md`](../deployment/OPERATIONS.md) — operational rules
+- [`deployment/CONTRACTS.md`](../deployment/CONTRACTS.md) — deterministic deployment contracts
 
 The deployment layer ensures reproducible execution across all environments.
 
@@ -298,8 +296,7 @@ The deployment layer ensures reproducible execution across all environments.
 
 ## 12. Provenance Architecture
 
-The pipeline maintains deterministic provenance across all layers. Provenance
-tracks version fields that describe the state of the system at every run:
+The pipeline maintains deterministic provenance across all layers. Version fields include:
 
 ```text
 pipeline_version
@@ -310,27 +307,24 @@ deployment_version
 sbom_version
 ```
 
-These fields are written into:
+These fields appear in:
 
-- manifest.provenance
+- manifests
 - SBOM metadata
 - release notes
 - audit logs
 
-Provenance ensures traceability, reproducibility, and compliance across pipeline
-execution, deployment changes, and artifact generation.
-
 Reference documents:
 
-- `deployment/MANIFEST_SPEC.md`
-- `deployment/SBOM.md`
-- `deployment/VERSIONING.md`
+- [`deployment/MANIFEST_SPEC.md`](../deployment/MANIFEST_SPEC.md)
+- [`deployment/SBOM.md`](../deployment/SBOM.md)
+- [`deployment/VERSIONING.md`](../deployment/VERSIONING.md)
 
 ---
 
 ## 13. Governance & Compliance Architecture
 
-The pipeline includes a deterministic control plane governing:
+The control plane governs:
 
 - change approval
 - compliance enforcement
@@ -341,22 +335,20 @@ The pipeline includes a deterministic control plane governing:
 These rules ensure the system behaves consistently and predictably across all
 environments.
 
-Control plane documents:
+Documents:
 
-- `deployment/GOVERNANCE.md`
-- `deployment/COMPLIANCE.md`
-- `deployment/RISK_MODEL.md`
-- `deployment/AUDIT_LOGS.md`
-- `deployment/ACCESS_CONTROL.md`
+- [`deployment/GOVERNANCE.md`](../deployment/GOVERNANCE.md)
+- [`deployment/COMPLIANCE.md`](../deployment/COMPLIANCE.md)
+- [`deployment/RISK_MODEL.md`](../deployment/RISK_MODEL.md)
+- [`deployment/AUDIT_LOGS.md`](../deployment/AUDIT_LOGS.md)
+- [`deployment/ACCESS_CONTROL.md`](../deployment/ACCESS_CONTROL.md)
 
-Governance and compliance integrate with CI/CD, provenance, and deployment
+Governance integrates with CI/CD, provenance, and deployment
 validation.
 
 ---
 
 ## 14. Deployment Directory Structure
-
-The deployment layer is organized into subsystem directories:
 
 ```text
 deployment/
@@ -370,19 +362,18 @@ deployment/
   security/      # hardening and security policies
 ```
 
-Each subsystem maps to a specific part of the runtime architecture:
+Subsystem responsibilities:
 
-- **ci/** — GitHub Actions workflows, validation rules  
-- **env/** — deterministic environment configuration  
-- **helm/** — packaged deployment for Kubernetes  
-- **k8s/** — raw manifests for direct cluster deployment  
-- **terraform/** — infrastructure provisioning and drift detection  
-- **logging/** — Fluent Bit configuration and log routing  
-- **monitoring/** — Prometheus, Grafana, SLO/SLI contracts  
-- **security/** — hardening rules, network policies, RBAC alignment
+- **ci/** — CI/CD workflows
+- **env/** — deterministic environment configuration
+- **helm/** — packaged Kubernetes deployment
+- **k8s/** — raw manifests
+- **terraform/** — infrastructure provisioning
+- **logging/** — Fluent Bit routing
+- **monitoring/** — Prometheus, Grafana, SLO/SLI
+- **security/** — hardening, RBAC, policies
 
-This structure ensures deployment is modular, reproducible, and fully aligned
-with the pipeline’s architecture.
+This structure ensures modular, reproducible deployment.
 
 ---
 

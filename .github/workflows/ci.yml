@@ -41,12 +41,15 @@ jobs:
           pip install -r deployment/requirements.txt
           pip install pytest flake8
 
+      - name: Build C++ utilities
+        run: make cpp-utils
+
       - name: Add project root to PYTHONPATH
         run: |
           echo "PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts" >> $GITHUB_ENV
 
       - name: Run tests
-        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest -q
+        run: PYTHONPATH=$(pwd):$(pwd)/src:$(pwd)/scripts pytest --maxfail=1 --disable-warnings -q
 
       - name: Lint code (non-blocking)
         run: |

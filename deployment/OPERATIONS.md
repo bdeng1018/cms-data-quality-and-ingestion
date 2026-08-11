@@ -4,13 +4,12 @@ CMS Data Quality & Ingestion Pipeline — Operational Specification
 
 ## 1. Purpose
 
-This document defines the operational behavior, runtime guarantees, logging rules,
-diagnostics expectations, error‑handling requirements, and lifecycle management
-for the CMS Data Quality & Ingestion Pipeline (Stages 01–05).
+This document defines the operational behavior, runtime guarantees, logging rules, diagnostics expectations, error‑handling requirements, and lifecycle management for the CMS Data Quality & Ingestion Pipeline (Stages 01–05).
 
-Operations are deterministic, reproducible, and contract‑driven.  
-All execution environments (local, Docker, docker‑compose, CI/CD) must comply
-with this specification.
+Operations are deterministic, reproducible, and contract‑driven.
+All execution environments (local, Docker, docker‑compose, CI/CD) must comply with this specification.
+
+C++ mechanization (Stage 01 validators + ingestion utilities) is included as a first‑class operational component beginning in v1.1.0.
 
 ---
 
@@ -18,18 +17,18 @@ with this specification.
 
 Operations follow these principles:
 
-- deterministic execution  
-- isolated outputs  
-- reproducible environments  
-- contract‑driven behavior  
-- atomic writes  
-- transparent diagnostics  
-- zero mutation of source data  
-- stable logging format  
-- stable artifact structure  
+- deterministic execution
+- isolated outputs
+- reproducible environments
+- contract‑driven behavior
+- atomic writes
+- transparent diagnostics
+- zero mutation of source data
+- stable logging format
+- stable artifact structure
+- deterministic C++ mechanization behavior
 
-These principles ensure reliability across ingestion, quality checks, reporting,
-and pipeline orchestration.
+These principles ensure reliability across ingestion, quality checks, reporting, and pipeline orchestration.
 
 ---
 
@@ -39,41 +38,52 @@ and pipeline orchestration.
 
 Each pipeline run follows this lifecycle:
 
-1. **Initialization**  
-   - load config  
-   - validate config  
-   - compute config hash  
-   - initialize logging  
+1. **Initialization**
+   - load config
+   - validate config
+   - compute config hash
+   - initialize logging
+   - detect mechanization mode (python-only vs python+cpp)
 
-2. **Environment Validation**  
-   - validate Python version  
-   - validate dependency lockfile  
-   - compute environment hash  
+2. **Environment Validation**
+   - validate Python version
+   - validate dependency lockfile
+   - compute environment hash
+   - validate C++ toolchain availability (docker + CI/CD)
 
-3. **Stage Execution**  
-   - Stage 01: schema validation  
-   - Stage 02: ingestion + cleaning  
-   - Stage 03: data quality  
-   - Stage 04: reporting  
-   - Stage 05: pipeline runner + summary  
+3. **Stage Execution**
+   - Stage 01: schema validation
+     - Python validator
+     - C++ schema validator (deterministic mechanization)
+   - Stage 02: ingestion + cleaning
+     - Python ingestion
+     - C++ row counter (raw + cleaned)
+   - Stage 03: data quality
+   - Stage 04: reporting
+   - Stage 05: pipeline runner + summary
 
-4. **Diagnostics**  
-   - run stage‑specific diagnostics  
-   - aggregate diagnostic summary  
+4. **Diagnostics**
+   - run stage‑specific diagnostics
+   - include C++ mechanization diagnostics
+   - aggregate diagnostic summary
 
-5. **Artifact Registry Generation**  
-   - compute artifact hashes  
-   - write artifact registry  
-   - validate registry schema  
+5. **Artifact Registry Generation**
+   - compute artifact hashes
+   - write artifact registry
+   - include mechanization outputs
+   - validate registry schema
 
-6. **Manifest Generation**  
-   - write manifest  
-   - validate manifest schema  
+6. **Manifest Generation**
+   - write manifest
+   - include mechanization mode
+   - include C++ logs + exit codes
+   - validate manifest schema
 
-7. **Completion**  
-   - finalize logs  
-   - write duration  
-   - write provenance  
+7. **Completion**
+   - finalize logs
+   - write duration
+   - write provenance
+   - write mechanization metadata
 
 ---
 
@@ -89,11 +99,12 @@ Logs must follow this format:
 
 ### 4.2 Required Fields
 
-- timestamp (ISO8601)  
-- stage name  
-- log level (INFO, WARNING, ERROR)  
-- message  
-- duration (for stage boundaries)  
+- timestamp (ISO8601)
+- stage name
+- log level (INFO, WARNING, ERROR)
+- message
+- duration (for stage boundaries)
+- C++ mechanization subprocess output (stdout + stderr)
 
 ### 4.3 Log Files
 
@@ -103,11 +114,14 @@ Logs must be written to:
 logs/ingestion.log
 logs/quality.log
 logs/runner.log
+logs/mechanization.log
 ```
 
 ### 4.4 Determinism
 
 Given identical inputs, logs must be identical except for timestamps.
+
+C++ mechanization logs must be bit‑for‑bit identical across environments.
 
 ---
 
@@ -117,11 +131,12 @@ Given identical inputs, logs must be identical except for timestamps.
 
 Diagnostics must run for:
 
-- Stage 01: schema  
-- Stage 02: ingestion  
-- Stage 03: intermediate artifacts  
-- Stage 04: reporting  
-- Stage 05: pipeline summary  
+- Stage 01: schema
+- Stage 02: ingestion
+- Stage 03: intermediate artifacts
+- Stage 04: reporting
+- Stage 05: pipeline summary
+- C++ mechanization (validator + row counter)
 
 ### 5.2 Diagnostic Output
 
@@ -140,16 +155,17 @@ Diagnostics must produce:
 
 Diagnostics summary must include:
 
-- total checks  
-- passed  
-- failed  
-- warnings  
+- total checks
+- passed
+- failed
+- warnings
+- mechanization checks (C++ validator + row counter)
 
 This summary is written into the manifest.
 
 ### 5.4 Determinism
 
-Diagnostics must produce identical results given identical inputs.
+Diagnostics must produce identical results given identical inputs, including mechanization outputs.
 
 ---
 
@@ -159,31 +175,34 @@ Diagnostics must produce identical results given identical inputs.
 
 Errors must be categorized as:
 
-- ingestion errors  
-- schema errors  
-- quality errors  
-- reporting errors  
-- pipeline orchestration errors  
+- ingestion errors
+- schema errors
+- quality errors
+- reporting errors
+- pipeline orchestration errors
+- mechanization errors (C++ validator + row counter)
 
 ### 6.2 Error Requirements
 
 Errors must:
 
-- include stage name  
-- include file + line number  
-- include remediation hints  
-- never produce partial artifacts  
-- never mutate source data  
-- fail fast  
+- include stage name
+- include file + line number
+- include remediation hints
+- never produce partial artifacts
+- never mutate source data
+- fail fast
+- include C++ exit codes + stderr when mechanization fails
 
 ### 6.3 Fatal Errors
 
 Fatal errors must:
 
-- stop pipeline execution  
-- write diagnostic output  
-- write partial manifest with error flag  
-- write logs up to failure point  
+- stop pipeline execution
+- write diagnostic output
+- write partial manifest with error flag
+- write logs up to failure point
+- include mechanization failure details when applicable
 
 ---
 
@@ -193,11 +212,12 @@ Fatal errors must:
 
 Artifacts must:
 
-- be written only inside `data/stageXX_*` directories  
-- never overwrite previous artifacts unless versioned  
-- include deterministic filenames  
-- include deterministic content  
-- include hashes recorded in the artifact registry  
+- be written only inside `data/stageXX_*` directories
+- never overwrite previous artifacts unless versioned
+- include deterministic filenames
+- include deterministic content
+- include hashes recorded in the artifact registry
+- include mechanization outputs (validator logs, row counter outputs)
 
 ### 7.2 Atomic Writes
 
@@ -211,18 +231,20 @@ All artifacts must be written atomically to avoid partial writes.
 
 Environment must include:
 
-- pinned Python version  
-- pinned dependency versions  
-- reproducible lockfile (`uv.lock` or `requirements.txt` with hashes)  
+- pinned Python version
+- pinned dependency versions
+- reproducible lockfile (`uv.lock` or `requirements.txt` with hashes)
 
 ### 8.2 Docker Environment
 
 Docker environment must:
 
-- install dependencies deterministically  
-- include CLI entrypoints  
-- include diagnostics scripts  
-- mount input/output directories  
+- install dependencies deterministically
+- include CLI entrypoints
+- include diagnostics scripts
+- mount input/output directories
+- include deterministic C++ toolchain (g++, make, cmake, ninja-build)
+- include `utils_cpp/` mechanization layer
 
 ### 8.3 docker‑compose Environment
 
@@ -232,16 +254,18 @@ Compose execution uses the root‑level `compose.yml` and must:
 - enforce read‑only mounts for code/configs
 - isolate data + logs
 - run the pipeline runner deterministically
+- mount `utils_cpp/` read-only for mechanization
 
 ### 8.4 CI/CD Environment
 
 CI/CD must:
 
-- run full test suite  
-- validate manifest schema  
-- validate artifact registry schema  
-- build Docker image  
-- publish release artifacts  
+- run full test suite
+- validate manifest schema
+- validate artifact registry schema
+- build Docker image
+- publish release artifacts
+- run C++ mechanization tests (`pytest -m cpp_utils`, `cpp_schema`, `cpp_all`)
 
 ---
 
@@ -251,12 +275,14 @@ CI/CD must:
 
 Provenance must include:
 
-- executor (local, docker, compose, ci)  
-- hostname  
-- Python version  
-- OS version  
-- dependency hash  
-- Docker image (if applicable)  
+- executor (local, docker, compose, ci)
+- hostname
+- Python version
+- OS version
+- dependency hash
+- Docker image (if applicable)
+- mechanization mode (python-only vs python+cpp)
+- C++ compiler version (docker + CI/CD)
 
 ### 9.2 Determinism
 
@@ -270,17 +296,18 @@ Provenance must be identical across identical environments.
 
 Operations follow semantic versioning:
 
-- MAJOR — breaking operational changes  
-- MINOR — new operational features  
-- PATCH — fixes  
+- MAJOR — breaking operational changes
+- MINOR — new operational features
+- PATCH — fixes
 
 ### 10.2 Version Field
 
 Operational version must appear in:
 
-- manifest  
-- artifact registry  
-- deployment docs  
+- manifest
+- artifact registry
+- deployment docs
+- mechanization metadata (compiler + binary hash)
 
 ---
 
@@ -288,8 +315,9 @@ Operational version must appear in:
 
 Future operational extensions include:
 
-- cloud storage operations  
-- distributed execution operations  
-- multi‑environment operations  
-- Branch 3 AI/RAG operational hooks  
-- container orchestration operations (K8s, Helm)  
+- cloud storage operations
+- distributed execution operations
+- multi‑environment operations
+- Branch 3 AI/RAG operational hooks
+- container orchestration operations (K8s, Helm)
+- Stage 06 high-performance C++ validation operations

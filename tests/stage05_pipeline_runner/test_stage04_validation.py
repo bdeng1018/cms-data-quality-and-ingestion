@@ -14,7 +14,6 @@ All filesystem interactions use temporary directories for isolation.
 
 import json
 import os
-from pathlib import Path
 from unittest.mock import patch
 
 from src.stage05_pipeline_runner.run_pipeline import main as run_pipeline_main
@@ -34,8 +33,6 @@ def test_stage04_validation_missing(tmp_path):
     stage04 = tmp_path / "data/stage04_processed"
     stage04.mkdir(parents=True)
     (stage04 / "report_index.json").write_text("{}")
-
-    from src.stage05_pipeline_runner.run_pipeline import validate_stage04_outputs
 
     missing = validate_stage04_outputs(root=tmp_path)
 

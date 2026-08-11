@@ -223,3 +223,118 @@ def test_valid_consistency_passes():
     diag.SUMMARY_PATH.write_text("{}")
 
     diag.check_consistency_with_cleaned_data()  # should not raise
+
+
+# --- Deterministic behavior tests for Stage 03 intermediate artifacts ---
+
+
+def test_quality_summary_is_deterministic(tmp_path, monkeypatch):
+    """Repeated reads of quality_summary.json must be deterministic."""
+    summary = {
+        "total_rows": 3,
+        "column_count": 3,
+        "missingness_summary": {"col1": 1, "col2": 1},
+        "quality_score": 0.95,
+    }
+
+    diag.SUMMARY_PATH.write_text(json.dumps(summary))
+
+    s1 = json.loads(diag.SUMMARY_PATH.read_text())
+    s2 = json.loads(diag.SUMMARY_PATH.read_text())
+
+    assert s1 == s2, "quality_summary.json must be deterministic across reads"
+
+
+def test_facility_metrics_is_deterministic(tmp_path, monkeypatch):
+    """facility_metrics.csv must load deterministically."""
+    df = pd.DataFrame(
+        {
+            "facility_id": ["A", "B"],
+            "row_count": [10, 20],
+            "missingness_rate": [0.1, 0.2],
+            "quality_score": [0.9, 0.8],
+        }
+    )
+    df.to_csv(diag.FACILITY_PATH, index=False)
+
+    loaded1 = pd.read_csv(diag.FACILITY_PATH)
+    loaded2 = pd.read_csv(diag.FACILITY_PATH)
+
+    assert loaded1.equals(loaded2), "facility_metrics.csv must be deterministic"
+
+
+def test_column_profiles_is_deterministic(tmp_path, monkeypatch):
+    """column_profiles.json must load deterministically."""
+    profiles = {
+        "col1": {"null_count": 1, "distinct_count": 2},
+        "col2": {"null_count": 1, "distinct_count": 3},
+    }
+    diag.PROFILES_PATH.write_text(json.dumps(profiles))
+
+    p1 = json.loads(diag.PROFILES_PATH.read_text())
+    p2 = json.loads(diag.PROFILES_PATH.read_text())
+
+    assert p1 == p2, "column_profiles.json must be deterministic across reads"
+
+
+def test_facility_metrics_column_order_is_deterministic(tmp_path, monkeypatch):
+    """Column ordering in facility_metrics.csv must be deterministic."""
+    df = pd.DataFrame(
+        {
+            "facility_id": ["A"],
+            "row_count": [10],
+            "missingness_rate": [0.1],
+            "quality_score": [0.9],
+        }
+    )
+    df.to_csv(diag.FACILITY_PATH, index=False)
+
+    loaded = pd.read_csv(diag.FACILITY_PATH)
+    assert list(loaded.columns) == [
+        "facility_id",
+        "row_count",
+        "missingness_rate",
+        "quality_score",
+    ], "facility_metrics.csv must have deterministic column ordering"
+
+
+def test_column_profiles_key_order_is_deterministic(tmp_path, monkeypatch):
+    """Column profile keys must be sorted deterministically."""
+    profiles = {
+        "col1": {"distinct_count": 2, "null_count": 1},
+    }
+    diag.PROFILES_PATH.write_text(json.dumps(profiles))
+
+    loaded = json.loads(diag.PROFILES_PATH.read_text())
+    keys = list(loaded["col1"].keys())
+
+    assert keys == sorted(
+        keys
+    ), "column_profiles.json keys must be sorted deterministically"
+
+
+def test_consistency_check_is_deterministic(tmp_path, monkeypatch):
+    """Consistency check must behave deterministically across repeated calls."""
+    write_cleaned_data(diag.CLEANED_DATA_PATH)
+
+    df = pd.DataFrame(
+        {
+            "facility_id": ["A", "B"],
+            "row_count": [10, 20],
+            "missingness_rate": [0.1, 0.2],
+            "quality_score": [0.9, 0.8],
+        }
+    )
+    df.to_csv(diag.FACILITY_PATH, index=False)
+
+    profiles = {
+        "col1": {"null_count": 1},
+        "col2": {"null_count": 1},
+    }
+    diag.PROFILES_PATH.write_text(json.dumps(profiles))
+
+    diag.SUMMARY_PATH.write_text("{}")
+
+    # Should not raise — twice
+    diag.check_consistency_with_cleaned_data()
+    diag.check_consistency_with_cleaned_data()

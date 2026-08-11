@@ -181,3 +181,144 @@ def test_compute_dataset_summary():
     assert summary["column_health_distribution"]["moderate"] == 1
 
     logger.info("✓ Dataset summary validated.")
+
+
+# --- Deterministic behavior tests for Stage 04 Reporting Engine ---
+
+
+def test_compute_column_health_is_deterministic():
+    """Repeated calls must produce identical column-health structures."""
+    profiles = {
+        "colA": {
+            "completeness_score": 1.0,
+            "distinct_count": 10,
+            "inferred_dtype": "str",
+        },
+        "colB": {
+            "completeness_score": 0.0,
+            "distinct_count": 0,
+            "inferred_dtype": "float64",
+        },
+    }
+
+    r1 = compute_column_health(profiles)
+    r2 = compute_column_health(profiles)
+
+    assert r1 == r2, "compute_column_health must be deterministic"
+
+
+def test_compute_column_health_key_order_is_deterministic():
+    """Column-health keys must be sorted deterministically."""
+    profiles = {
+        "colA": {
+            "distinct_count": 10,
+            "completeness_score": 1.0,
+            "inferred_dtype": "str",
+        },
+    }
+
+    result = compute_column_health(profiles)
+    keys = list(result["colA"].keys())
+
+    assert keys == sorted(keys), "Column-health keys must be sorted deterministically"
+
+
+def test_compute_facility_health_is_deterministic():
+    """Facility-health classification must be deterministic."""
+    df = pd.DataFrame(
+        {
+            "facility_id": ["A", "B"],
+            "completeness_score": [0.9, 0.2],
+        }
+    )
+
+    r1 = compute_facility_health(df)
+    r2 = compute_facility_health(df)
+
+    assert r1.equals(r2), "compute_facility_health must be deterministic"
+
+
+def test_identify_sparse_columns_is_deterministic():
+    """Sparse-column detection must be deterministic."""
+    column_health = {
+        "colA": {"health": "healthy"},
+        "colB": {"health": "sparse"},
+        "colC": {"health": "critical"},
+    }
+
+    s1 = identify_sparse_columns(column_health)
+    s2 = identify_sparse_columns(column_health)
+
+    assert s1 == s2, "identify_sparse_columns must be deterministic"
+
+
+def test_identify_sparse_columns_sorted():
+    """Sparse-column list must be sorted deterministically."""
+    column_health = {
+        "colC": {"health": "critical"},
+        "colB": {"health": "sparse"},
+    }
+
+    sparse = identify_sparse_columns(column_health)
+    assert sparse == sorted(
+        sparse
+    ), "Sparse-column list must be sorted deterministically"
+
+
+def test_compute_top_bottom_facilities_is_deterministic():
+    """Top/bottom facility ranking must be deterministic."""
+    df = pd.DataFrame(
+        {
+            "facility_id": ["A", "B", "C"],
+            "completeness_score": [0.9, 0.5, 0.1],
+        }
+    )
+
+    t1, b1 = compute_top_bottom_facilities(df, n=1)
+    t2, b2 = compute_top_bottom_facilities(df, n=1)
+
+    assert t1.equals(t2), "Top facilities must be deterministic"
+    assert b1.equals(b2), "Bottom facilities must be deterministic"
+
+
+def test_compute_dataset_summary_is_deterministic():
+    """Dataset summary must be deterministic across repeated runs."""
+    quality_summary = {
+        "total_rows": 100,
+        "column_count": 10,
+        "facility_count": 100,
+        "completeness_score": 0.25,
+        "quality_score": 0.25,
+    }
+
+    column_health = {
+        "colA": {"health": "healthy"},
+        "colB": {"health": "critical"},
+        "colC": {"health": "moderate"},
+    }
+
+    s1 = compute_dataset_summary(quality_summary, column_health)
+    s2 = compute_dataset_summary(quality_summary, column_health)
+
+    assert s1 == s2, "compute_dataset_summary must be deterministic"
+
+
+def test_dataset_summary_key_order_is_deterministic():
+    """Dataset-summary keys must be sorted deterministically."""
+    quality_summary = {
+        "column_count": 10,
+        "total_rows": 100,
+        "facility_count": 100,
+        "completeness_score": 0.25,
+        "quality_score": 0.25,
+    }
+
+    column_health = {
+        "colA": {"health": "healthy"},
+        "colB": {"health": "critical"},
+    }
+
+    summary = compute_dataset_summary(quality_summary, column_health)
+    keys = list(summary.keys())
+
+    assert keys == sorted(keys), "Dataset-summary keys must be sorted deterministically"

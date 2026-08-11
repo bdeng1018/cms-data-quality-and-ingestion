@@ -42,24 +42,10 @@ if not logger.handlers:
 # Existence checks
 # ==============================================================================
 def ensure_exists(path: str | Path) -> None:
-    """
-    Ensure a file exists before ingestion or reading.
-
-    Parameters
-    ----------
-    path : str or Path
-        File path to validate.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the file does not exist.
-    """
     path = Path(path)
     if not path.exists():
         logger.error(f"File not found: {path}")
         raise FileNotFoundError(f"File not found: {path}")
-
     logger.info(f"Verified file exists: {path}")
 
 
@@ -67,20 +53,6 @@ def ensure_exists(path: str | Path) -> None:
 # Directory utilities
 # ==============================================================================
 def ensure_directory(path: str | Path) -> None:
-    """
-    Ensure a directory exists. If missing, create it.
-
-    Parameters
-    ----------
-    path : str or Path
-        Directory path to create if missing.
-
-    Notes
-    -----
-    - Idempotent
-    - Safe for Stage 02 landing-zone writes
-    - Used by Stage 04 report writer
-    """
     if not path:
         return
 
@@ -97,34 +69,12 @@ def ensure_directory(path: str | Path) -> None:
 # CSV / Parquet readers
 # ==============================================================================
 def read_csv(path: str | Path) -> pd.DataFrame:
-    """
-    Load a CSV file into a DataFrame.
-
-    Parameters
-    ----------
-    path : str or Path
-
-    Returns
-    -------
-    pd.DataFrame
-    """
     ensure_exists(path)
     logger.info(f"Reading CSV: {path}")
     return pd.read_csv(path)
 
 
 def read_parquet(path: str | Path) -> pd.DataFrame:
-    """
-    Load a Parquet file into a DataFrame.
-
-    Parameters
-    ----------
-    path : str or Path
-
-    Returns
-    -------
-    pd.DataFrame
-    """
     ensure_exists(path)
     logger.info(f"Reading Parquet: {path}")
     return pd.read_parquet(path)
@@ -134,23 +84,40 @@ def read_parquet(path: str | Path) -> pd.DataFrame:
 # DataFrame writer
 # ==============================================================================
 def write_df(df: pd.DataFrame, path: str | Path) -> None:
-    """
-    Write a DataFrame to disk (CSV).
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame to write.
-    path : str or Path
-        Output CSV path.
-
-    Notes
-    -----
-    - Used sparingly in Stage 02 landing-zone writes
-    - Safe for Stage 04 CSV outputs
-    """
     path = Path(path)
     ensure_directory(path.parent)
 
     logger.info(f"Writing DataFrame → {path}")
     df.to_csv(path, index=False)
+
+
+# ==============================================================================
+# Deterministic text I/O (added for diagnostics)
+# ==============================================================================
+def write_file(path: Path, content: str) -> None:
+    """
+    Deterministic UTF‑8 write with newline normalization.
+
+    Diagnostics contract:
+        - Normalize CRLF/CR → LF
+        - Overwrite deterministically
+        - UTF‑8 only
+    """
+    normalized = content.replace("\r\n", "\n").replace("\r", "\n")
+    path.write_text(normalized, encoding="utf-8")
+
+
+def read_file(path: Path) -> str:
+    """
+    Deterministic UTF‑8 read with newline normalization.
+
+    Diagnostics contract:
+        - Normalize CRLF/CR → LF
+        - Raise FileNotFoundError for missing files
+        - UTF‑8 only
+    """
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    raw = path.read_text(encoding="utf-8")
+    return raw.replace("\r\n", "\n").replace("\r", "\n")
