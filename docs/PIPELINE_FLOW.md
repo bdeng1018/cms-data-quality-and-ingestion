@@ -1,9 +1,7 @@
-# Pipeline Flow — CMS Data Quality & Ingestion Pipeline
+# Pipeline Flow — CMS Data Quality & Ingestion Pipeline (v1.1.1)
 
-The CMS Data Quality & Ingestion Pipeline processes POS/QIES data through a
-deterministic, contract‑driven, five‑stage architecture. Each stage produces
-well‑defined artifacts, exposes diagnostics, and feeds the next stage in a
-reproducible manner.
+The CMS Data Quality & Ingestion Pipeline processes POS/QIES data through a deterministic, contract‑driven, five‑stage architecture.
+Each stage produces well‑defined artifacts, exposes diagnostics, and feeds the next stage in a reproducible manner.
 
 ---
 
@@ -17,11 +15,11 @@ Stage 02 → Stage 01 → Stage 03 → Stage 04 → Stage 05
 
 This ordering ensures:
 
-- Stage 01 defines the canonical schema
-- Stage 02 ingests raw data using that schema
-- Stage 03 computes quality metrics
-- Stage 04 generates reports
-- Stage 05 orchestrates and summarizes
+- Stage 02 ingests and canonicalizes raw POS/QIES data
+- Stage 01 regenerates and validates the schema from cleaned data
+- Stage 03 computes deterministic quality metrics
+- Stage 04 generates structured reporting artifacts
+- Stage 05 orchestrates, validates, and summarizes the full run
 
 Mechanization (C++ schema validator + C++ row counter) runs in Stages 01 and 02.
 
@@ -63,7 +61,10 @@ More details: [mechanization layer](ca://s?q=Explain_C%2B%2B_mechanization_layer
         ┌────────────────────────────────────────────────┐
         │         Stage 03 — Data Quality Profiling      │
         │  - Run quality checks                          │
-        │  - Generate intermediate artifacts             │
+        │  - Compute completeness invariants (v1.1.1)    │
+        │  - Compute metadata completeness (v1.1.1)      │
+        │  - Compute drift severity (v1.1.1)             │
+        │  - Generate deterministic artifacts            │
         └───────────────┬────────────────────────────────┘
                         │
                         ▼
@@ -118,7 +119,15 @@ Stage 04 consumes Stage 03’s intermediate artifacts:
 - column profiles
 - quality summary
 
-These artifacts drive the reporting engine.
+New v1.1.1 fields:
+
+- `missing_required_columns`
+- `empty_required_columns`
+- `missing_metadata_fields`
+- `metadata_fields_with_nulls`
+- `drift_severity`
+
+These invariants improve downstream reporting accuracy and schema drift visibility.
 
 ### Stage 04 → Stage 05
 
@@ -153,7 +162,7 @@ All artifacts are deterministic and reproducible across environments.
 
 ---
 
-## 5. Mechanization Flow (v1.1.0)
+## 5. Mechanization Flow (v1.1.1)
 
 Mechanization runs in:
 
@@ -167,7 +176,7 @@ Mechanization metadata is included in the final summary:
   "mode": "python+cpp",
   "schema_validator_exit_code": 0,
   "row_counter_exit_code": 0,
-  "cpp_compiler_version": "g++-13"
+  "cpp_compiler_version": "g++ (placeholder)"
 }
 ```
 
@@ -202,14 +211,14 @@ executes all diagnostics in order.
 Logs are stage‑specific:
 
 ```code
-logs/ingestion.log        # Stage 02
-logs/quality.log          # Stage 03
-logs/runner.log           # Stage 04
-logs/mechanization.log    # Stages 01–02 (v1.1.0)
+logs/run_ingestion.log     # Stage 02
+logs/schema_loader.log     # Stage 01
+logs/quality.log           # Stage 03
+logs/runner.log            # Stage 04
+logs/mechanization.log     # Stages 01–02
 ```
 
-Stage 05 does not create a new log file.
-Instead, it produces a final summary artifact.
+Stage 05 produces a final summary artifact instead of a log.
 
 ---
 

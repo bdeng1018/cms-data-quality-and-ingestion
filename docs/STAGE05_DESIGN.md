@@ -1,24 +1,26 @@
-# Stage 05 Design — Pipeline Orchestrator
+# Stage 05 Design — Pipeline Orchestrator (v1.1.1)
 
-Stage 05 is the control plane of the CMS Data Quality & Ingestion Pipeline.  
-It is responsible for executing Stages 01–04 in order, validating their outputs, coordinating logs, and producing a final pipeline summary artifact.
+Stage 05 is the deterministic control plane of the CMS Data Quality & Ingestion Pipeline.
+It executes Stages 01–04 in order, validates their outputs, coordinates logs, and produces the final `pipeline_summary.json` artifact.
 
-This document describes the design, responsibilities, execution model, and error‑handling strategy of Stage 05.
+Stage 05 does **not** compute new quality metrics.
+Its role is orchestration, validation, and provenance.
 
 ---
 
-## 1. Purpose of Stage 05
+## 1. Purpose of Stage 05
 
-Stage 05 provides:
+Stage 05 provides:
 
-- **End‑to‑end orchestration** of the entire pipeline  
-- **Deterministic execution order**  
-- **Centralized configuration loading**  
-- **Cross‑stage validation**  
-- **Final pipeline summary generation**  
-- **Integration with diagnostics**  
+- **End‑to‑end orchestration** of Stages 01–04
+- **Deterministic execution order**
+- **Centralized configuration loading**
+- **Cross‑stage validation**
+- **Final pipeline summary generation**
+- **Mechanization provenance integration**
+- **Stable runtime + exit‑code reporting**
 
-Unlike Stages 01–04, which are domain‑specific and self‑contained, Stage 05 is responsible for coordinating the entire system.
+Unlike Stages 01–04, which are domain‑specific, Stage 05 coordinates the entire system.
 
 ---
 
@@ -26,13 +28,13 @@ Unlike Stages 01–04, which are domain‑specific and self‑contained, Stage 0
 
 ### Inputs
 
-Stage 05 consumes:
+Stage 05 consumes:
 
-- Cleaned data from Stage 02  
-- Schema from Stage 01  
-- Intermediate artifacts from Stage 03  
-- Reports from Stage 04  
-- Configuration from:
+- Stage 02 cleaned dataset
+- Stage 01 schema
+- Stage 03 quality artifacts
+- Stage 04 reporting artifacts
+- Pipeline configuration:
 
 ```code
 configs/pipeline.yml
@@ -48,24 +50,29 @@ data/stage05_reports/pipeline_summary.json
 
 This summary includes:
 
-- Stage execution order  
-- Success/failure status  
-- Timestamps  
-- Total pipeline duration  
-- Any warnings surfaced during execution  
+- stage execution order
+- success/failure status
+- timestamps
+- total pipeline duration
+- mechanization provenance
+- ingestion shape
+- exit codes
+- warnings (if any)
 
-Stage 05 does **not** produce its own log file.  
+Stage 05 does **not** produce its own log file.
 Logging remains stage‑scoped:
 
-```code
-logs/ingestion.log        # Stage 02
-logs/quality.log          # Stage 03
-logs/runner.log           # Stage 04
+```text
+logs/run_ingestion.log   # Stage 02
+logs/schema_loader.log   # Stage 01
+logs/quality.log         # Stage 03
+logs/runner.log          # Stage 04
+logs/mechanization.log   # mechanization provenance
 ```
 
 ---
 
-## 3. Execution Model
+## 3. Execution Model (v1.1.1)
 
 Stage 05 executes the pipeline in the following order:
 
@@ -77,16 +84,18 @@ This ordering is intentional:
 
 ### Why Stage 02 runs before Stage 01
 
-Stage 01 regenerates `schema.json` from cleaned Stage 02 data.  
+Stage 01 regenerates `schema.json` from cleaned Stage 02 data.
 Therefore, Stage 02 must run first.
 
-### Why Stage 03 runs after Stage 01  
+### Why Stage 03 runs after Stage 01
 
 Stage 03 quality checks depend on the schema produced by Stage 01.
 
-### Why Stage 04 runs after Stage 03  
+### Why Stage 04 runs after Stage 03
 
 Stage 04 reports depend on Stage 03 intermediate artifacts.
+
+This ordering is frozen and validated in v1.1.1.
 
 ---
 
@@ -142,7 +151,7 @@ Optional fields:
 - execution flags
 - future stage parameters
 
-Configuration is intentionally minimal to keep Stage 05 simple and predictable.
+Configuration is intentionally minimal to keep Stage 05 predictable.
 
 ---
 
@@ -152,8 +161,8 @@ Stage 05 uses a **fail‑fast** model:
 
 ### If a stage fails
 
-- The orchestrator stops immediately
-- The failure is recorded in the summary
+- Orchestration stops immediately
+- Failure is recorded in the summary
 - Diagnostics can be run to identify the issue
 
 ### If a stage produces incomplete artifacts
@@ -167,11 +176,11 @@ Stage 05 uses a **fail‑fast** model:
 - Stage 05 aborts before running any stage
 - Summary includes configuration error details
 
-This ensures pipeline correctness and prevents cascading failures.
+This prevents cascading failures and ensures deterministic behavior.
 
 ---
 
-## 7. Summary Artifact Design
+## 7. Summary Artifact Design (v1.1.1)
 
 The final output of Stage 05 is:
 
@@ -179,23 +188,46 @@ The final output of Stage 05 is:
 data/stage05_reports/pipeline_summary.json
 ```
 
-Recommended structure:
+### Real v1.1.1 fields
 
 ```json
 {
   "pipeline": "cms-data-quality-and-ingestion",
-  "timestamp_start": "2026-07-22T17:54:00",
-  "timestamp_end": "2026-07-22T17:54:42",
-  "duration_seconds": 42.3,
+  "timestamp_start": "2026-09-17T20:21:52.134860",
+  "timestamp_end": "2026-09-17T20:25:12.957663",
+  "duration_seconds": 200.822803,
   "stages": {
-    "stage02": "success",
     "stage01": "success",
+    "stage02": "success",
     "stage03": "success",
-    "stage04": "success"
+    "stage04": "success",
+    "mechanization": {
+      "schema_validator": "VALID",
+      "ingestion_utils_normalize": "OK",
+      "ingestion_utils_delimiter": ",",
+      "ingestion_utils_bom": "OK"
+    }
   },
-  "warnings": []
+  "warnings": [],
+  "mechanization": {
+    "mode": "python+cpp",
+    "cpp_compiler_version": "g++ (placeholder)",
+    "stage": "stage05",
+    "exit_code": 0,
+    "schema_validator_exit_code": 0,
+    "row_counter_exit_code": 0
+  }
 }
 ```
+
+### Key v1.1.1 metrics
+
+- **Runtime:** 200.82 seconds
+- **Ingestion shape:** 44,707 × 474
+- **Mechanization mode:** python+cpp
+- **Schema validator:** VALID
+- **Exit codes:** all zero
+- **Warnings:** none
 
 This artifact is the authoritative record of the pipeline run.
 
@@ -204,13 +236,13 @@ This artifact is the authoritative record of the pipeline run.
 ## 8. Diagnostics Integration
 
 Stage 05 does not run diagnostics automatically.
-Instead, diagnostics are executed via:
+Diagnostics are executed via:
 
 ```bash
 make diagnostics
 ```
 
-Stage 05’s own diagnostics script:
+Stage 05 diagnostics script:
 
 ```code
 scripts/diagnostics/stage05/check_pipeline.py
@@ -254,6 +286,6 @@ The orchestrator is intentionally simple to keep extension predictable.
 
 ## 10. Contact
 
-Maintainer: Brian Deng <br>
-Email: <bdeng.data.pipelines@gmail.com> <br>
+Maintainer: Brian Deng  <br>
+Email: <bdeng.data.pipelines@gmail.com>  <br>
 GitHub: <https://github.com/bdeng1018>

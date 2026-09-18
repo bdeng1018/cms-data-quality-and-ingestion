@@ -129,6 +129,77 @@ def compute_drift(
     }
 
 
+def compute_completeness(
+    df: pd.DataFrame, required_columns: List[str]
+) -> Dict[str, List[str]]:
+    """
+    Determine which required columns are missing or entirely null.
+
+    Args:
+        df: Raw DataFrame.
+        required_columns: Columns that must exist and contain non-null values.
+
+    Returns:
+        Dictionary with lists of missing and empty columns.
+    """
+    logger.debug("Checking QC completeness.")
+
+    missing = [col for col in required_columns if col not in df.columns]
+    empty = [
+        col for col in required_columns if col in df.columns and df[col].isna().all()
+    ]
+
+    return {
+        "missing_required_columns": missing,
+        "empty_required_columns": empty,
+    }
+
+
+def compute_metadata_completeness(
+    df: pd.DataFrame, metadata_fields: List[str]
+) -> Dict[str, List[str]]:
+    """
+    Check metadata fields for missing or null values.
+
+    Args:
+        df: Raw DataFrame.
+        metadata_fields: Metadata columns expected to be present and non-null.
+
+    Returns:
+        Dictionary with lists of missing metadata fields and fields with nulls.
+    """
+    logger.debug("Checking metadata completeness.")
+
+    missing = [col for col in metadata_fields if col not in df.columns]
+    null_fields = [
+        col for col in metadata_fields if col in df.columns and df[col].isna().any()
+    ]
+
+    return {
+        "missing_metadata_fields": missing,
+        "metadata_fields_with_nulls": null_fields,
+    }
+
+
+def classify_drift_severity(drift: Dict[str, List[str]]) -> str:
+    """
+    Classify drift severity based on missing/unexpected columns.
+
+    Returns:
+        'none', 'minor', or 'major'
+    """
+    missing = drift.get("missing_columns", [])
+    unexpected = drift.get("unexpected_columns", [])
+
+    if not missing and not unexpected:
+        return "none"
+
+    if len(missing) <= 1 and len(unexpected) <= 1:
+        return "minor"
+
+    return "major"
+
+
 def run_quality_checks(
     df: pd.DataFrame, expected_columns: List[str], key: str
 ) -> QualityReport:
@@ -149,6 +220,16 @@ def run_quality_checks(
     null_counts = compute_null_counts(df)
     duplicate_counts = compute_duplicate_counts(df, key)
     drift_indicators = compute_drift(df, expected_columns)
+    # QC completeness
+    required_columns = expected_columns  # reuse expected schema
+    completeness = compute_completeness(df, required_columns)
+
+    # Metadata completeness
+    metadata_fields = ["ccn", "facility_name", "state", "zip"]  # safe public fields
+    metadata_completeness = compute_metadata_completeness(df, metadata_fields)
+
+    # Drift severity
+    drift_severity = classify_drift_severity(drift_indicators)
 
     warnings = []
 
@@ -171,12 +252,47 @@ def run_quality_checks(
             f"Unexpected columns present: {drift_indicators['unexpected_columns']}"
         )
 
+    # Completeness warnings
+    if completeness["missing_required_columns"]:
+        warnings.append(
+            f"Missing required columns: {completeness['missing_required_columns']}"
+        )
+    if completeness["empty_required_columns"]:
+        warnings.append(
+            f"Required columns with all-null values: {completeness['empty_required_columns']}"
+        )
+
+    # Metadata warnings
+    if metadata_completeness["missing_metadata_fields"]:
+        warnings.append(
+            f"Missing metadata fields: {metadata_completeness['missing_metadata_fields']}"
+        )
+    if metadata_completeness["metadata_fields_with_nulls"]:
+        warnings.append(
+            f"Metadata fields containing nulls: {metadata_completeness['metadata_fields_with_nulls']}"
+        )
+
+    # Drift severity warning
+    if drift_severity == "major":
+        warnings.append("Major schema drift detected.")
+    elif drift_severity == "minor":
+        warnings.append("Minor schema drift detected.")
+
     logger.info("Stage 03 quality checks complete.")
 
     return QualityReport(
         row_count=row_count,
         null_counts=null_counts,
         duplicate_counts=duplicate_counts,
-        drift_indicators=drift_indicators,
+        drift_indicators={
+            **drift_indicators,
+            "drift_severity": [drift_severity],
+            "missing_required_columns": completeness["missing_required_columns"],
+            "empty_required_columns": completeness["empty_required_columns"],
+            "missing_metadata_fields": metadata_completeness["missing_metadata_fields"],
+            "metadata_fields_with_nulls": metadata_completeness[
+                "metadata_fields_with_nulls"
+            ],
+        },
         warnings=warnings,
     )

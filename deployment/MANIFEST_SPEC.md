@@ -1,16 +1,13 @@
 # MANIFEST_SPEC.md
 
-CMS Data Quality & Ingestion Pipeline — Manifest Specification
+CMS Data Quality & Ingestion Pipeline — Manifest Specification (v1.1.1)
 
 ## 1. Purpose
 
 This document defines the formal JSON schema for pipeline run manifests.
-Manifests capture run metadata, environment details, artifact registry references,
-diagnostics summaries, mechanization metadata, and provenance information for
-deterministic, reproducible execution.
+Manifests capture run metadata, environment details, artifact registry references, diagnostics summaries, mechanization metadata, and provenance information for deterministic, reproducible execution.
 
-All CLI tools, Docker execution, docker‑compose execution, CI/CD workflows, and
-pipeline runner code must comply with this specification.
+All CLI tools, Docker execution, docker‑compose execution, CI/CD workflows, and pipeline runner code must comply with this specification.
 
 ---
 
@@ -28,7 +25,7 @@ It provides:
 - artifact registry path + hash
 - diagnostics summary
 - provenance information
-- mechanization mode (python-only vs python+cpp)
+- mechanization mode (python‑only vs python+cpp)
 - C++ mechanization logs + exit codes
 
 Manifests are **immutable**, **deterministic**, and **versioned**.
@@ -112,9 +109,9 @@ Manifests must never overwrite previous versions unless explicitly versioned.
   "warnings": ["string"],
   "tags": ["string"],
   "debug": {
-      "intermediate_artifacts": ["string"],
-      "diagnostic_files": ["string"],
-      "cpp_logs": ["string"]
+    "intermediate_artifacts": ["string"],
+    "diagnostic_files": ["string"],
+    "cpp_logs": ["string"]
   }
 }
 ```
@@ -126,6 +123,7 @@ Manifests must never overwrite previous versions unless explicitly versioned.
 ### 5.1 `run_id`
 
 Unique identifier for the run.
+
 Format: `cms_<YYYYMMDD>_<HHMMSS>_<random_suffix>`
 
 ### 5.2 `timestamp_start` / `timestamp_end`

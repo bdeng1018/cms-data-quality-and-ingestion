@@ -80,8 +80,23 @@ def write_quality_summary(summary: dict, base_dir: Path = DEFAULT_INTERMEDIATE_D
     ensure_dir(base_dir)
     out_path = base_dir / "quality_summary.json"
 
+    # Expand summary with optional v1.1.1 fields if present
+    optional_fields = [
+        "missing_required_columns",
+        "empty_required_columns",
+        "missing_metadata_fields",
+        "metadata_fields_with_nulls",
+        "drift_severity",
+    ]
+
+    expanded_summary = dict(summary)
+
+    for field in optional_fields:
+        if field in summary:
+            expanded_summary[field] = summary[field]
+
     # Enforce deterministic key ordering
-    sorted_summary = {k: summary[k] for k in sorted(summary.keys())}
+    sorted_summary = {k: expanded_summary[k] for k in sorted(expanded_summary.keys())}
 
     with out_path.open("w") as f:
         json.dump(sorted_summary, f, indent=2)

@@ -24,4 +24,4 @@ description: CMS Data Quality & Ingestion Pipeline — Deterministic Helm Deploy
 type: application
 
 version: 0.1.0 # Helm chart version
-appVersion: "0.1.0" # Pipeline version (semantic)
+appVersion: "v1.1.1" # Pipeline version (semantic)

@@ -1,22 +1,17 @@
 # ==============================================================================
-# CMS Data Quality & Ingestion Pipeline (GitHub Actions CI/CD)
+# CMS Data Quality & Ingestion Pipeline (Deployment CI)
 # ==============================================================================
 # Intent:
-#   Provide a deterministic CI/CD pipeline for the CMS ingestion repo. This
-#   workflow enforces reproducible builds, tests, mechanization validation,
-#   manifest validation, and optional Docker image publishing.
+#   Deterministic CI for deployment validation. Ensures reproducible builds,
+#   mechanization correctness, manifest/SBOM/provenance validation, and
+#   deterministic Docker image creation.
 #
 # Determinism Guarantees:
-#   - Pinned Python version.
-#   - Pinned dependency installation via uv.
-#   - Deterministic C++ toolchain installation.
-#   - Stable job names and steps.
-#
-# Side Effects:
-#   - Runs Python + C++ tests.
-#   - Validates manifests + artifacts.
-#   - Builds Docker image (with C++ mechanization).
-#   - Optionally pushes image to registry.
+#   - Pinned Python version
+#   - Pinned dependency installation via uv
+#   - Deterministic C++ toolchain installation
+#   - Deterministic metadata injection
+#   - Deterministic artifact validation
 # ==============================================================================
 
 name: cms-ingestion-ci
@@ -27,14 +22,17 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  VERSION: "v1.1.1"
+
 jobs:
   build-test-validate:
     runs-on: ubuntu-latest
 
     steps:
-      # ==========================================================================
+      # ====================================================================
       # Checkout + Python Setup
-      # ==========================================================================
+      # ====================================================================
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -43,58 +41,90 @@ jobs:
         with:
           python-version: "3.11"
 
-      # ==========================================================================
+      # ====================================================================
       # Install Dependencies (Deterministic)
-      # ==========================================================================
+      # ====================================================================
       - name: Install uv and sync dependencies
         run: |
           pip install --upgrade pip
           pip install uv
           uv sync --frozen
 
-      # ==========================================================================
+      # ====================================================================
       # Install Deterministic C++ Toolchain
-      # ==========================================================================
+      # ====================================================================
       - name: Install C++ toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y g++ make cmake ninja-build
 
-      # ==========================================================================
+      # ====================================================================
       # Build C++ Mechanization Layer
-      # ==========================================================================
+      # ====================================================================
       - name: Build C++ mechanization binaries
-        run: |
-          make cpp-all
+        run: make cpp-all
 
-      # ==========================================================================
+      # ====================================================================
       # Run Python + C++ Tests
-      # ==========================================================================
+      # ====================================================================
       - name: Run tests
         run: |
           make test
           pytest -m cpp_all
 
-      # ==========================================================================
-      # Validate Manifest
-      # ==========================================================================
-      - name: Validate manifest
-        run: |
-          python scripts/diagnostics/stage05/check_pipeline.py
+      # ====================================================================
+      # Validate Stage 05 Pipeline Contract
+      # ====================================================================
+      - name: Validate pipeline contract
+        run: python scripts/diagnostics/stage05/check_pipeline.py
 
-      # ==========================================================================
-      # Validate Artifact Registry
-      # ==========================================================================
+      # ====================================================================
+      # Validate Stage 04 Artifact Registry
+      # ====================================================================
       - name: Validate artifact registry
-        run: |
-          python scripts/diagnostics/stage04/check_reports.py
+        run: python scripts/diagnostics/stage04/check_reports.py
 
-      # ==========================================================================
-      # Build Docker Image (with C++ mechanization)
-      # ==========================================================================
+      # ====================================================================
+      # Inject Deterministic Metadata (Required for Provenance)
+      # ====================================================================
+      - name: Set workflow metadata
+        run: |
+          echo "WORKFLOW_FILE=deployment/ci/github-actions.yml" >> $GITHUB_ENV
+          echo "EXECUTION_ENVIRONMENT=github-actions" >> $GITHUB_ENV
+          echo "CONTAINER_RUNTIME=docker" >> $GITHUB_ENV
+
+      - name: Set provenance metadata
+        run: |
+          echo "DOCKER_VERSION=$(docker --version)" >> $GITHUB_ENV
+          echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
+          echo "REPOSITORY_URL=https://github.com/bdeng1018/cms-data-quality-and-ingestion" >> $GITHUB_ENV
+          echo "GHCR_NAMESPACE=bdeng1018" >> $GITHUB_ENV
+          echo "GIT_REF=${GITHUB_REF}" >> $GITHUB_ENV
+          echo "ISO8601_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          echo "RELEASE_DATE=$(date -u +"%Y-%m-%d")" >> $GITHUB_ENV
+
+      # ====================================================================
+      # Validate Manifest / SBOM / Provenance / Signature
+      # ====================================================================
+      - name: Validate manifest
+        run: python deployment/scripts/validate_manifest.py ${VERSION}
+
+      - name: Validate SBOM
+        run: python deployment/scripts/validate_sbom.py ${VERSION}
+
+      - name: Validate provenance
+        run: python deployment/scripts/validate_provenance.py ${VERSION}
+
+      - name: Validate signature
+        run: python deployment/scripts/validate_signature.py ${VERSION}
+
+      # ====================================================================
+      # Build Deterministic Docker Image
+      # ====================================================================
       - name: Build Docker image
         run: |
-          docker build -f deployment/Dockerfile -t cms_ingestion:ci .
+          docker build -f deployment/Dockerfile -t cms_ingestion:${VERSION} .
+          docker tag cms_ingestion:${VERSION} ghcr.io/bdeng1018/cms-ingestion:${VERSION}
 
   # ============================================================================
   # Optional Publish Job
@@ -113,5 +143,5 @@ jobs:
 
       - name: Build and push image
         run: |
-          docker build -f deployment/Dockerfile -t cms_ingestion:latest .
-          # docker push your-registry/cms_ingestion:latest
+          docker build -f deployment/Dockerfile -t cms_ingestion:${VERSION} .
+          # docker push ghcr.io/bdeng1018/cms-ingestion:${VERSION}

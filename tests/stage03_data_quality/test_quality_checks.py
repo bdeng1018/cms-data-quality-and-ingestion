@@ -39,6 +39,11 @@ def test_quality_report_structure():
     assert isinstance(report.duplicate_counts, dict)
     assert isinstance(report.drift_indicators, dict)
     assert isinstance(report.warnings, list)
+    assert "drift_severity" in report.drift_indicators
+    assert "missing_required_columns" in report.drift_indicators
+    assert "empty_required_columns" in report.drift_indicators
+    assert "missing_metadata_fields" in report.drift_indicators
+    assert "metadata_fields_with_nulls" in report.drift_indicators
 
 
 def test_null_counts():
@@ -79,6 +84,7 @@ def test_drift_detection_missing_columns():
 
     assert "provider_type" in report.drift_indicators["missing_columns"]
     assert any("Missing expected columns" in w for w in report.warnings)
+    assert report.drift_indicators["drift_severity"] == ["minor"]
 
 
 def test_drift_detection_unexpected_columns():
@@ -95,6 +101,7 @@ def test_drift_detection_unexpected_columns():
 
     assert "extra_col" in report.drift_indicators["unexpected_columns"]
     assert any("Unexpected columns" in w for w in report.warnings)
+    assert report.drift_indicators["drift_severity"] == ["minor"]
 
 
 # --- Deterministic behavior tests for Stage 03 quality_checks.py ---
@@ -131,6 +138,26 @@ def test_quality_checks_are_deterministic():
 
     # Deterministic warnings
     assert r1.warnings == r2.warnings, "warnings list must be deterministic"
+
+    assert (
+        r1.drift_indicators["drift_severity"] == r2.drift_indicators["drift_severity"]
+    )
+    assert (
+        r1.drift_indicators["missing_required_columns"]
+        == r2.drift_indicators["missing_required_columns"]
+    )
+    assert (
+        r1.drift_indicators["empty_required_columns"]
+        == r2.drift_indicators["empty_required_columns"]
+    )
+    assert (
+        r1.drift_indicators["missing_metadata_fields"]
+        == r2.drift_indicators["missing_metadata_fields"]
+    )
+    assert (
+        r1.drift_indicators["metadata_fields_with_nulls"]
+        == r2.drift_indicators["metadata_fields_with_nulls"]
+    )
 
 
 def test_null_counts_key_order_is_deterministic():
@@ -195,6 +222,9 @@ def test_drift_indicators_are_deterministic():
     assert (
         r1.drift_indicators == r2.drift_indicators
     ), "drift_indicators must be deterministic"
+    assert (
+        r1.drift_indicators["drift_severity"] == r2.drift_indicators["drift_severity"]
+    )
 
 
 def test_quality_report_serializable_deterministically():
@@ -221,3 +251,28 @@ def test_quality_report_serializable_deterministically():
     assert list(serialized.keys()) == sorted(
         serialized.keys()
     ), "Serialized QualityReport keys must be sorted deterministically"
+    assert "drift_severity" in report.drift_indicators
+
+
+def test_completeness_and_metadata_completeness():
+    df = pd.DataFrame(
+        {
+            "ccn": [None, None],
+            "provider_type": ["A", "B"],
+            "state": [None, None],
+            # facility_name and zip missing entirely
+        }
+    )
+
+    expected_cols = ["ccn", "provider_type"]
+
+    report = run_quality_checks(df, expected_cols, key="ccn")
+
+    # Required columns
+    assert "ccn" in report.drift_indicators["empty_required_columns"]
+    assert "provider_type" not in report.drift_indicators["empty_required_columns"]
+
+    # Metadata completeness
+    assert "facility_name" in report.drift_indicators["missing_metadata_fields"]
+    assert "zip" in report.drift_indicators["missing_metadata_fields"]
+    assert "state" in report.drift_indicators["metadata_fields_with_nulls"]

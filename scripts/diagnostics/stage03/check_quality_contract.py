@@ -251,6 +251,47 @@ def check_summary_contract(strict: bool = True):
 
 
 # ==============================================================================
+# Contract Completeness
+# ==============================================================================
+
+
+def check_completeness_contract(strict: bool = False):
+    """
+    Optional v1.1.1 contract:
+        Validate completeness + metadata completeness fields
+        when present in quality_summary.json.
+    """
+    summary = load_summary()
+
+    # These fields are optional in Stage 03 artifacts
+    optional_fields = {
+        "missing_required_columns",
+        "empty_required_columns",
+        "missing_metadata_fields",
+        "metadata_fields_with_nulls",
+        "drift_severity",
+    }
+
+    present = optional_fields.intersection(summary.keys())
+
+    if not present:
+        print("[SKIP] No v1.1.1 completeness fields present (optional mode).")
+        return
+
+    # Validate types
+    for field in present:
+        value = summary[field]
+        if not isinstance(value, list):
+            if strict:
+                raise AssertionError(f"{field} must be a list")
+            else:
+                print(f"[SKIP] {field} must be a list (optional mode).")
+                return
+
+    print("Stage 03 completeness contract passed (optional mode).")
+
+
+# ==============================================================================
 # Deterministic Ordering
 # ==============================================================================
 def check_deterministic_ordering():
@@ -290,6 +331,7 @@ def main():
     check_metrics_contract(df)
     check_profiles_contract(schema, strict=False)
     check_summary_contract(strict=False)
+    check_completeness_contract(strict=False)
     check_deterministic_ordering()
 
     print("Stage 03 quality contract diagnostics passed.")

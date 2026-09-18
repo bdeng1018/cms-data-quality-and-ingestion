@@ -10,24 +10,14 @@
 # Determinism Guarantees:
 #   - Identical outputs given identical inputs.
 #   - Pinned Python version (3.11).
-#   - Pinned C++ compiler (g++ 13.x) for deterministic mechanization.
+#   - Deterministic C++ toolchain for mechanization.
 #   - Stable directory structure under /app for artifacts, logs, and manifests.
-#
-# Side Effects:
-#   - Artifacts written to /app/data.
-#   - Logs written to /app/logs.
-#   - Stage 05 produces manifest + provenance registry.
-#
-# Future Extensions:
-#   - Replace entrypoint with `cms run` after CLI implementation.
-#   - Add healthcheck for long-running ingestion jobs.
-#   - Integrate with K8s/Helm/Terraform deployment layers.
 # ==============================================================================
 
 # ==============================================================================
-# Base Image
+# Base Image (Ubuntu-based, ARM64-stable)
 # ==============================================================================
-FROM python:3.11-slim AS base
+FROM python:3.11 AS base
 
 # ==============================================================================
 # OCI Source Label (GHCR Linking)
@@ -49,17 +39,9 @@ WORKDIR /app
 # ==============================================================================
 # System Dependencies (Deterministic C++ Mechanization)
 # ==============================================================================
-# Intent:
-#   Install deterministic C++ toolchain for Stage 01 mechanization utilities.
-#
-# Determinism:
-#   - g++ version pinned to Debian stable release.
-#   - No dynamic apt dependency resolution beyond required packages.
-# ==============================================================================
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    g++ \
-    make \
+    build-essential \
     cmake \
     ninja-build && \
     rm -rf /var/lib/apt/lists/*
@@ -68,13 +50,13 @@ RUN apt-get update && \
 # Dependency Contracts
 # ==============================================================================
 COPY environment.yml ./
-COPY deployment/requirements.txt ./
+COPY deployment/requirements.txt ./deployment/requirements.txt
 
 # ==============================================================================
 # Deterministic Dependency Installation (pip)
 # ==============================================================================
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r deployment/requirements.txt
 
 # ==============================================================================
 # Pipeline Source Code
@@ -88,13 +70,13 @@ COPY deployment/ /app/deployment/
 # ==============================================================================
 # Makefiles + CLI Entrypoints
 # ==============================================================================
-COPY Makefile .
-COPY deployment/Makefile.deploy .
+COPY Makefile /app/Makefile
+COPY deployment/Makefile.deploy /app/deployment/Makefile.deploy
 
 # ==============================================================================
 # Artifact + Log Directories
 # ==============================================================================
-RUN mkdir -p data logs
+RUN mkdir -p /app/data /app/logs
 
 # ==============================================================================
 # CLI Entrypoint

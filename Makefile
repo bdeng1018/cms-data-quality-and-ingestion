@@ -415,7 +415,7 @@ env: ## Create conda environment
 .PHONY: deploy
 deploy: ## Run deployment orchestrator (delegates to deployment/Makefile.deploy)
 	@echo "Running deployment orchestrator..."
-	$(MAKE) -f deployment/Makefile.deploy deploy
+	$(MAKE) -C deployment -f Makefile.deploy deploy
 	@echo "Deployment complete."
 
 # ==============================================================================

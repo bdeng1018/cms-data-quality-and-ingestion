@@ -2,26 +2,26 @@
 
 ## Documentation Contract
 
-This document defines the deterministic Software Bill of Materials (SBOM)
-structure for the CMS Data Quality & Ingestion Pipeline. The SBOM provides a
-reproducible inventory of all dependencies, versions, artifacts, schemas,
-manifests, and deployment components.
+This document defines the deterministic Software Bill of Materials (SBOM) structure for the CMS Data Quality & Ingestion Pipeline.
+The SBOM provides a reproducible inventory of all dependencies, versions, artifacts, schemas, manifests, mechanization metadata, and deployment components.
 
 ### Determinism Guarantees
 
-- stable SBOM structure  
-- stable dependency inventory  
-- pinned versions  
-- reproducible provenance fields  
-- deterministic ordering  
+- stable SBOM structure
+- stable dependency inventory
+- pinned versions
+- reproducible provenance fields
+- deterministic ordering
+- deterministic artifact indexing
 
 ### Side Effects
 
-- documents dependency evolution  
-- documents artifact evolution  
-- documents schema evolution  
-- documents deployment evolution  
-- documents observability evolution  
+- documents dependency evolution
+- documents artifact evolution
+- documents schema evolution
+- documents deployment evolution
+- documents observability evolution
+- documents mechanization evolution
 
 ---
 
@@ -49,15 +49,15 @@ This structure must never change without a **MAJOR** version bump.
 
 The pipeline section must include:
 
-- pipeline_version  
-- pipeline entrypoint  
-- pipeline stages  
-- pipeline execution semantics  
+- pipeline_version
+- pipeline entrypoint
+- pipeline stages
+- pipeline execution semantics
 
 Example:
 
 ```yaml
-pipeline_version: 1.2.0
+pipeline_version: 1.1.1
 entrypoint: src/stage05_pipeline_runner/run_pipeline.py
 stages:
   - stage01_schema_definition
@@ -65,6 +65,7 @@ stages:
   - stage03_data_quality
   - stage04_reporting
   - stage05_pipeline_runner
+execution: deterministic
 ```
 
 ---
@@ -73,10 +74,10 @@ stages:
 
 Dependencies must be listed with:
 
-- name  
-- version  
-- source  
-- hash (future)  
+- name
+- version
+- source
+- hash (future)
 
 Example:
 
@@ -91,9 +92,9 @@ dependencies:
 
 Dependencies must match:
 
-- `uv.lock`  
-- `environment.yml`  
-- CI/CD installation logs  
+- `uv.lock`
+- `environment.yml`
+- CI/CD installation logs
 
 ---
 
@@ -101,25 +102,27 @@ Dependencies must match:
 
 Artifacts must include:
 
-- artifact_version  
-- artifact list  
-- artifact sizes  
-- artifact hashes (future)  
+- artifact_version
+- artifact list
+- artifact sizes
+- artifact hashes (future)
 
-Example:
+Example (v1.1.1):
 
 ```yaml
 artifacts:
   - dataset_summary.json
-  - facility_health.csv
+  - top_facilities.csv
+  - bottom_facilities.csv
+  - sparse_columns.json
   - column_health.json
-  - report_index.json
+  - pipeline_summary.json
 ```
 
 Artifact version must match:
 
-- Stage 04 output  
-- manifest.provenance  
+- Stage 04 output
+- Stage 05 provenance
 
 ---
 
@@ -127,21 +130,21 @@ Artifact version must match:
 
 Schemas must include:
 
-- schema_version  
-- schema file path  
-- schema hash (future)  
+- schema_version
+- schema file path
+- schema hash (future)
 
 Example:
 
 ```yaml
 schemas:
-  - stage01_schema/schema.json (v1.0.0)
+  - stage01_schema/schema.json (v1.1.1)
 ```
 
 Schema version must match:
 
-- Stage 01 diagnostics  
-- manifest.provenance  
+- Stage 01 diagnostics
+- manifest.provenance
 
 ---
 
@@ -149,21 +152,21 @@ Schema version must match:
 
 Manifests must include:
 
-- manifest_version  
-- manifest file path  
-- manifest structure hash (future)  
+- manifest_version
+- manifest file path
+- manifest structure hash (future)
 
 Example:
 
 ```yaml
 manifests:
-  - pipeline_summary.json (v1.2.0)
+  - manifest.json (v1.1.1)
 ```
 
 Manifest version must match:
 
-- Stage 05 output  
-- provenance metadata  
+- Stage 05 output
+- provenance metadata
 
 ---
 
@@ -171,11 +174,11 @@ Manifest version must match:
 
 Deployment components must include:
 
-- deployment_version  
-- Dockerfile hash (future)  
-- Compose version  
-- Helm chart version  
-- Terraform version  
+- deployment_version
+- Dockerfile hash (future)
+- Compose version
+- Helm chart version
+- Terraform version
 
 Example:
 
@@ -189,8 +192,8 @@ deployment:
 
 Deployment version must match:
 
-- CI/CD logs  
-- manifest.provenance  
+- CI/CD logs
+- manifest.provenance
 
 ---
 
@@ -198,10 +201,10 @@ Deployment version must match:
 
 Observability components must include:
 
-- metrics version  
-- alerts version  
-- dashboards version  
-- logging version  
+- metrics version
+- alerts version
+- dashboards version
+- logging version
 
 Example:
 
@@ -227,15 +230,18 @@ manifest_version
 deployment_version
 observability_version (future)
 sbom_version
+mechanization_mode
+cpp_compiler_version
 ```
 
 SBOM version must increment when:
 
-- dependency inventory changes  
-- schema changes  
-- artifact formats change  
-- manifest structure changes  
-- deployment topology changes  
+- dependency inventory changes
+- schema changes
+- artifact formats change
+- manifest structure changes
+- deployment topology changes
+- mechanization behavior changes
 
 ---
 
@@ -243,12 +249,13 @@ SBOM version must increment when:
 
 SBOMs **must**:
 
-- follow pinned structure  
-- follow pinned version bump rules  
-- avoid nondeterministic ordering  
-- avoid nondeterministic categories  
-- be validated in CI/CD  
-- be included in manifest.provenance  
+- follow pinned structure
+- follow pinned version bump rules
+- avoid nondeterministic ordering
+- avoid nondeterministic categories
+- be validated in CI/CD
+- be included in manifest.provenance
+- be reproducible from a clean clone
 
 This ensures SBOM behavior is identical across all environments.
 
@@ -256,9 +263,10 @@ This ensures SBOM behavior is identical across all environments.
 
 ## Future Extensions
 
-- SBOM hashing  
-- SBOM signing (cosign)  
-- SBOM attestation (in-toto)  
-- distributed ingestion SBOMs  
-- multi-region SBOMs  
-- RAG/AI indexing SBOMs  
+- SBOM hashing
+- SBOM signing (cosign)
+- SBOM attestation (in-toto)
+- distributed ingestion SBOMs
+- multi-region SBOMs
+- RAG/AI indexing SBOMs
+- mechanization performance metrics

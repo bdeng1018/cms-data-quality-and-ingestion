@@ -1,4 +1,4 @@
-# Architecture Overview - CMS Data Quality & Ingestion Pipeline
+# Architecture Overview — CMS Data Quality & Ingestion Pipeline (v1.1.1)
 
 The CMS Data Quality & Ingestion Pipeline is a deterministic, contract‑driven system for ingesting, validating, profiling, and reporting on CMS POS/QIES data.
 
@@ -10,27 +10,35 @@ This document describes the **pipeline architecture** (Stages 01–05) and the
 
 The pipeline is designed to:
 
-- Ingest CMS POS/QIES data reliably
-- Apply deterministic cleaning and normalization
-- Enforce strict schema consistency
-- Produce validated intermediate artifacts
-- Generate reproducible quality reports
-- Provide a Stage 05 orchestrator for full end‑to‑end execution
-- Expose diagnostics at every stage
-- Maintain strict separation between code, configs, data, and diagnostics
-- Support deterministic deployment across local, Docker, Compoase, and CI/CD
+- ingest CMS POS/QIES data reliably
+- apply deterministic cleaning and normalization
+- enforce strict schema consistency
+- produce validated intermediate artifacts
+- generate reproducible quality reports
+- provide a Stage 05 orchestrator for full end‑to‑end execution
+- expose diagnostics at every stage
+- maintain strict separation between code, configs, data, and diagnostics
+- support deterministic deployment across local, Docker, Compose, and CI/CD
 
-The architecture emphasizes **clarity**, **traceability**, **reproducibility**, and **audit-friendly behavior**.
+The architecture emphasizes **clarity**, **traceability**, **reproducibility**, and **audit‑friendly behavior**.
 
 ---
 
-## 2. High‑Level Pipeline Flow
+## 2. High‑Level Pipeline Flow (v1.1.1)
 
 ```text
 Raw Data → Stage 02 → Cleaned Data → Stage 01 → Schema → Stage 03 → Quality Artifacts → Stage 04 → Reports → Stage 05 → Pipeline Summary
 ```
 
 Each stage is independent, testable, diagnosable, and produces deterministics artifacts.
+
+Real v1.1.1 metrics:
+
+- Stage 02 cleaned dataset: **44,707 rows × 474 columns**
+- Stage 01 schema regenerated deterministically
+- Stage 03 quality score: **15.2%**
+- Stage 04 column health: **474/474 healthy**
+- Stage 05 runtime: **200.82 seconds**
 
 ---
 
@@ -43,10 +51,8 @@ Each stage is independent, testable, diagnosable, and produces deterministics ar
 - Ensures column count, order, and naming.
 - Provides diagnostics verifying schema integrity.
 
-**Inputs:** `data/stage02_cleaned/cleaned_data.csv`
+**Inputs:** `data/stage02_cleaned/cleaned_data.csv`  <br>
 **Outputs:** `data/stage01_schema/schema.json`
-
----
 
 ### Stage 02 — Raw Ingestion + Cleaning
 
@@ -54,45 +60,47 @@ Each stage is independent, testable, diagnosable, and produces deterministics ar
 - Ingests POS/QIES into parquet/CSV.
 - Applies deterministic cleaning rules.
 - Produces canonical cleaned dataset.
+- Performs deterministic C++ row counting.
 
-**Inputs:** Raw POS/QIES files
+**Inputs:** Raw POS/QIES files  <br>
 **Outputs:**
 
 - `data/stage02_raw/`
 - `data/stage02_cleaned/cleaned_data.csv`
 
----
-
 ### Stage 03 — Data Quality Profiling
 
 - Runs quality checks on cleaned data.
-- Generates intermediate artifacts (metrics, flags, distributions).
+- Computes completeness invariants (v1.1.1).
+- Computes metadata completeness (v1.1.1).
+- Computes drift severity (v1.1.1).
+- Generates deterministic intermediate artifacts.
 - Includes diagnostics validating quality outputs.
 
-**Inputs:** Cleaned data + schema
+**Inputs:** Cleaned data + schema  <br>
 **Outputs:** `data/stage03_intermediate/`
-
----
 
 ### Stage 04 — Reporting
 
 - Consumes Stage 03 artifacts.
 - Generates formatted reports (CSV/JSON/Markdown).
+- Evaluates column health contracts.
+- Evaluates sparse column contracts.
+- Ranks facilities by completeness.
 - Includes diagnostics verifying report completeness.
 
-**Inputs:** Intermediate artifacts
+**Inputs:** Intermediate artifacts  <br>
 **Outputs:** `data/stage04_processed/`
-
----
 
 ### Stage 05 — Pipeline Runner (Orchestrator)
 
 - Executes Stages 01–04 deterministically.
 - Loads configuration from `configs/pipeline.yml`.
+- Collects mechanization metadata.
 - Writes final pipeline summary.
 - Includes diagnostics validating the full pipeline run.
 
-**Inputs:** All previous stage outputs
+**Inputs:** All previous stage outputs  <br>
 **Outputs:**
 
 - `data/stage05_reports/`
@@ -210,9 +218,11 @@ The Makefile is the primary developer interface.
 Stage-specific logs:
 
 ```text
-logs/ingestion.log        # Stage 02
-logs/quality.log          # Stage 03
-logs/runner.log           # Stage 04
+logs/run_ingestion.log     # Stage 02
+logs/schema_loader.log     # Stage 01
+logs/quality.log           # Stage 03
+logs/runner.log            # Stage 04
+logs/mechanization.log     # Stages 01–02
 ```
 
 Stage 05 does not create a new log file.
@@ -228,8 +238,7 @@ This summary captures:
 - success/failure status
 - timestamps
 - total pipeline duration
-
-Logging remains stage‑scoped, while Stage 05 focuses on orchestration.
+- mechanization metadata
 
 ---
 

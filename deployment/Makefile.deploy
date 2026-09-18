@@ -20,9 +20,9 @@
 # Note: C++ mechanization binaries are built in CI (make cpp-all) and included via src/.
 # ==============================================================================
 
-PROJECT_ROOT := .
+PROJECT_ROOT := ..
 DOCKERFILE := deployment/Dockerfile
-COMPOSE := compose.yml
+COMPOSE := ../compose.yml
 IMAGE_NAME := cms_ingestion
 IMAGE_TAG := latest
 
@@ -35,13 +35,13 @@ VERSION ?= dev
 .PHONY: help
 
 help:
-    @echo ""
-    @echo "CMS Deployment — Commands"
-    @echo "-------------------------"
-    @grep -E '^[a-zA-Z0-9_-]+:.*##' Makefile.deploy \
-        | sed -E 's/^(.*):.*##(.*)/\1:\2/' \
-        | sed -E 's/^([^:]+):/\1:  /'
-    @echo ""
+	@echo ""
+	@echo "CMS Deployment — Commands"
+	@echo "-------------------------"
+	@grep -E '^[a-zA-Z0-9_-]+:.*##' Makefile.deploy \
+		| sed -E 's/^(.*):.*##(.*)/\1:\2/' \
+		| sed -E 's/^([^:]+):/\1:  /'
+	@echo ""
 
 # ==============================================================================
 # Docker Build — Deterministic
@@ -53,8 +53,8 @@ help:
 .PHONY: docker-build
 
 docker-build: ## Build deterministic Docker image
-    @echo "=== Building deterministic Docker image ==="
-    docker build -f $(DOCKERFILE) -t $(IMAGE_NAME):$(IMAGE_TAG) $(PROJECT_ROOT)
+	@echo "=== Building deterministic Docker image ==="
+	docker build -f ../$(DOCKERFILE) -t $(IMAGE_NAME):$(IMAGE_TAG) ..
 
 # ==============================================================================
 # Docker Run — Deterministic (No Compose)
@@ -65,16 +65,16 @@ docker-build: ## Build deterministic Docker image
 .PHONY: docker-run
 
 docker-run: ## Run pipeline inside Docker image (no Compose)
-    @echo "=== Running pipeline inside Docker image ==="
-    docker run --rm \
-        -v $(PROJECT_ROOT)/configs:/app/configs:ro \
-        -v $(PROJECT_ROOT)/src:/app/src:ro \
-        -v $(PROJECT_ROOT)/utils:/app/utils:ro \
-        -v $(PROJECT_ROOT)/scripts:/app/scripts:ro \
-        -v $(PROJECT_ROOT)/deployment:/app/deployment:ro \
-        -v $(PROJECT_ROOT)/data:/app/data \
-        -v $(PROJECT_ROOT)/logs:/app/logs \
-        $(IMAGE_NAME):$(IMAGE_TAG)
+	@echo "=== Running pipeline inside Docker image ==="
+	docker run --rm \
+		-v $(PROJECT_ROOT)/configs:/app/configs:ro \
+		-v $(PROJECT_ROOT)/src:/app/src:ro \
+		-v $(PROJECT_ROOT)/utils:/app/utils:ro \
+		-v $(PROJECT_ROOT)/scripts:/app/scripts:ro \
+		-v $(PROJECT_ROOT)/deployment:/app/deployment:ro \
+		-v $(PROJECT_ROOT)/data:/app/data \
+		-v $(PROJECT_ROOT)/logs:/app/logs \
+		$(IMAGE_NAME):$(IMAGE_TAG)
 
 # ==============================================================================
 # Compose Up / Down / Restart
@@ -83,17 +83,17 @@ docker-run: ## Run pipeline inside Docker image (no Compose)
 .PHONY: compose-up compose-down compose-restart
 
 compose-up: ## Start full deployment environment using Compose
-    @echo "=== Starting deterministic deployment environment ==="
-    docker compose -f $(COMPOSE) up --build
+	@echo "=== Starting deterministic deployment environment ==="
+	docker compose -f $(COMPOSE) up --build
 
 compose-down: ## Shut down deployment environment
-    @echo "=== Shutting down deployment environment ==="
-    docker compose -f $(COMPOSE) down
+	@echo "=== Shutting down deployment environment ==="
+	docker compose -f $(COMPOSE) down
 
 compose-restart: ## Restart deployment environment
-    @echo "=== Restarting deployment environment ==="
-    docker compose -f $(COMPOSE) down
-    docker compose -f $(COMPOSE) up --build
+	@echo "=== Restarting deployment environment ==="
+	docker compose -f $(COMPOSE) down
+	docker compose -f $(COMPOSE) up --build
 
 # ==============================================================================
 # Release Artifact Validation
@@ -102,24 +102,28 @@ compose-restart: ## Restart deployment environment
 .PHONY: validate-manifest validate-sbom validate-provenance validate-signature
 
 validate-manifest: ## Validate manifest for VERSION
-    @echo "=== Validating manifest.json for version $(VERSION) ==="
-    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
-        python deployment/scripts/validate_manifest.py $(VERSION)
+	@echo "=== Validating manifest.json for version $(VERSION) ==="
+	cd $(PROJECT_ROOT) && \
+	PYTHONPATH=".:./src:./scripts" \
+		python deployment/scripts/validate_manifest.py $(VERSION)
 
 validate-sbom: ## Validate SBOM for VERSION
-    @echo "=== Validating SBOM for version $(VERSION) ==="
-    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
-        python deployment/scripts/validate_sbom.py $(VERSION)
+	@echo "=== Validating SBOM for version $(VERSION) ==="
+	cd $(PROJECT_ROOT) && \
+	PYTHONPATH=".:./src:./scripts" \
+		python deployment/scripts/validate_sbom.py $(VERSION)
 
 validate-provenance: ## Validate provenance for VERSION
-    @echo "=== Validating provenance for version $(VERSION) ==="
-    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
-        python deployment/scripts/validate_provenance.py $(VERSION)
+	@echo "=== Validating provenance for version $(VERSION) ==="
+	cd $(PROJECT_ROOT) && \
+	PYTHONPATH=".:./src:./scripts" \
+		python deployment/scripts/validate_provenance.py $(VERSION)
 
 validate-signature: ## Validate detached signature for VERSION
-    @echo "=== Validating signature for version $(VERSION) ==="
-    PYTHONPATH="$(PROJECT_ROOT):$(PROJECT_ROOT)/src:$(PROJECT_ROOT)/scripts" \
-        python deployment/scripts/validate_signature.py $(VERSION)
+	@echo "=== Validating signature for version $(VERSION) ==="
+	cd $(PROJECT_ROOT) && \
+	PYTHONPATH=".:./src:./scripts" \
+		python deployment/scripts/validate_signature.py $(VERSION)
 
 # ==============================================================================
 # Clean Deployment Artifacts
@@ -128,14 +132,14 @@ validate-signature: ## Validate detached signature for VERSION
 .PHONY: clean docker-clean
 
 clean: ## Remove data + logs (safe)
-    @echo "=== Cleaning data + logs ==="
-    rm -rf $(PROJECT_ROOT)/data/*
-    rm -rf $(PROJECT_ROOT)/logs/*
+	@echo "=== Cleaning data + logs ==="
+	rm -rf $(PROJECT_ROOT)/data/*
+	rm -rf $(PROJECT_ROOT)/logs/*
 
 docker-clean: ## Remove dangling Docker images + containers
-    @echo "=== Cleaning Docker artifacts ==="
-    docker system prune -f
-    docker volume prune -f
+	@echo "=== Cleaning Docker artifacts ==="
+	docker system prune -f
+	docker volume prune -f
 
 # ==============================================================================
 # Full Deterministic Deployment (Build → Up → Validate)
@@ -144,16 +148,16 @@ docker-clean: ## Remove dangling Docker images + containers
 .PHONY: deploy deploy-ci
 
 deploy: ## Full deterministic deployment run
-    $(MAKE) docker-build
-    $(MAKE) compose-up
-    $(MAKE) validate-manifest VERSION=$(VERSION)
-    $(MAKE) validate-sbom VERSION=$(VERSION)
-    $(MAKE) validate-provenance VERSION=$(VERSION)
-    $(MAKE) validate-signature VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy docker-build
+	$(MAKE) -f Makefile.deploy compose-up
+	$(MAKE) -f Makefile.deploy validate-manifest VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy validate-sbom VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy validate-provenance VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy validate-signature VERSION=$(VERSION)
 
 deploy-ci: ## CI-style deterministic deployment validation
-    $(MAKE) docker-build
-    $(MAKE) validate-manifest VERSION=$(VERSION)
-    $(MAKE) validate-sbom VERSION=$(VERSION)
-    $(MAKE) validate-provenance VERSION=$(VERSION)
-    $(MAKE) validate-signature VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy docker-build
+	$(MAKE) -f Makefile.deploy validate-manifest VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy validate-sbom VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy validate-provenance VERSION=$(VERSION)
+	$(MAKE) -f Makefile.deploy validate-signature VERSION=$(VERSION)

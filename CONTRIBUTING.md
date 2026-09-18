@@ -10,7 +10,7 @@ This document describes how to contribute code, documentation, tests, diagnostic
 
 ## 📦 Repository Structure
 
-The project is organized into five pipeline stages:
+The project is organized into five deterministic pipeline stages:
 
 ```text
 src/
@@ -220,9 +220,11 @@ configs/logging.yml
 Log files are written to:
 
 ```text
-logs/ingestion.log
+logs/run_ingestion.log
+logs/schema_loader.log
 logs/quality.log
 logs/runner.log
+logs/mechanization.log
 ```
 
 Contributor guidelines:
@@ -249,8 +251,9 @@ To add or modify a pipeline stage:
 
 ### Branch 1 Note
 
-Branch 1 is **fully deterministic** (Stages 01–05 + Stage 06 infrastructure only).
-AI/RAG/agentic inference arrives in **Branch 2** and should not be added to Branch 1.
+Branch 1 is **fully deterministic** (Stages 01–05).
+Stage 06 introduces **high‑performance validation + AI harness infrastructure only**.
+AI/RAG/agentic inference arrives in **Branch 2**.
 
 ---
 
@@ -307,7 +310,8 @@ This project uses semantic versioning:
 - `0.1.x` — Branch 1 (Stages 01–04)
 - `0.2.x` — Branch 1 MVP (Stage 05)
 - `1.0.x` — Deterministic freeze pipeline + deployment layer
-- `1.1.x` — Stage 06 (AI/RAG/Agentic infrastructure)
+- `1.1.x` — Deterministic POS/QIES quality + reporting (v1.1.1)
+- `1.2.x` — Stage 06 high‑performance validation + AI harness foundation
 
 All changes must be recorded in `CHANGELOG.md` under:
 
@@ -342,8 +346,8 @@ See `CODE_OF_CONDUCT.md` for community guidelines.
 
 ## 📬 Contact
 
-Maintainer: **Brian Deng**
-Location: Los Angeles, CA
+Maintainer: **Brian Deng**  <br>
+Location: Los Angeles, CA  <br>
 Email: **<bdeng.data.pipelines@gmail.com>**
 
 Focus: healthcare data engineering, analytics systems design, scientific computing, data quality & governance, technical writing

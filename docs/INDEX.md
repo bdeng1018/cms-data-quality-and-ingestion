@@ -70,10 +70,18 @@ Raw file ingestion, structural validation, and canonical dataset creation.
 [src/stage03_data_quality/README.md](../src/stage03_data_quality/README.md)
 Null checks, duplicate detection, sparsity analysis, drift indicators, and quality metrics.
 
+### [STAGE03_DESIGN.md](STAGE03_DESIGN.md)
+
+Deterministic quality engine design, completeness invariants, metadata completeness, drift severity, and artifact contracts.
+
 ### Stage 04 — Reporting
 
 [src/stage04_reporting/README.md](../src/stage04_reporting/README.md)
-Report generation, summary artifacts, and quality metric aggregation.
+Report generation, summary artifacts, column health evaluation, and facility ranking.
+
+### [STAGE04_DESIGN.md](STAGE04_DESIGN.md)
+
+Reporting engine design, dataset summary, column health contract, sparse column contract, and deterministic reporting guarantees.
 
 ### Stage 05 — Pipeline Runner
 
@@ -97,7 +105,7 @@ Operational procedures, logs, monitoring, provenance validation, and runtime beh
 
 ### [deployment/MANIFEST_SPEC.md](../deployment/MANIFEST_SPEC.md)
 
-Specification for pipeline manifests, metadata, and deterministic output guarantees.
+Specification for pipeline manifests, metadata, deterministic output guarantees, and v1.1.1 release structure.
 
 ### [deployment/security/HARDENING.md](../deployment/security/HARDENING.md)
 
@@ -137,7 +145,7 @@ Security reporting process and vulnerability disclosure guidelines.
 
 ### [MECHANIZATION_CPP.md](MECHANIZATION_CPP.md)
 
-C++ scaffolding for Stage 06 deterministic mechanization, schema validation, and future agent‑loop integration.
+C++ scaffolding for deterministic mechanization, schema validation, row counting, and future Stage 06 extensions.
 
 ---
 
@@ -174,6 +182,6 @@ Schema visualization for Stage 01 and Stage 02 outputs.
 
 ## 8. Maintainer
 
-Maintainer: **Brian Deng**
-Email: **<bdeng.data.pipelines@gmail.com>**
+Maintainer: **Brian Deng**  <br>
+Email: **<bdeng.data.pipelines@gmail.com>**  <br>
 GitHub: **<https://github.com/bdeng1018>**

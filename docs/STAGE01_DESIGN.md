@@ -262,6 +262,6 @@ The deterministic boundary model remains unchanged.
 
 ## 11. Contact
 
-Maintainer: Brian Deng <br>
-Email: <bdeng.data.pipelines@gmail.com> <br>
+Maintainer: Brian Deng  <br>
+Email: <bdeng.data.pipelines@gmail.com>  <br>
 GitHub: <https://github.com/bdeng1018>

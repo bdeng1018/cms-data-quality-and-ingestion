@@ -31,8 +31,72 @@ This project follows **Keep a Changelog** and **semantic versioning**.
 ### Notes
 
 - No AI inference, RAG logic, or agent loops will be implemented in this cycle
-- Stage 06 will focus on **high‑performance validation** and **AI infrastructure only**
+- Stage 06 focuses on **high‑performance validation** and **AI infrastructure only**
 - Full AI/RAG/agentic inference arrives in **Branch 2**
+
+---
+
+## [1.1.1](ca://s?q=Show_version_1_1_1) — Deterministic POS/QIES Quality + Reporting Release
+
+### Added — Full Stage 03 + Stage 04 Quality & Reporting Artifacts
+
+- `quality_summary.json` (real POS/QIES metrics)
+  - 44,707 facilities
+  - 474 columns
+  - overall quality score: **0.1521687529**
+  - completeness: **15.2%**
+- `column_profiles.json` (per‑column nulls, dtype, distinct counts, quality scores)
+- `facility_metrics.csv` (per‑facility completeness + missingness)
+- `dataset_summary.json` (Stage 04 reporting summary)
+- `top_facilities.csv` + `bottom_facilities.csv`
+- `column_health.json` (474/474 healthy)
+- `sparse_columns.json` (empty — no contract violations)
+
+### Added — Deterministic Pipeline Metrics (Stage 05)
+
+- `pipeline_summary.json` with full execution metadata:
+  - start: `2026‑09‑17T20:21:52.134860`
+  - end: `2026‑09‑17T20:25:12.957663`
+  - duration: **200.82 seconds**
+  - ingestion shape: **44,707 × 474**
+  - mechanization mode: `python+cpp`
+  - schema validator: `VALID`
+  - ingestion utils: normalize=OK, delimiter=",", BOM=OK
+  - exit codes: all zero
+
+### Added — Deterministic Release Artifacts
+
+- `deployment/releases/v1.1.1.manifest.json`
+- `deployment/sbom/sbom-v1.1.1.json`
+- `deployment/provenance/provenance-v1.1.1.json`
+- `deployment/provenance/provenance-v1.1.1.sig`
+
+Includes:
+
+- SBOM component count: **4**
+- dependency count: **3**
+- deterministic SLSA‑1.0 provenance
+- stable artifact references for manifest, SBOM, provenance, docker image
+
+### Changed — Root README
+
+- added full **Operational Metrics & Results (v1.1.1)** section
+- added dataset scope, pipeline features, deployment instructions
+- integrated Stage 03–05 metrics into documentation
+- clarified deterministic boundaries for Branch 1
+
+### Fixed — Deterministic Reporting Consistency
+
+- resolved Stage 04 health‑contract inconsistencies
+- standardized facility completeness ordering
+- stabilized column‑health contract evaluation
+- corrected Stage 03 → Stage 04 artifact alignment
+
+### Notes
+
+- v1.1.1 is the **first release with full POS/QIES quality + reporting metrics**
+- all metrics are **real**, **frozen**, and **deterministic**
+- Stage 06 (high‑performance validation + AI harness) begins next
 
 ---
 
